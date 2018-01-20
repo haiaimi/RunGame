@@ -59,4 +59,5 @@ public:
 	void InSlope();
 
 	void DestroyActor();
+
 };

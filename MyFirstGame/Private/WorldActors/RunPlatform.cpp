@@ -39,11 +39,11 @@ void ARunPlatform::PostInitializeComponents()
 	QueryBox->OnComponentBeginOverlap.AddDynamic(this,&ARunPlatform::BeginOverlap);  //为碰撞体添加碰撞响应
 	QueryBox->OnComponentEndOverlap.AddDynamic(this, &ARunPlatform::EndOverlap);   //碰撞结束时的响应
 
-	XScale = 2.f;   //注意平台大小比例变化
+	XScale = 2.f;    //注意平台大小比例变化
 	FVector PlatformSize = Platform->Bounds.BoxExtent;   //获取Platform的大小
 	FVector QuerySize = QueryBox->Bounds.BoxExtent; //获取碰撞体的大小
 	FVector BoxScale = FVector(XScale*PlatformSize.X / QuerySize.X, YScale*PlatformSize.Y / QuerySize.Y, 10 * PlatformSize.Z / QuerySize.Z);
-	QueryBox->SetWorldScale3D(BoxScale);   //根据Platform大小设置碰撞体尺寸
+	QueryBox->SetWorldScale3D(BoxScale);    //根据Platform大小设置碰撞体尺寸
 	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Blue, FString::Printf(TEXT("X:%2f,Y:%2f,Z:%2f,Platform.X:%2f"), BoxScale.X, BoxScale.Y, BoxScale.Z, PlatformSize.X));
 	Platform->SetRelativeLocation(FVector(-PlatformSize.X * 2, 0.f, 0.f));   //先设置Platform相对于Arrow的相对位置
 	QueryBox->SetRelativeLocation(FVector(PlatformSize.X / XScale, PlatformSize.Y / YScale, QueryBox->Bounds.BoxExtent.Z));  //然后设置检测碰撞体的位置，一定要除以缩放比例，貌似是按原图形的大小数据进行位移，然后按比例移动缩放后的图形
@@ -73,6 +73,8 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 	{
 		AMyFirstGameCharacter* CurChar = Cast<AMyFirstGameCharacter>(OtherActor);   //当前在平台上的玩家
 		IsSlope = true;
+
+		/*下面进行控制人物移动速度，来模拟人上坡的减速，注意配合动画*/
 	}
 }
 
@@ -81,11 +83,12 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 	if (Cast<AMyFirstGameCharacter>(OtherActor))
 	{
 		Platform->SetSimulatePhysics(true);  //开启物理模拟
-		GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //四秒后删除该平台，释放内存
+		GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4秒后删除该平台，释放内存
 	}
 }
 
 void ARunPlatform::DestroyActor()
 {
 	Super::Destroy();
+
 }
