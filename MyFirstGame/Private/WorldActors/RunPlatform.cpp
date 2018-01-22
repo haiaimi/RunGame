@@ -2,8 +2,10 @@
 
 #include "RunPlatform.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/ArrowComponent.h"
+#include "GameFrameWork/CharacterMovementComponent.h"
 #include "MyFirstGameCharacter.h"
 #include "TimerManager.h"
 #include "Engine/Engine.h"
@@ -11,7 +13,7 @@
 // Sets default values
 ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitializer)
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	Platform = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("Platform"));
@@ -42,12 +44,15 @@ void ARunPlatform::PostInitializeComponents()
 	XScale = 2.f;    //注意平台大小比例变化
 	FVector PlatformSize = Platform->Bounds.BoxExtent;   //获取Platform的大小
 	FVector QuerySize = QueryBox->Bounds.BoxExtent; //获取碰撞体的大小
-	FVector BoxScale = FVector(XScale*PlatformSize.X / QuerySize.X, YScale*PlatformSize.Y / QuerySize.Y, 10 * PlatformSize.Z / QuerySize.Z);
-	QueryBox->SetWorldScale3D(BoxScale);    //根据Platform大小设置碰撞体尺寸
-	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Blue, FString::Printf(TEXT("X:%2f,Y:%2f,Z:%2f,Platform.X:%2f"), BoxScale.X, BoxScale.Y, BoxScale.Z, PlatformSize.X));
-	Platform->SetRelativeLocation(FVector(-PlatformSize.X * 2, 0.f, 0.f));   //先设置Platform相对于Arrow的相对位置
-	QueryBox->SetRelativeLocation(FVector(PlatformSize.X / XScale, PlatformSize.Y / YScale, QueryBox->Bounds.BoxExtent.Z));  //然后设置检测碰撞体的位置，一定要除以缩放比例，貌似是按原图形的大小数据进行位移，然后按比例移动缩放后的图形
+	FVector BoxScale = FVector(PlatformSize.X / QuerySize.X, PlatformSize.Y / QuerySize.Y, 15 * PlatformSize.Z / QuerySize.Z);
+	QueryBox->SetWorldScale3D(BoxScale);      //根据Platform大小设置碰撞体尺寸
+	QueryBox->SetRelativeLocation(FVector(PlatformSize.X, PlatformSize.Y, QueryBox->Bounds.BoxExtent.Z));  //然后设置检测碰撞体的位置
+	Platform->SetWorldScale3D(FVector(XScale, YScale, 1.f));
 
+	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Blue, FString::Printf(TEXT("X:%2f,Y:%2f,Z:%2f,Platform.X:%2f"), PlatformSize.X, PlatformSize.Y, BoxScale.Z, PlatformSize.X));
+	
+	PlatformLength = 2 * XScale * PlatformSize.X;
+	PlatformWidth = 2 * YScale * PlatformSize.Y;
 	//获取倾斜时目标角度
 	DstRotation = GetActorRotation() - FRotator(60.f, 0.f, 0.f);
 }
@@ -64,6 +69,10 @@ void ARunPlatform::Tick(float DeltaTime)
 
 		if (GetActorRotation().Pitch <= -60.f)
 			IsSlope = false;
+		
+		//下面是更新玩家的最大移动速度和动画比例
+		float rate = 1 - FMath::Abs(Temp.Pitch - DstRotation.Pitch) / 60.f;
+		InSlope(rate);
 	}
 }
 
@@ -71,10 +80,12 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 {
 	if (Cast<AMyFirstGameCharacter>(OtherActor))
 	{
-		AMyFirstGameCharacter* CurChar = Cast<AMyFirstGameCharacter>(OtherActor);   //当前在平台上的玩家
+		CurChar = Cast<AMyFirstGameCharacter>(OtherActor);   //当前在平台上的玩家
 		IsSlope = true;
 
 		/*下面进行控制人物移动速度，来模拟人上坡的减速，注意配合动画*/
+		MaxAcclerateSpeed = CurChar->MaxAcclerateSpeed;
+		MaxRunSpeed = CurChar->MaxRunSpeed;
 	}
 }
 
@@ -82,7 +93,17 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 {
 	if (Cast<AMyFirstGameCharacter>(OtherActor))
 	{
+		IsSlope = false;
 		Platform->SetSimulatePhysics(true);  //开启物理模拟
+		if (CurChar)
+		{
+			//恢复玩家原本的移动速度,和动画播放速率
+			CurChar->MaxAcclerateSpeed = MaxAcclerateSpeed;
+			CurChar->MaxRunSpeed = MaxRunSpeed;
+			CurChar->RunRate = 1.f;
+			//GEngine->AddOnScreenDebugMessage(1, 5, FColor::Blue, FString::Printf(TEXT("MaxAcclerateSpeed:%f,  MaxRunSpeed:%f,  RunRate:%f"), CurChar->MaxAcclerateSpeed, CurChar->MaxRunSpeed, CurChar->RunRate));
+		}
+		QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);  //这里要把该平台的碰撞体检测关闭
 		GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4秒后删除该平台，释放内存
 	}
 }
@@ -90,5 +111,23 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 void ARunPlatform::DestroyActor()
 {
 	Super::Destroy();
+}
 
+void ARunPlatform::InSlope(float rate)
+{
+	if (CurChar)
+	{
+		if (CurChar->IsInAccelerate)
+		{
+			CurChar->RunRate = 1.f - 0.4*rate;   //动作的最低速率为原来的0.6，太低会导致不连贯
+			CurChar->GetCharacterMovement()->MaxWalkSpeed = MaxAcclerateSpeed - MaxAcclerateSpeed * 0.4f*rate; //同样移速的最低也是原来的0.6
+			CurChar->MaxAcclerateSpeed = MaxAcclerateSpeed - MaxAcclerateSpeed * 0.4f*rate;;
+		}
+		else
+		{
+			CurChar->RunRate = 1.f - 0.4*rate;   //动作的最低速率为原来的0.6，太低会导致不连贯
+			CurChar->GetCharacterMovement()->MaxWalkSpeed = MaxRunSpeed - MaxRunSpeed * 0.4f*rate; //同样移速的最低也是原来的0.6
+			CurChar->MaxRunSpeed = MaxRunSpeed - MaxRunSpeed * 0.4f*rate;;
+		}
+	}
 }

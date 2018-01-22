@@ -56,6 +56,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Aim_Motage")
 	UAnimMontage* CrounchToStandAim;
 
+	/**这里主要是修改玩家加速时动画的播放速率*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aim_Motage")
+	float RunRate;
+
 	/**是否在向左转*/
 	uint8 IsToRight : 1;
 
@@ -77,7 +81,12 @@ public:
 	/**是否处于下蹲到站立动作之中*/
 	uint8 IsInCrounchToStand : 1;
 
-	/*站立、蹲下动画时间*/
+	uint8 IsInAccelerate : 1;
+
+	/**玩家最大的跑步和加速时的速度*/
+	float MaxRunSpeed, MaxAcclerateSpeed;
+
+	/**站立、蹲下动画时间*/
 	float ActionAnimTime = 0.f;
 
 	float CurActionTime;

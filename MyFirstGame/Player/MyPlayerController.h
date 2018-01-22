@@ -6,14 +6,37 @@
 #include "GameFramework/PlayerController.h"
 #include "MyPlayerController.generated.h"
 
+class ARunPlatform;
 /**
- * 
+ * 1、自动生成平台
  */
 UCLASS()
 class MYFIRSTGAME_API AMyPlayerController : public APlayerController
 {
-	GENERATED_BODY()
+	GENERATED_UCLASS_BODY()
 
-		AMyPlayerController();
+public:
+	ARunPlatform* CurPlatform;
+
+	/**要生成的平台*/
+	TSubclassOf<ARunPlatform> SpawnPlatform;
+
+	/**存放当前所有平台的数组*/
+	TArray<ARunPlatform*> PlatformArray;
+
+public:
+	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction);
+
+protected:
+	virtual void SetupInputComponent()override;
+
+	virtual void PostInitializeComponents()override;
+
+public:
+	/**用于自动生成平台*/
+	void AutoSpawnPlatform();
+
+	/**根据上个一个平台（相对于数组里的）计算生成平台的位置*/
+	FTransform GetRandomSpawnTransf(ARunPlatform* PrePlatform);
 
 };

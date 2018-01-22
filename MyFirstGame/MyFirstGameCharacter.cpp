@@ -61,6 +61,11 @@ AMyFirstGameCharacter::AMyFirstGameCharacter(const FObjectInitializer& ObjectIni
 
 	CurrentWeapon = EWeaponType::Type::Weapon_Instant;
 	ShootInternal = 0.f;
+	RunRate = 1.f; //默认加速动画播放速率
+
+	//默认玩家的移动速度
+	MaxAcclerateSpeed = 850.f;
+	MaxRunSpeed = 600.f;
 
 	// Create a follow camera
     //FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -289,14 +294,16 @@ void AMyFirstGameCharacter::StopViewAround()
 
 void AMyFirstGameCharacter::StartAccelerate()
 {
+	IsInAccelerate = true;
 	CanShoot = false;         //加速跑的时候也不能射击
-	GetCharacterMovement()->MaxWalkSpeed = 850.f;        //把速度增加到850
+	GetCharacterMovement()->MaxWalkSpeed = MaxAcclerateSpeed;       //把速度增加到850
 }
 
 void AMyFirstGameCharacter::StopAccelerate()
 {
+	IsInAccelerate = false;
 	CanShoot = true;
-	GetCharacterMovement()->MaxWalkSpeed = 600.f; 
+	GetCharacterMovement()->MaxWalkSpeed = MaxRunSpeed;
 }
 
 FRotator AMyFirstGameCharacter::ComputeAimOffset()const

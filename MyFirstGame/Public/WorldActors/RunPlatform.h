@@ -24,6 +24,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Platform")
 	class UArrowComponent* ArrowDst;
 
+	/**指向当前平台上的玩家*/
+	class AMyFirstGameCharacter* CurChar;
+
+	ARunPlatform* NextPlatform;
+
 	/**用于删除平台的时间句柄*/
 	FTimerHandle DestoryHandle;
 
@@ -37,6 +42,11 @@ public:
 	float XScale;
 
 	float YScale;
+
+	/**玩家正常情况下的最大速度*/
+	float MaxAcclerateSpeed, MaxRunSpeed;
+
+	float PlatformLength, PlatformWidth;
 
 protected:
 	// Called when the game starts or when spawned
@@ -56,8 +66,12 @@ public:
 	void EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	/**在倾斜时所做的操作*/
-	void InSlope();
+	void InSlope(float rate);
 
 	void DestroyActor();
 
+	/**获取平台的长度*/
+	FORCEINLINE float GetPlatformLength() { return PlatformLength; }
+
+	FORCEINLINE float GetPlatformWidth() { return PlatformWidth; }
 };
