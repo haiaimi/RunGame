@@ -277,6 +277,12 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 		GetCharacterMovement()->MaxWalkSpeed = CurMaxAcclerateSpeed;       //把速度变为当前加速状态速度
 	else
 		GetCharacterMovement()->MaxWalkSpeed = CurMaxRunSpeed;   //速度改为当前正常跑步速度
+
+	//下面是判断是否可以开枪（根据速度阈值判断，大于800就会播放加速动画，由于状态机的设置，后期可以添加一个加速阈值接口给状态机，也就不能开枪）
+	if (GetCharacterMovement()->MaxWalkSpeed >= 800.f)
+		CanShoot = false;
+	else
+		CanShoot = true;
 }
 
 void AMyFirstGameCharacter::AddControllerYawInput(float Val)
@@ -302,14 +308,12 @@ void AMyFirstGameCharacter::StopViewAround()
 
 void AMyFirstGameCharacter::StartAccelerate()
 {
-	IsInAccelerate = true;
-	CanShoot = false;         //加速跑的时候也不能射击
+	IsInAccelerate = true;       //加速跑的时候也不能射击
 }
 
 void AMyFirstGameCharacter::StopAccelerate()
 {
 	IsInAccelerate = false;
-	CanShoot = true;
 }
 
 FRotator AMyFirstGameCharacter::ComputeAimOffset()const

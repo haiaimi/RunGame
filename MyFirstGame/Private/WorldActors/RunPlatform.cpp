@@ -32,8 +32,8 @@ ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(O
 	RootComponent = ArrowDst;
 
 	IsSlope = false;    //默认是不倾斜的
-	XScale = 1.f;
-	YScale = 1.f;
+	SlopeAngle = 60.f;
+	IsShootToSlope = false; //默认是正常平台模式
 
 	PlatDir = EPlatformDirection::Absolute_Forward;  //默认向前
 }
@@ -42,10 +42,10 @@ ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(O
 void ARunPlatform::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	QueryBox->OnComponentBeginOverlap.AddDynamic(this,&ARunPlatform::BeginOverlap);  //为碰撞体添加碰撞响应
+
+	QueryBox->OnComponentBeginOverlap.AddDynamic(this, &ARunPlatform::BeginOverlap);  //为碰撞体添加碰撞响应
 	QueryBox->OnComponentEndOverlap.AddDynamic(this, &ARunPlatform::EndOverlap);   //碰撞结束时的响应
 
-	XScale = 2.f;    //注意平台大小比例变化
 	FVector PlatformSize = Platform->Bounds.BoxExtent;   //获取Platform的大小
 	FVector QuerySize = QueryBox->Bounds.BoxExtent; //获取碰撞体的大小
 	FVector BoxScale = FVector(PlatformSize.X / QuerySize.X, PlatformSize.Y / QuerySize.Y, 15 * PlatformSize.Z / QuerySize.Z);
@@ -58,24 +58,24 @@ void ARunPlatform::PostInitializeComponents()
 	PlatformLength = 2 * XScale * PlatformSize.X;
 	PlatformWidth = 2 * YScale * PlatformSize.Y;
 	//获取倾斜时目标角度
-	DstRotation = GetActorRotation() - FRotator(60.f, 0.f, 0.f);
+	DstRotation = GetActorRotation() - FRotator(SlopeAngle, 0.f, 0.f);
 }
 
 // Called every frame
-void ARunPlatform::Tick(float DeltaTime)
+void ARunPlatform::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
 {
-	Super::Tick(DeltaTime);
+	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 
 	if (IsSlope)
 	{
 		FRotator Temp = FMath::RInterpConstantTo(GetActorRotation(), DstRotation, DeltaTime, 20.f);  //以每秒20度的速度倾斜
 		SetActorRotation(Temp);
 
-		if (GetActorRotation().Pitch <= -60.f)
+		if (GetActorRotation().Pitch <= -SlopeAngle)
 			IsSlope = false;
 		
 		//下面是更新玩家的最大移动速度和动画比例
-		float rate = 1 - FMath::Abs(Temp.Pitch - DstRotation.Pitch) / 60.f;
+		float rate = 1 - FMath::Abs(Temp.Pitch - DstRotation.Pitch) / SlopeAngle;
 		InSlope(rate);
 	}
 }
@@ -85,11 +85,18 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 	if (Cast<AMyFirstGameCharacter>(OtherActor))
 	{
 		CurChar = Cast<AMyFirstGameCharacter>(OtherActor);   //当前在平台上的玩家
-		IsSlope = true;
-
-		/*下面进行控制人物移动速度，来模拟人上坡的减速，注意配合动画*/
 		MaxAcclerateSpeed = CurChar->MaxAcclerateSpeed;
 		MaxRunSpeed = CurChar->MaxRunSpeed;
+
+		/*下面进行控制人物移动速度，来模拟人上坡的减速，注意配合动画*/
+		if (!IsShootToSlope)
+		{
+			IsSlope = true;      //随着平台倾斜逐渐减低速度
+		}
+		else
+		{
+			InSlope(SlopeAngle / 60.f);   //斜坡直接降低人物的速度
+		}
 
 		if (Cast<AMyPlayerController>(CurChar->Controller))
 		{

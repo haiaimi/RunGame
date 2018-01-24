@@ -24,8 +24,9 @@ ABoomActor::ABoomActor()
 	RadialForce->SetActive(false);                   //默认设置爆炸组件处于非激活状态
 	RadialForce->bAutoActivate = false;         //禁止自动激活
 	RadialForce->ForceStrength = 100000.f;  //设置爆炸的力量
-	RadialForce->Radius = 200.f;                      //设置爆炸半径
+	RadialForce->Radius = 500.f;                      //设置爆炸半径
 
+	IsBoom = false;
 	CanBoom = true;
 }
 
@@ -40,7 +41,6 @@ void ABoomActor::BeginPlay()
 void ABoomActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void ABoomActor::Boom()
@@ -57,13 +57,21 @@ void ABoomActor::Boom()
 	if (GetWorld())
 	{
 		GetWorldTimerManager().SetTimer(SpawnParticle, this, &ABoomActor::DestroyActor, 2.f, false);
+		GetWorldTimerManager().SetTimer(ForceTime, this, &ABoomActor::StopForce, 0.5f, false);    //爆炸效果只持续0.5秒
 	}
 
+	IsBoom = true;
 	CanBoom = false;
 }
 
 void ABoomActor::DestroyActor()
 {
-	Destroy();
+	Super::Destroy();
 	GetWorldTimerManager().ClearTimer(SpawnParticle);
+	GetWorldTimerManager().ClearTimer(ForceTime);
+}
+
+void ABoomActor::StopForce()
+{
+	RadialForce->SetActive(false);
 }

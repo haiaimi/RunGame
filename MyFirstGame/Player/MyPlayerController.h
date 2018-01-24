@@ -24,6 +24,9 @@ public:
 	/**要生成的平台*/
 	TSubclassOf<ARunPlatform> SpawnPlatform;
 
+	/**需要触发的平台*/
+	TSubclassOf<ARunPlatform> SpawnPlatform_Shoot;
+
 	/**存放当前所有平台的数组*/
 	TArray<ARunPlatform*> PlatformArray;
 
@@ -39,8 +42,8 @@ protected:
 	virtual void PostInitializeComponents()override;
 
 public:
-	/**用于自动生成平台*/
-	void AutoSpawnPlatform();
+	/**用于自动生成平台,这是经过触发才能触发的平台*/
+	FTransform GetSpawnTransf_Shoot(ARunPlatform* PrePlatform);
 
 	/**根据上个一个平台（相对于数组里的）计算生成平台的位置*/
 	FTransform GetRandomSpawnTransf(ARunPlatform* PrePlatform);

@@ -16,18 +16,24 @@ public:
 	ABoomActor();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boom")
-		class URadialForceComponent* RadialForce;
+	class URadialForceComponent* RadialForce;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boom", meta = (AllowPrivateAccess = "true"))
-		class UStaticMeshComponent* WhatToBoom;
+	class UStaticMeshComponent* WhatToBoom;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Boom")
-		class UParticleSystem* BoomEmitter;
+	class UParticleSystem* BoomEmitter;
 
-		FTimerHandle SpawnParticle;
+	FTimerHandle SpawnParticle;
 
-		//该爆炸物是否可以爆炸
-		uint8 CanBoom : 1;
+	//该定时器用来定时爆炸力作用时间
+	FTimerHandle ForceTime;
+
+	//该爆炸物是否可以爆炸
+	uint8 CanBoom : 1;
+
+	//是否已经爆炸
+	uint8 IsBoom : 1;
 
 protected:
 	// Called when the game starts or when spawned
@@ -40,5 +46,7 @@ public:
 	void  DestroyActor();
 
 	void Boom();
+
+	void StopForce();
 
 };

@@ -4,15 +4,20 @@
 #include "MyPlayerCameraManager.h"
 #include "EngineUtils.h"
 #include "RunPlatform.h"
+#include "RunPlatform_Shoot.h"
 #include "ConstructorHelpers.h"
 #include "Engine/Engine.h"
 #include "MyFirstGame.h"
+
+const float ShootPlatformAngle = 30.f;
 
 AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PlayerCameraManagerClass = AMyPlayerCameraManager::StaticClass();
 	static ConstructorHelpers::FClassFinder<ARunPlatform> SpawnPlat(TEXT("/Game/Blueprint/RunPlatform_BP"));
+	static ConstructorHelpers::FClassFinder<ARunPlatform> SpawnPlat_Shoot(TEXT("/Game/Blueprint/RunPlatform_Shoot_BP"));
 	SpawnPlatform = SpawnPlat.Class;
+	SpawnPlatform_Shoot = SpawnPlat_Shoot.Class;
 }
 
 
@@ -29,10 +34,17 @@ void AMyPlayerController::PostInitializeComponents()
 	//获取游戏世界中预设的一个平台，（默认的一个）
 	for (TActorIterator<ARunPlatform> It(GetWorld()); It; ++It)
 	{
-		CurPlatform = *It;
-		TempPlatform = CurPlatform;
-		PlatformArray[0] = *It;  //数组的第一个就是默认平台
-		GEngine->AddOnScreenDebugMessage(1, 5, FColor::Black, TEXT("检索成功"));
+		if ((*It)->Tags.Num())
+		{
+			if ((*It)->Tags[0] == TEXT("StartPlatform"))   //如果是指定的开始平台就开始
+			{
+				CurPlatform = *It;
+				TempPlatform = CurPlatform;
+				PlatformArray[0] = *It;  //数组的第一个就是默认平台
+				GEngine->AddOnScreenDebugMessage(1, 5, FColor::Black, TEXT("检索成功"));
+				break;
+			}
+		}
 	}
 
 	//下面是逐步生成10个平台
@@ -48,19 +60,40 @@ void AMyPlayerController::PostInitializeComponents()
 void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
-	
+	int32 Random_Shoot = FMath::Rand() % 100;  //生成随机数，用来决定是否生成触发平台
+	ARunPlatform* AddPlatform;   //指向即将生成的平台
+
 	if (CurPlatform != TempPlatform && CurPlatform != NULL) //玩家所在平台发生变化
 	{
-		ARunPlatform* AddPlatform = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray.Last()));
+		if (Random_Shoot >= 0 && Random_Shoot <= 24 && !Cast <ARunPlatform_Shoot>(PlatformArray.Last()))   //30%的几率生成触发型平台,并且前一个平台不是射击型
+			AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Shoot>(SpawnPlatform_Shoot, GetSpawnTransf_Shoot(PlatformArray.Last()));
+		else
+			AddPlatform = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray.Last()));
+
 		AddPlatform->PlatDir = AbsoluteDir;
 		PlatformArray.Push(AddPlatform);
 		TempPlatform = CurPlatform;   //
 	}
 }
 
-void AMyPlayerController::AutoSpawnPlatform()
+FTransform AMyPlayerController::GetSpawnTransf_Shoot(ARunPlatform* PrePlatform)
 {
-	
+	FTransform TempTrans;
+	if (PrePlatform)
+	{
+		AbsoluteDir = PrePlatform->PlatDir;    //该平台只生成在相对前面的平台的前方
+		FVector CurLocation = PrePlatform->GetActorLocation();
+		FRotator CurRotation = PrePlatform->GetActorRotation();
+
+		FMatrix RotatMatrix = FRotationMatrix(CurRotation);
+		FVector ForwardDir = -RotatMatrix.GetUnitAxis(EAxis::X);
+		FVector UpDir = RotatMatrix.GetUnitAxis(EAxis::Z);
+		float SlopeDegree = FMath::DegreesToRadians(ShootPlatformAngle);
+
+		FVector SpawnLocation = CurLocation + FMath::Cos(SlopeDegree)*PrePlatform->GetPlatformLength()*ForwardDir + FMath::Sin(SlopeDegree)*PrePlatform->GetPlatformLength()*UpDir;
+		TempTrans = FTransform(CurRotation, SpawnLocation);
+	}
+	return TempTrans;
 }
 
 FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)

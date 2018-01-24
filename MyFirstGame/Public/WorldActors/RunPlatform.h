@@ -35,13 +35,19 @@ public:
 	/**是否开始倾斜*/
 	uint8 IsSlope : 1;
 
+	/**倾斜的角度，会有多种情况的倾斜*/
+	float SlopeAngle;
+
+	/**是否是通过射击使得平台旋转的模式*/
+	uint8 IsShootToSlope : 1;
+
 	/**倾斜的最终角度*/
 	FRotator DstRotation;
 
 	/*下面两个是平台的缩放比例*/
-	float XScale;
+	float XScale = 2;  //默认横向是两倍
 
-	float YScale;
+	float YScale = 1;
 
 	/**玩家正常情况下的最大速度*/
 	float MaxAcclerateSpeed, MaxRunSpeed;
@@ -57,7 +63,7 @@ protected:
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction) override;
 
 public:
 	/**玩家进入当前Platform执行的操作*/
