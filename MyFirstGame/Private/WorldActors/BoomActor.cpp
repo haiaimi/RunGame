@@ -65,4 +65,5 @@ void ABoomActor::Boom()
 void ABoomActor::DestroyActor()
 {
 	Destroy();
+	GetWorldTimerManager().ClearTimer(SpawnParticle);
 }

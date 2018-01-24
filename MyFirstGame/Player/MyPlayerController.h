@@ -18,11 +18,17 @@ class MYFIRSTGAME_API AMyPlayerController : public APlayerController
 public:
 	ARunPlatform* CurPlatform;
 
+	/***/
+	ARunPlatform* TempPlatform;
+		
 	/**要生成的平台*/
 	TSubclassOf<ARunPlatform> SpawnPlatform;
 
 	/**存放当前所有平台的数组*/
 	TArray<ARunPlatform*> PlatformArray;
+
+	/**生成的平台中的绝对方向信息*/
+	uint8 AbsoluteDir;
 
 public:
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction);

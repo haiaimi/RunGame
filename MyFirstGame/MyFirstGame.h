@@ -16,3 +16,13 @@ namespace EWeaponType
 	};
 }
 
+UENUM()
+namespace EPlatformDirection
+{
+	enum Type
+	{
+		Absolute_Left,
+		Absolute_Forward,
+		Absolute_Right
+	};
+}

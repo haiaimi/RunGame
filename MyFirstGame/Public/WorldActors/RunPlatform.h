@@ -48,6 +48,9 @@ public:
 
 	float PlatformLength, PlatformWidth;
 
+	/*平台的绝对方向，以正X为前，负Y为左，正Y为右*/
+	uint8 PlatDir;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void PostInitializeComponents()override;

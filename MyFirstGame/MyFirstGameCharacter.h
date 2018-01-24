@@ -81,10 +81,14 @@ public:
 	/**是否处于下蹲到站立动作之中*/
 	uint8 IsInCrounchToStand : 1;
 
+	/**是否在加速*/
 	uint8 IsInAccelerate : 1;
 
 	/**玩家最大的跑步和加速时的速度*/
 	float MaxRunSpeed, MaxAcclerateSpeed;
+
+	/**玩家移动中变化后的速度（在平台上）*/
+	float CurMaxRunSpeed, CurMaxAcclerateSpeed;
 
 	/**站立、蹲下动画时间*/
 	float ActionAnimTime = 0.f;

@@ -7,8 +7,10 @@
 #include "Components/ArrowComponent.h"
 #include "GameFrameWork/CharacterMovementComponent.h"
 #include "MyFirstGameCharacter.h"
+#include "Player/MyPlayerController.h"
 #include "TimerManager.h"
 #include "Engine/Engine.h"
+#include "MyFirstGame.h"
 
 // Sets default values
 ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitializer)
@@ -32,6 +34,8 @@ ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(O
 	IsSlope = false;    //默认是不倾斜的
 	XScale = 1.f;
 	YScale = 1.f;
+
+	PlatDir = EPlatformDirection::Absolute_Forward;  //默认向前
 }
 
 // Called when the game starts or when spawned
@@ -86,6 +90,12 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		/*下面进行控制人物移动速度，来模拟人上坡的减速，注意配合动画*/
 		MaxAcclerateSpeed = CurChar->MaxAcclerateSpeed;
 		MaxRunSpeed = CurChar->MaxRunSpeed;
+
+		if (Cast<AMyPlayerController>(CurChar->Controller))
+		{
+			AMyPlayerController* MPC = Cast<AMyPlayerController>(CurChar->Controller);
+			MPC->CurPlatform = this;     //玩家当前所在平台
+		}
 	}
 }
 
@@ -104,6 +114,12 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 			//GEngine->AddOnScreenDebugMessage(1, 5, FColor::Blue, FString::Printf(TEXT("MaxAcclerateSpeed:%f,  MaxRunSpeed:%f,  RunRate:%f"), CurChar->MaxAcclerateSpeed, CurChar->MaxRunSpeed, CurChar->RunRate));
 		}
 		QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);  //这里要把该平台的碰撞体检测关闭
+
+		if (Cast<AMyPlayerController>(CurChar->Controller))
+		{
+			AMyPlayerController* MPC = Cast<AMyPlayerController>(CurChar->Controller);
+			MPC->CurPlatform = NULL;     //玩家当前所在平台设为空
+		}
 		GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4秒后删除该平台，释放内存
 	}
 }
@@ -111,6 +127,7 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 void ARunPlatform::DestroyActor()
 {
 	Super::Destroy();
+	GetWorldTimerManager().ClearTimer(DestoryHandle);      //清除定时器
 }
 
 void ARunPlatform::InSlope(float rate)
@@ -120,14 +137,12 @@ void ARunPlatform::InSlope(float rate)
 		if (CurChar->IsInAccelerate)
 		{
 			CurChar->RunRate = 1.f - 0.4*rate;   //动作的最低速率为原来的0.6，太低会导致不连贯
-			CurChar->GetCharacterMovement()->MaxWalkSpeed = MaxAcclerateSpeed - MaxAcclerateSpeed * 0.4f*rate; //同样移速的最低也是原来的0.6
-			CurChar->MaxAcclerateSpeed = MaxAcclerateSpeed - MaxAcclerateSpeed * 0.4f*rate;;
+			CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed - MaxAcclerateSpeed * 0.4f * rate;
 		}
 		else
 		{
 			CurChar->RunRate = 1.f - 0.4*rate;   //动作的最低速率为原来的0.6，太低会导致不连贯
-			CurChar->GetCharacterMovement()->MaxWalkSpeed = MaxRunSpeed - MaxRunSpeed * 0.4f*rate; //同样移速的最低也是原来的0.6
-			CurChar->MaxRunSpeed = MaxRunSpeed - MaxRunSpeed * 0.4f*rate;;
+			CurChar->CurMaxRunSpeed = MaxRunSpeed - MaxRunSpeed * 0.4f * rate;
 		}
 	}
 }

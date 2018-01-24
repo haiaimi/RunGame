@@ -124,6 +124,9 @@ void AMyFirstGameCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
+	CurMaxAcclerateSpeed = MaxAcclerateSpeed;
+	CurMaxRunSpeed = MaxRunSpeed;
+
 	WeaponNum = Inventory.Num();   //武器数量
 	if (WeaponNum > 0)
 	{
@@ -269,6 +272,11 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 			IsInCrounchToStand = false;
 		}
 	}
+
+	if (IsInAccelerate)
+		GetCharacterMovement()->MaxWalkSpeed = CurMaxAcclerateSpeed;       //把速度变为当前加速状态速度
+	else
+		GetCharacterMovement()->MaxWalkSpeed = CurMaxRunSpeed;   //速度改为当前正常跑步速度
 }
 
 void AMyFirstGameCharacter::AddControllerYawInput(float Val)
@@ -296,14 +304,12 @@ void AMyFirstGameCharacter::StartAccelerate()
 {
 	IsInAccelerate = true;
 	CanShoot = false;         //加速跑的时候也不能射击
-	GetCharacterMovement()->MaxWalkSpeed = MaxAcclerateSpeed;       //把速度增加到850
 }
 
 void AMyFirstGameCharacter::StopAccelerate()
 {
 	IsInAccelerate = false;
 	CanShoot = true;
-	GetCharacterMovement()->MaxWalkSpeed = MaxRunSpeed;
 }
 
 FRotator AMyFirstGameCharacter::ComputeAimOffset()const
