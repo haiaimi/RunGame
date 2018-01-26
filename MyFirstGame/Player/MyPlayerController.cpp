@@ -54,6 +54,7 @@ void AMyPlayerController::PostInitializeComponents()
 		ARunPlatform* Temp = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray[i - 1]));
 		Temp->PlatDir = AbsoluteDir;
 		PlatformArray[i] = Temp;
+		PlatformArray[i - 1]->NextPlatform = PlatformArray[i];
 	}
 }
 
@@ -71,6 +72,7 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 			AddPlatform = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray.Last()));
 
 		AddPlatform->PlatDir = AbsoluteDir;
+		PlatformArray.Last()->NextPlatform = AddPlatform;  //指定下一个平台
 		PlatformArray.Push(AddPlatform);
 		TempPlatform = CurPlatform;   //
 	}

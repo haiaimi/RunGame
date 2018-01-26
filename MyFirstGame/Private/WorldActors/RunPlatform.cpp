@@ -23,8 +23,10 @@ ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(O
 	ArrowDst = ObjectInitializer.CreateDefaultSubobject<UArrowComponent>(this, TEXT("Arrow"));
 
 	//该碰撞体只用于检测
+	QueryBox->SetCollisionObjectType(COLLISION_BOOMQUERY);  
 	QueryBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	QueryBox->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECollisionResponse::ECR_Ignore); //忽略子弹
 	QueryBox->bGenerateOverlapEvents = true;       //生成碰撞事件
 
 	QueryBox->SetupAttachment(Platform);
@@ -35,6 +37,7 @@ ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(O
 	SlopeAngle = 60.f;
 	IsShootToSlope = false; //默认是正常平台模式
 
+	SafeStayTime = 0.3f;  //默认安全时间
 	PlatDir = EPlatformDirection::Absolute_Forward;  //默认向前
 }
 
@@ -74,9 +77,24 @@ void ARunPlatform::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 		if (GetActorRotation().Pitch <= -SlopeAngle)
 			IsSlope = false;
 		
-		//下面是更新玩家的最大移动速度和动画比例
-		float rate = 1 - FMath::Abs(Temp.Pitch - DstRotation.Pitch) / SlopeAngle;
-		InSlope(rate);
+		//下面是更新玩家的最大移动速度和动画比例，只有在是普通模式下才执行
+		if (!IsShootToSlope)
+		{
+			if (SafeStayTime <= 0)
+				SafeStayTime = 0.f;  //安全时间已过
+			else
+				SafeStayTime -= DeltaTime;
+
+			float rate = 1 - FMath::Abs(Temp.Pitch - DstRotation.Pitch) / SlopeAngle;
+			InSlope(rate);
+		}
+	}
+	if (CurChar != NULL && IsShootToSlope) //玩家在平台上（射击触发模式）
+	{
+		if (SafeStayTime <= 0)
+			SafeStayTime = 0.f;  //安全时间已过
+		else
+			SafeStayTime -= DeltaTime;
 	}
 }
 
@@ -108,26 +126,29 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 
 void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (Cast<AMyFirstGameCharacter>(OtherActor))
+	if (SafeStayTime == 0)   //在安全时间内不会触发该函数内容
 	{
-		IsSlope = false;
-		Platform->SetSimulatePhysics(true);  //开启物理模拟
-		if (CurChar)
+		if (Cast<AMyFirstGameCharacter>(OtherActor))
 		{
-			//恢复玩家原本的移动速度,和动画播放速率
-			CurChar->MaxAcclerateSpeed = MaxAcclerateSpeed;
-			CurChar->MaxRunSpeed = MaxRunSpeed;
-			CurChar->RunRate = 1.f;
-			//GEngine->AddOnScreenDebugMessage(1, 5, FColor::Blue, FString::Printf(TEXT("MaxAcclerateSpeed:%f,  MaxRunSpeed:%f,  RunRate:%f"), CurChar->MaxAcclerateSpeed, CurChar->MaxRunSpeed, CurChar->RunRate));
-		}
-		QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);  //这里要把该平台的碰撞体检测关闭
+			IsSlope = false;
+			Platform->SetSimulatePhysics(true);  //开启物理模拟
+			if (CurChar)
+			{
+				//恢复玩家原本的移动速度,和动画播放速率
+				CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
+				CurChar->CurMaxRunSpeed = MaxRunSpeed;
+				CurChar->RunRate = 1.f;
+				GEngine->AddOnScreenDebugMessage(1, 5, FColor::Blue, FString::Printf(TEXT("MaxAcclerateSpeed:%f,  MaxRunSpeed:%f,  RunRate:%f"), CurChar->MaxAcclerateSpeed, CurChar->MaxRunSpeed, CurChar->RunRate));
+			}
+			QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);  //这里要把该平台的碰撞体检测关闭
 
-		if (Cast<AMyPlayerController>(CurChar->Controller))
-		{
-			AMyPlayerController* MPC = Cast<AMyPlayerController>(CurChar->Controller);
-			MPC->CurPlatform = NULL;     //玩家当前所在平台设为空
+			if (Cast<AMyPlayerController>(CurChar->Controller))
+			{
+				AMyPlayerController* MPC = Cast<AMyPlayerController>(CurChar->Controller);
+				MPC->CurPlatform = NULL;     //玩家当前所在平台设为空
+			}
+			GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4秒后删除该平台，释放内存
 		}
-		GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4秒后删除该平台，释放内存
 	}
 }
 
@@ -141,15 +162,8 @@ void ARunPlatform::InSlope(float rate)
 {
 	if (CurChar)
 	{
-		if (CurChar->IsInAccelerate)
-		{
-			CurChar->RunRate = 1.f - 0.4*rate;   //动作的最低速率为原来的0.6，太低会导致不连贯
-			CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed - MaxAcclerateSpeed * 0.4f * rate;
-		}
-		else
-		{
-			CurChar->RunRate = 1.f - 0.4*rate;   //动作的最低速率为原来的0.6，太低会导致不连贯
-			CurChar->CurMaxRunSpeed = MaxRunSpeed - MaxRunSpeed * 0.4f * rate;
-		}
+		CurChar->RunRate = 1.f - 0.4*rate;   //动作的最低速率为原来的0.6，太低会导致不连贯
+		CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed - MaxAcclerateSpeed * 0.4f * rate;
+		CurChar->CurMaxRunSpeed = MaxRunSpeed - MaxRunSpeed * 0.4f * rate;
 	}
 }

@@ -114,7 +114,7 @@ void ADoor::NotifyActorBeginOverlap(AActor* OtherActor)
 
 void  ADoor::NotifyActorEndOverlap(AActor* OtherActor)
 {
-	if (CurChar == Cast<AMyFirstGameCharacter>(OtherActor))
+	if (CurChar != NULL && CurChar == Cast<AMyFirstGameCharacter>(OtherActor))
 	{
 		CurChar->AvoidOpenDoor();
 		CurChar = NULL;

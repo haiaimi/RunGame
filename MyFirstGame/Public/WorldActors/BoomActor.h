@@ -24,6 +24,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Boom")
 	class UParticleSystem* BoomEmitter;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Boom")
+	class USphereComponent* QueryChar;
+
 	FTimerHandle SpawnParticle;
 
 	//该定时器用来定时爆炸力作用时间
@@ -34,6 +37,9 @@ public:
 
 	//是否已经爆炸
 	uint8 IsBoom : 1;
+
+	//是否是主动触发爆炸
+	bool InitiativeToBoom = false;
 
 protected:
 	// Called when the game starts or when spawned
@@ -48,5 +54,11 @@ public:
 	void Boom();
 
 	void StopForce();
+
+	/**开始物理模拟*/
+	void StartSimulatePhysic();
+
+	UFUNCTION()
+	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
 };

@@ -22,6 +22,9 @@ public:
 	/**指向已生成的爆炸物*/
 	ABoomActor* AimTrigger;
 
+	/**生成的主动爆炸物*/
+	ABoomActor* InitiativeBoom;
+
 protected:
 	virtual void PostInitializeComponents()override;
 	

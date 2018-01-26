@@ -22,10 +22,12 @@ ABullet::ABullet(const FObjectInitializer& ObjectInitializer) :Super(ObjectIniti
 	BulletCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);          //只是用来检测，不具有物理模拟
 	BulletCollision->SetCollisionObjectType(COLLISION_PROJECTILE);          //设置该Collision的对象类型
 	BulletCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	BulletCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
-	BulletCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block);
-	BulletCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
-
+	BulletCollision->SetCollisionResponseToChannel(COLLISION_BOOMQUERY, ECollisionResponse::ECR_Ignore);  //忽略爆炸检测体
+	BulletCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Block);  
+	
+	BulletMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BulletMesh->SetCollisionObjectType(COLLISION_BOOMQUERY); 
+	BulletMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	RootComponent = BulletCollision;
 	BulletMesh->SetupAttachment(RootComponent);
 	BulletMesh->SetRelativeScale3D(FVector(0.6f, 0.6f, 0.6f));

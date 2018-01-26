@@ -27,6 +27,7 @@ public:
 	/**指向当前平台上的玩家*/
 	class AMyFirstGameCharacter* CurChar;
 
+	/**指向该平台的下一个平台的指针*/
 	ARunPlatform* NextPlatform;
 
 	/**用于删除平台的时间句柄*/
@@ -53,6 +54,9 @@ public:
 	float MaxAcclerateSpeed, MaxRunSpeed;
 
 	float PlatformLength, PlatformWidth;
+
+	/**玩家在平台上活动的安全时间，不会无意跳出碰撞体后造成平台坠落*/
+	float SafeStayTime;
 
 	/*平台的绝对方向，以正X为前，负Y为左，正Y为右*/
 	uint8 PlatDir;
