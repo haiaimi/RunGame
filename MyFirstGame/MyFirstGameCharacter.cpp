@@ -17,6 +17,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "MyFirstGame.h"
 #include "Engine/Engine.h"
+#include "Bonus.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AMyFirstGameCharacter
@@ -598,4 +599,27 @@ void AMyFirstGameCharacter::EquipWeapon(AWeapon_Gun* CurWeapon)
 	this->CurWeapon = CurWeapon;
 	CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponSocket);       //把Weapon附着到玩家身上,记住是附着在网格上，而不是整个Actor
 	this->CurWeapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));
+}
+
+void AMyFirstGameCharacter::ApplyBonus(class ABonus* BonusActor)
+{
+	EBonusType::Type BonusType = BonusActor->BonusData.BonusType;    //获取该奖励状态
+	if (BonusType != EBonusType::Bonus_None)
+	{
+		if (BonusType == EBonusType::Bonus_Score)
+			AddScore(BonusActor->GetBonusScore());
+
+		else if (BonusType == EBonusType::Bonus_Accelerate)
+			AddSpeed(BonusActor->GetBonusSpeed());
+	}
+}
+
+void AMyFirstGameCharacter::AddScore(int32 BonusScore)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::FormatAsNumber(BonusScore), true);
+}
+
+void AMyFirstGameCharacter::AddSpeed(int32 BonusSpeed)
+{
+
 }

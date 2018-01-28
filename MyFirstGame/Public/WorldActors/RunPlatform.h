@@ -6,6 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "RunPlatform.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FPlatformDestory);
+DECLARE_MULTICAST_DELEGATE(FPlatformFall);
+
 UCLASS()
 class MYFIRSTGAME_API ARunPlatform : public AActor
 {
@@ -61,6 +64,12 @@ public:
 	/*平台的绝对方向，以正X为前，负Y为左，正Y为右*/
 	uint8 PlatDir;
 
+	/**此多播代理用于在其上面的奖励Actor销毁*/
+	FPlatformDestory OnDestory;
+
+	/**/
+	FPlatformFall OnFall;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void PostInitializeComponents()override;
@@ -87,4 +96,6 @@ public:
 	FORCEINLINE float GetPlatformLength() { return PlatformLength; }
 
 	FORCEINLINE float GetPlatformWidth() { return PlatformWidth; }
+
+	FORCEINLINE UStaticMeshComponent* GetMesh() { return Platform; }
 };

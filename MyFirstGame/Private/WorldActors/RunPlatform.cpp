@@ -132,6 +132,9 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 		{
 			IsSlope = false;
 			Platform->SetSimulatePhysics(true);  //开启物理模拟
+			if (OnFall.IsBound())
+				OnFall.Broadcast(); 
+
 			if (CurChar)
 			{
 				//恢复玩家原本的移动速度,和动画播放速率
@@ -156,6 +159,10 @@ void ARunPlatform::DestroyActor()
 {
 	Super::Destroy();
 	GetWorldTimerManager().ClearTimer(DestoryHandle);      //清除定时器
+	if (OnDestory.IsBound())
+	{
+		OnDestory.Broadcast();   //开始执行代理（含有多个Actor)
+	}
 }
 
 void ARunPlatform::InSlope(float rate)

@@ -17,7 +17,7 @@ namespace EWeaponType
 	};
 }
 
-UENUM()
+UENUM(BlueprintType)
 namespace EPlatformDirection
 {
 	enum Type
@@ -25,5 +25,16 @@ namespace EPlatformDirection
 		Absolute_Left,
 		Absolute_Forward,
 		Absolute_Right
+	};
+}
+
+UENUM(BlueprintType)
+namespace EBonusType
+{
+	enum Type
+	{
+		Bonus_None,
+		Bonus_Score,
+		Bonus_Accelerate
 	};
 }

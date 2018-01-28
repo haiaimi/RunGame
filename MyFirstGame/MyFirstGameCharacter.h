@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "MyFirstGameCharacter.generated.h"
 
+class ABonus;
+
 UCLASS(config=Game)
 class AMyFirstGameCharacter : public ACharacter
 {
@@ -249,5 +251,12 @@ public:
 
 	/**第三人称中的射击容易偏移，这里就计算射击的角度，最大程度的与准心适配*/
 	FVector ComputeShootDir(float AdjustDistance);
+
+	///下面是玩家的奖励如分数、速度
+	void ApplyBonus(class ABonus* BonusActor);
+
+	void AddScore(int32 BonusScore);
+
+	void AddSpeed(int32 BonusSpeed);
 };
 

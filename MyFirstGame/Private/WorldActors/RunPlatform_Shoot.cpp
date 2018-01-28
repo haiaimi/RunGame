@@ -26,7 +26,6 @@ void ARunPlatform_Shoot::PostInitializeComponents()
 		FVector SpawnLocation = GetActorLocation() + SpawnDirX * GetPlatformLength() + SpawnDirY * GetPlatformWidth() / 2 + SpawnDirZ * GetPlatformWidth() / 2;
 
 		AimTrigger = GetWorld()->SpawnActor<ABoomActor>(Trigger, FTransform(FRotator::ZeroRotator, SpawnLocation));
-
 		//下面就生成具有物理模拟的爆炸物
 		InitiativeBoom = GetWorld()->SpawnActorDeferred<ABoomActor>(Trigger, FTransform(FRotator::ZeroRotator, GetActorLocation() + SpawnDirY * GetPlatformWidth() / 2));
 		if (InitiativeBoom)
@@ -40,8 +39,8 @@ void ARunPlatform_Shoot::PostInitializeComponents()
 void ARunPlatform_Shoot::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
 {
 	//如果爆炸就开始倾斜
-	if(AimTrigger)
-		if (AimTrigger->IsBoom)
+	if (AimTrigger)
+		if (AimTrigger->IsBoom&&InitiativeBoom != NULL)
 		{
 			IsSlope = true;
 			InitiativeBoom->StartSimulatePhysic();
