@@ -28,7 +28,7 @@ struct FWeaponData
 
 	/**此枪的类型*/
 	UPROPERTY(EditDefaultsOnly, Category = "Gun")
-	int8 WeaponType;
+	TEnumAsByte<EWeaponType::Type> WeaponType;
 
 	FWeaponData()
 	{
@@ -60,16 +60,26 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "GunData")
 	class UParticleSystem* FireEmitter;
 
+	/**闪电粒子*/
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GunData")
+	class UParticleSystem* BeamEmitter;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile")
+	TSubclassOf<class ABullet> ProjectileWeapon;
+
 protected:
 	virtual void PostInitializeComponents()override;
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction) override;
 
 	FORCEINLINE UParticleSystem* GetFireParticle() { return FireEmitter; }
 
 	FVector GetFireLocation();
 
 	FTransform GetFireTransform();
+
+	/**把开火函数放在枪类中*/
+	virtual void Fire(FVector FireDir);
 };

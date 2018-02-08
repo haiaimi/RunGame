@@ -7,12 +7,14 @@
 #define COLLISION_PROJECTILE   ECollisionChannel::ECC_GameTraceChannel1
 #define COLLISION_BOOMQUERY    ECollisionChannel::ECC_GameTraceChannel2
 
+UENUM(BlueprintType)
 namespace EWeaponType
 {
 	enum Type
 	{
 		Weapon_Instant,
 		Weapon_Projectile,
+		Weapon_Beam,
 		Weapon_Num
 	};
 }

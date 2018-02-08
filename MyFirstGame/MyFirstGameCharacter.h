@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "MyFirstGame.h"
 #include "MyFirstGameCharacter.generated.h"
 
 class ABonus;
@@ -43,6 +44,12 @@ public:
 	/**放武器的插槽*/
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	FName WeaponSocket;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FName FirstWeaponSocket;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FName SecondWeaponSocket;
 
 	class AWeapon_Gun* CurWeapon;
 
@@ -113,7 +120,7 @@ public:
 	uint8 IsTargeting : 1;
 
 	/**玩家当前武器*/
-	uint8 CurrentWeapon;
+	TEnumAsByte<EWeaponType::Type> CurrentWeaponType;
 
 	/**玩家当前是否在射击*/
 	uint8 IsShooting : 1;
@@ -234,7 +241,7 @@ public:
 	bool PlayerIsTargeting() { return IsTargeting; }
 
 	/**发射抛射物子弹*/
-	void FireProjectile();
+	void Fire();
 
 	/**选则武器*/
 	void NextWeapon();
@@ -243,11 +250,14 @@ public:
 
 	void EquipWeapon(AWeapon_Gun* CurWeapon);
 
+	/*把武器收起放到背后*/
+	void PackupWeapon(AWeapon_Gun* PickupWeapon);
+
 	///下面是动画相关
 	/**播放蒙太奇动画，返回动画时间*/
 	float PlayAnim(float rate, UAnimMontage* Anim);
 
-	float ComputeSuitRate(float CurTimePerFrame,int8 CurShootSpeed);
+	float ComputeSuitRate(int8 CurShootSpeed);
 
 	/**第三人称中的射击容易偏移，这里就计算射击的角度，最大程度的与准心适配*/
 	FVector ComputeShootDir(float AdjustDistance);
@@ -258,5 +268,6 @@ public:
 	void AddScore(int32 BonusScore);
 
 	void AddSpeed(int32 BonusSpeed);
+
 };
 

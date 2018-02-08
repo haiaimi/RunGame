@@ -8,6 +8,9 @@
 #include "Classes/GameFramework/Pawn.h"
 #include "Engine/Engine.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Weapon_Gun.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 
 // Sets default values
 ABullet::ABullet(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitializer)
@@ -39,6 +42,7 @@ ABullet::ABullet(const FObjectInitializer& ObjectInitializer) :Super(ObjectIniti
 	ProjectileComponent->bRotationFollowsVelocity = true;
 	ProjectileComponent->ProjectileGravityScale = 0.5f;
 
+	//CurWeaponType = EWeaponType::Weapon_Projectile;
 	PrimaryActorTick.TickGroup = TG_PrePhysics;     //在物理模拟之前所有的任务要被执行
 }
 
@@ -47,7 +51,7 @@ void ABullet::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	SetLifeSpan(5.f);
+	SetLifeSpan(LiveTime);
 	ProjectileComponent->OnProjectileStop.AddDynamic(this, &ABullet::OnImpact);
 	if(Instigator)
 	{
@@ -55,12 +59,31 @@ void ABullet::PostInitializeComponents()
 	}
 	
 	OwnerController = GetInstigatorController();
+
+	AWeapon_Gun* Temp = Cast<AWeapon_Gun>(GetOwner());
+	if (Temp != NULL)
+	{
+		CurWeaponType = Temp->WeaponData.WeaponType;
+		OwnerWeapon = Temp;
+		if (CurWeaponType == EWeaponType::Weapon_Beam && OwnerWeapon->BeamEmitter != NULL)
+		{
+			SpawnedParticle = UGameplayStatics::SpawnEmitterAttached(OwnerWeapon->BeamEmitter, BulletMesh, TEXT("ParticleSocket"));    //生成闪电粒子
+			SpawnedParticle->SetWorldScale3D(FVector(5.f, 5.f, 5.f));
+			SpawnedParticle->SetRelativeRotation(FRotator(0.f, 0.f, 90.f));
+		}
+	}
 }
 
 // Called every frame
 void ABullet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (OwnerWeapon&&CurWeaponType == EWeaponType::Type::Weapon_Beam) //只有闪电枪才会更新
+	{
+		SpawnedParticle->SetBeamTargetPoint(0, OwnerWeapon->GetFireLocation(), 0);
+		//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, TEXT("Beam is in Update"));
+	}
 }
 
 void ABullet::OnImpact(const FHitResult& HitResult)
@@ -80,3 +103,7 @@ void ABullet::InitBulletVelocity(const FVector& ShootDir)
 	ProjectileComponent->Velocity = ProjectileComponent->InitialSpeed*ShootDir;
 }
 
+void ABullet::ChangeParticleSourceToPlatform(FVector SourcePoint)
+{
+	SpawnedParticle->SetBeamSourcePoint(0, SourcePoint, 0);
+}

@@ -45,13 +45,13 @@ class MYFIRSTGAME_API ABonus : public AActor
 
 public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (AllowPrivateAccess = "true"), Category = "Bonus")
-		class UStaticMeshComponent* BonusShape;
+	class UStaticMeshComponent* BonusShape;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bonus")
-		class UBoxComponent* BonusQuery;
+	class UBoxComponent* BonusQuery;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bonus")
-		struct FBonusData BonusData;
+	struct FBonusData BonusData;
 
 protected:
 	// Called when the game starts or when spawned

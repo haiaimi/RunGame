@@ -9,7 +9,7 @@
 
 ARunPlatform_Shoot::ARunPlatform_Shoot(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitializer)
 {
-	IsShootToSlope = true;
+	NoPlayerToSlope = true;
 	SlopeAngle = 30.f; 
 }
 
@@ -26,6 +26,7 @@ void ARunPlatform_Shoot::PostInitializeComponents()
 		FVector SpawnLocation = GetActorLocation() + SpawnDirX * GetPlatformLength() + SpawnDirY * GetPlatformWidth() / 2 + SpawnDirZ * GetPlatformWidth() / 2;
 
 		AimTrigger = GetWorld()->SpawnActor<ABoomActor>(Trigger, FTransform(FRotator::ZeroRotator, SpawnLocation));
+		AimTrigger->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 		//下面就生成具有物理模拟的爆炸物
 		InitiativeBoom = GetWorld()->SpawnActorDeferred<ABoomActor>(Trigger, FTransform(FRotator::ZeroRotator, GetActorLocation() + SpawnDirY * GetPlatformWidth() / 2));
 		if (InitiativeBoom)
@@ -33,14 +34,15 @@ void ARunPlatform_Shoot::PostInitializeComponents()
 			InitiativeBoom->InitiativeToBoom = true;
 			UGameplayStatics::FinishSpawningActor(InitiativeBoom, FTransform(FRotator::ZeroRotator, GetActorLocation() + SpawnDirX * 20 + SpawnDirY * GetPlatformWidth() / 2 + SpawnDirZ * -20));
 		}
+		InitiativeBoom->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 	}
 }
 
 void ARunPlatform_Shoot::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
 {
 	//如果爆炸就开始倾斜
-	if (AimTrigger)
-		if (AimTrigger->IsBoom&&InitiativeBoom != NULL)
+	if (AimTrigger != NULL)
+		if (AimTrigger->IsBoom && !AimTrigger->CanBoom && InitiativeBoom != NULL)   //CanBoom是用来确定BoomActor是否已经炸过
 		{
 			IsSlope = true;
 			InitiativeBoom->StartSimulatePhysic();

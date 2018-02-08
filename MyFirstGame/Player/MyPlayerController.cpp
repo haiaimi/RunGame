@@ -5,6 +5,7 @@
 #include "EngineUtils.h"
 #include "RunPlatform.h"
 #include "RunPlatform_Shoot.h"
+#include "RunPlatform_Beam.h"
 #include "ConstructorHelpers.h"
 #include "Engine/Engine.h"
 #include "MyFirstGame.h"
@@ -17,10 +18,17 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	PlayerCameraManagerClass = AMyPlayerCameraManager::StaticClass();
 	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat(TEXT("/Game/Blueprint/RunPlatform_BP"));
 	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Shoot(TEXT("/Game/Blueprint/RunPlatform_Shoot_BP"));
+	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Beam(TEXT("/Game/Blueprint/RunPlatform_Beam_BP"));
 	static ConstructorHelpers::FClassFinder<ABonus> FBonus_Score(TEXT("/Game/Blueprint/Bonus/Bonus_Score_BP"));
+
 	SpawnPlatform = FSpawnPlat.Class;
 	SpawnPlatform_Shoot = FSpawnPlat_Shoot.Class;
+	SpawnPlatform_Beam = FSpawnPlat_Beam.Class;
 	Bonus_Score = FBonus_Score.Class;
+
+	CurrentWeaponType = EWeaponType::Weapon_Instant;
+	InConnectedToPlat = false;
+	CurConnectedPlat = NULL;
 }
 
 
@@ -62,31 +70,60 @@ void AMyPlayerController::PostInitializeComponents()
 			PlatformArray[i - 1]->NextPlatform = PlatformArray[i];
 		}
 	}
+
+	if (SpawnPlatform_Beam != NULL)
+		GEngine->AddOnScreenDebugMessage(1, 5, FColor::Black, TEXT("找到Beam Platform"));
 }
 
 void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
-	int32 Random_Shoot = FMath::Rand() % 100;  //生成随机数，用来决定是否生成触发平台
-	int32 Random_Bonus_Score = FMath::Rand() % 100;
+
 	ARunPlatform* AddPlatform;   //指向即将生成的平台
-
-	if (CurPlatform != TempPlatform && CurPlatform != NULL)   //玩家所在平台发生变化
+	if (CurPlatform != TempPlatform && CurPlatform != NULL && !PlatformArray.Last()->MoveToNew)   //玩家所在平台发生变化，并且最后一个平台不在移动时
 	{
-		if (Random_Shoot >= 0 && Random_Shoot <= 24 && !Cast <ARunPlatform_Shoot>(PlatformArray.Last()))   //30%的几率生成触发型平台,并且前一个平台不是射击型
-			AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Shoot>(SpawnPlatform_Shoot, GetSpawnTransf_Shoot(PlatformArray.Last()));
+		int32 Random_Shoot = FMath::Rand() % 100;  //生成随机数，用来决定是否生成触发平台
+		int32 Random_Bonus_Score = FMath::Rand() % 100;
+		int32 Random_Beam = FMath::Rand() % 100;    //生成随机数，决定是否生成需要闪电枪触发的平台
+
+		if (Random_Beam >= 0 && Random_Beam < 20 && !Cast<ARunPlatform_Shoot>(PlatformArray.Last()) && !Cast<ARunPlatform_Beam>(PlatformArray.Last()))  //5%的几率生成闪电平台，并且上一个平台不是射击触发型和闪电类型
+		{
+			AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Beam>(SpawnPlatform_Beam, GetSpawnTransf_Beam(PlatformArray.Last()));
+			PlatformArray.Last()->NoPlayerToSlope = true;   //该平台的上一个平台不进行旋转
+			PlatformArray.Last()->SlopeAngle = 0.f;
+		}
 		else
-			AddPlatform = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray.Last()));
+		{
+			if (Random_Shoot >= 0 && Random_Shoot < 25 && !Cast <ARunPlatform_Shoot>(PlatformArray.Last()) && !Cast<ARunPlatform_Beam>(PlatformArray.Last()))   //25%的几率生成触发型平台,并且前一个平台不是射击型和闪电型
+				AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Shoot>(SpawnPlatform_Shoot, GetSpawnTransf_Shoot(PlatformArray.Last()));
+			else
+				AddPlatform = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray.Last()));
+		}
 
-		AddPlatform->PlatDir = AbsoluteDir;
-		PlatformArray.Last()->NextPlatform = AddPlatform;  //指定下一个平台
-		PlatformArray.Push(AddPlatform);
-		TempPlatform = CurPlatform;   //
+		if (AddPlatform)
+		{
+			AddPlatform->PlatDir = AbsoluteDir;
+			PlatformArray.Last()->NextPlatform = AddPlatform;  //指定下一个平台
+			PlatformArray.Push(AddPlatform);
+			PlatformArray.Remove(TempPlatform);  //移除已经走过的平台
+			TempPlatform = CurPlatform;   //
 
-		if (Random_Bonus_Score >= 0 && Random_Bonus_Score < 50)
-			SpawnBonus_Score(AddPlatform);   //50的几率生成Bonus Score
+			if (Random_Bonus_Score >= 0 && Random_Bonus_Score < 30)
+				SpawnBonus_Score(AddPlatform);   //30的几率生成Bonus Score
+		}
 	}
 }
+
+void AMyPlayerController::Destroyed()
+{
+	Super::Destroyed();
+
+	int32 ArrayNum = PlatformArray.Num();
+	//删除平台数组释放空间
+	//for (int32 i = 0; i < ArrayNum; i++)
+		//PlatformArray.RemoveAt(ArrayNum);
+}
+
 
 FTransform AMyPlayerController::GetSpawnTransf_Shoot(ARunPlatform* PrePlatform)
 {
@@ -94,7 +131,7 @@ FTransform AMyPlayerController::GetSpawnTransf_Shoot(ARunPlatform* PrePlatform)
 	if (PrePlatform)
 	{
 		AbsoluteDir = PrePlatform->PlatDir;    //该平台只生成在相对前面的平台的前方
-		FVector CurLocation = PrePlatform->GetActorLocation();
+		FVector CurLocation = PrePlatform->SpawnLocation;
 		FRotator CurRotation = PrePlatform->GetActorRotation();
 
 		FMatrix RotatMatrix = FRotationMatrix(CurRotation);
@@ -113,7 +150,7 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 	FTransform TempTrans;
 	if (PrePlatform)
 	{
-		FVector CurLocation = PrePlatform->GetActorLocation();
+		FVector CurLocation = PrePlatform->SpawnLocation;
 		FRotator CurRotation = PrePlatform->GetActorRotation();
 
 		FMatrix RotatMatrix = FRotationMatrix(CurRotation);
@@ -124,9 +161,9 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 		FRotator SpawnRotation;
 		uint8 PreDir = PrePlatform->PlatDir;
 
-		uint8 Dir = 0;
+		uint8 Dir = 0;    //这是相对方向
 		
-		if(PreDir==EPlatformDirection::Absolute_Forward)
+		if(PreDir == EPlatformDirection::Absolute_Forward)
 			Dir = FMath::Rand() % 3;  //随机三个方向
 
 		if (PreDir == EPlatformDirection::Absolute_Left)
@@ -141,6 +178,11 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 			Dir = (Dir == false) ? 0 : 1;
 		}
 			
+		if (Cast<ARunPlatform_Beam>(PrePlatform) != NULL)     //如果前一个平台是闪电平台
+		{
+			Dir = 1;  //只生成在前一个方块的前方
+		}
+
 		switch (Dir)
 		{
 			case 0:
@@ -161,6 +203,7 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 				TempTrans = FTransform(SpawnRotation, SpawnLocation);
 				break;
 		}
+
 		/**下面就是得出下一个生成平台的绝对世界方向*/
 		if (PrePlatform->PlatDir == EPlatformDirection::Absolute_Forward)
 			AbsoluteDir = Dir;
@@ -174,6 +217,24 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 	return TempTrans;
 }
 
+FTransform AMyPlayerController::GetSpawnTransf_Beam(ARunPlatform* PrePlatform)
+{
+	FTransform TempTrans;
+	if (PrePlatform)
+	{
+		AbsoluteDir = PrePlatform->PlatDir;    //该平台只生成在相对前面的平台的前方
+		FVector CurLocation = PrePlatform->SpawnLocation;
+		FRotator CurRotation = PrePlatform->GetActorRotation();
+
+		FMatrix RotatMatrix = FRotationMatrix(CurRotation);
+		FVector ForwardDir = -RotatMatrix.GetUnitAxis(EAxis::X);
+
+		FVector SpawnLocation = CurLocation + ForwardDir * PrePlatform->GetPlatformLength() * 3;
+		TempTrans = FTransform(CurRotation, SpawnLocation);
+	}
+	return TempTrans;
+}
+
 void AMyPlayerController::SpawnBonus_Score(ARunPlatform* const CurPlatform)
 {
 	if (CurPlatform && Bonus_Score)
@@ -183,8 +244,26 @@ void AMyPlayerController::SpawnBonus_Score(ARunPlatform* const CurPlatform)
 		FVector SpawnDirY = Orient.GetUnitAxis(EAxis::Y);
 		FVector SpawnDirZ = Orient.GetUnitAxis(EAxis::Z);
 
-		FVector FirstSpawnLoc = CurPlatform->GetActorLocation() + SpawnDirY * CurPlatform->GetPlatformWidth() / 2 + 50 * SpawnDirX + SpawnDirZ * 70;
-		int32 BonusNum = CurPlatform->GetPlatformLength() / 100.f;
+		FVector FirstSpawnLoc;
+		int32 ScorePosOnPlat = FMath::Rand() % 3;     //0为左，1为中，2为右
+		//下面就是设置三个位置的Score
+		if (ScorePosOnPlat == 0)
+			FirstSpawnLoc = CurPlatform->GetActorLocation() + SpawnDirY * (CurPlatform->GetPlatformWidth() - 20) + 30 * SpawnDirX + SpawnDirZ * 70;
+		else if (ScorePosOnPlat == 1)
+			FirstSpawnLoc = CurPlatform->GetActorLocation() + SpawnDirY * CurPlatform->GetPlatformWidth() / 2 + 30 * SpawnDirX + SpawnDirZ * 70;
+		else if (ScorePosOnPlat == 2)
+			FirstSpawnLoc = CurPlatform->GetActorLocation() + SpawnDirY * 20 + 30 * SpawnDirX + SpawnDirZ * 70;
+
+		int32 CurPlatformIndex, BonusNum = 0;
+
+		if (PlatformArray.Find(CurPlatform, CurPlatformIndex))
+		{
+			if (CurPlatform->PlatDir == PlatformArray[CurPlatformIndex - 1]->PlatDir)
+				BonusNum = CurPlatform->GetPlatformLength() / 100.f;
+			else
+				BonusNum = CurPlatform->GetPlatformLength() / 100.f - 1;
+		}
+
 		for (int32 i = 0; i < BonusNum; i++)
 		{
 			ABonus* SpawnBonus = GetWorld()->SpawnActor<ABonus>(Bonus_Score, FTransform(CurPlatform->GetActorRotation(), FirstSpawnLoc + 100 * i * SpawnDirX));
@@ -193,5 +272,15 @@ void AMyPlayerController::SpawnBonus_Score(ARunPlatform* const CurPlatform)
 			CurPlatform->OnDestory.AddUObject(SpawnBonus, &ABonus::DestroyActor);
 			CurPlatform->OnFall.AddUObject(SpawnBonus, &ABonus::StartFall);
 		}
+	}
+}
+
+void AMyPlayerController::ChangeWeaponType(EWeaponType::Type WeaponType)
+{
+	CurrentWeaponType = WeaponType;
+	if (CurrentWeaponType != EWeaponType::Weapon_Beam && InConnectedToPlat && CurConnectedPlat != NULL)
+	{
+		CurConnectedPlat->DeActiveBeam();
+		CurConnectedPlat = NULL;
 	}
 }

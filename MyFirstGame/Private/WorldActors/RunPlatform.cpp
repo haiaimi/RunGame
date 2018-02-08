@@ -11,6 +11,7 @@
 #include "TimerManager.h"
 #include "Engine/Engine.h"
 #include "MyFirstGame.h"
+#include "RunPlatform_Shoot.h"
 
 // Sets default values
 ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitializer)
@@ -35,10 +36,11 @@ ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(O
 
 	IsSlope = false;    //默认是不倾斜的
 	SlopeAngle = 60.f;
-	IsShootToSlope = false; //默认是正常平台模式
+	NoPlayerToSlope = false; //默认是正常平台模式
 
 	SafeStayTime = 0.3f;  //默认安全时间
 	PlatDir = EPlatformDirection::Absolute_Forward;  //默认向前
+	MoveToNew = false;
 }
 
 // Called when the game starts or when spawned
@@ -62,6 +64,7 @@ void ARunPlatform::PostInitializeComponents()
 	PlatformWidth = 2 * YScale * PlatformSize.Y;
 	//获取倾斜时目标角度
 	DstRotation = GetActorRotation() - FRotator(SlopeAngle, 0.f, 0.f);
+	SpawnLocation = GetActorLocation();
 }
 
 // Called every frame
@@ -78,7 +81,7 @@ void ARunPlatform::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 			IsSlope = false;
 		
 		//下面是更新玩家的最大移动速度和动画比例，只有在是普通模式下才执行
-		if (!IsShootToSlope)
+		if (!NoPlayerToSlope)
 		{
 			if (SafeStayTime <= 0)
 				SafeStayTime = 0.f;  //安全时间已过
@@ -89,13 +92,23 @@ void ARunPlatform::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 			InSlope(rate);
 		}
 	}
-	if (CurChar != NULL && IsShootToSlope) //玩家在平台上（射击触发模式）
+	if (CurChar != NULL && NoPlayerToSlope) //玩家在平台上（射击触发模式）
 	{
 		if (SafeStayTime <= 0)
 			SafeStayTime = 0.f;  //安全时间已过
 		else
 			SafeStayTime -= DeltaTime;
 	}
+
+	MoveTick(DeltaTime);
+}
+
+
+void ARunPlatform::BeginPlay()
+{
+	Super::BeginPlay();
+
+	//WorldPlayerController = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
 }
 
 void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
@@ -107,7 +120,7 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		MaxRunSpeed = CurChar->MaxRunSpeed;
 
 		/*下面进行控制人物移动速度，来模拟人上坡的减速，注意配合动画*/
-		if (!IsShootToSlope)
+		if (!NoPlayerToSlope)
 		{
 			IsSlope = true;      //随着平台倾斜逐渐减低速度
 		}
@@ -135,7 +148,7 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 			if (OnFall.IsBound())
 				OnFall.Broadcast(); 
 
-			if (CurChar)
+			if (CurChar && Cast<ARunPlatform_Shoot>(this->NextPlatform) == NULL)  //只有下一个平台不是Shoot平台才会恢复移速
 			{
 				//恢复玩家原本的移动速度,和动画播放速率
 				CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
@@ -148,7 +161,9 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 			if (Cast<AMyPlayerController>(CurChar->Controller))
 			{
 				AMyPlayerController* MPC = Cast<AMyPlayerController>(CurChar->Controller);
-				MPC->CurPlatform = NULL;     //玩家当前所在平台设为空
+				if (NextPlatform != NULL)
+					if (MPC->CurPlatform != NextPlatform)
+						MPC->CurPlatform = NULL;     //玩家当前所在平台设为空
 			}
 			GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4秒后删除该平台，释放内存
 		}
@@ -172,5 +187,31 @@ void ARunPlatform::InSlope(float rate)
 		CurChar->RunRate = 1.f - 0.4*rate;   //动作的最低速率为原来的0.6，太低会导致不连贯
 		CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed - MaxAcclerateSpeed * 0.4f * rate;
 		CurChar->CurMaxRunSpeed = MaxRunSpeed - MaxRunSpeed * 0.4f * rate;
+	}
+}
+
+void ARunPlatform::MoveToNewPos(FVector DeltaDistance)
+{
+	MoveToNew = true;
+	DeltaLoc = DeltaDistance;   //设置移动的相对距离
+}
+
+void ARunPlatform::MoveTick(float DeltaTime)
+{
+	if (MoveToNew)
+	{
+		FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
+		SetActorLocation(NewPos);
+
+			if (NextPlatform != NULL)
+				if (!NextPlatform->MoveToNew)     //只有下一个平台没有移动时才执行下面操作
+					if ((NewPos - SpawnLocation).Size() > DeltaLoc.Size() / 2)     //移动超过相差距离一半时，就开始移动下一个平台
+						NextPlatform->MoveToNewPos(DeltaLoc);
+
+		if (NewPos == SpawnLocation + DeltaLoc)
+		{
+			MoveToNew = false;
+			SpawnLocation = NewPos;
+		}
 	}
 }

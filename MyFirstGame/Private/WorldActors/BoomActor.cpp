@@ -52,9 +52,9 @@ void ABoomActor::BeginPlay()
 }
 
 // Called every frame
-void ABoomActor::Tick(float DeltaTime)
+void ABoomActor::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
 {
-	Super::Tick(DeltaTime);
+	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 }
 
 void ABoomActor::Boom()
@@ -67,7 +67,6 @@ void ABoomActor::Boom()
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BoomEmitter, GetActorTransform());
 	}
 	WhatToBoom->SetVisibility(false);
-	
 	if (GetWorld())
 	{
 		GetWorldTimerManager().SetTimer(SpawnParticle, this, &ABoomActor::DestroyActor, 2.f, false);
@@ -92,7 +91,8 @@ void ABoomActor::StopForce()
 
 void ABoomActor::StartSimulatePhysic()
 {
-	WhatToBoom->SetSimulatePhysics(true);
+	if (WhatToBoom != NULL)
+		WhatToBoom->SetSimulatePhysics(true);
 }
 
 void ABoomActor::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)

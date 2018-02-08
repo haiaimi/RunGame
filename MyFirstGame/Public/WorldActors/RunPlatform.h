@@ -42,8 +42,8 @@ public:
 	/**倾斜的角度，会有多种情况的倾斜*/
 	float SlopeAngle;
 
-	/**是否是通过射击使得平台旋转的模式*/
-	uint8 IsShootToSlope : 1;
+	/**是否不需要玩家旋转*/
+	uint8 NoPlayerToSlope : 1;
 
 	/**倾斜的最终角度*/
 	FRotator DstRotation;
@@ -61,14 +61,22 @@ public:
 	/**玩家在平台上活动的安全时间，不会无意跳出碰撞体后造成平台坠落*/
 	float SafeStayTime;
 
-	/*平台的绝对方向，以正X为前，负Y为左，正Y为右*/
+	/**平台的绝对方向，以正X为前，负Y为左，正Y为右*/
 	uint8 PlatDir;
 
 	/**此多播代理用于在其上面的奖励Actor销毁*/
 	FPlatformDestory OnDestory;
 
-	/**/
+	/***/
 	FPlatformFall OnFall;
+
+	/**初始生成平台的位置*/
+	FVector SpawnLocation;
+
+	uint8 MoveToNew : 1;
+
+	/**位移的相对距离*/
+	FVector DeltaLoc;
 
 protected:
 	// Called when the game starts or when spawned
@@ -78,10 +86,12 @@ public:
 	// Called every frame
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction) override;
 
+	virtual void BeginPlay()override;
+
 public:
 	/**玩家进入当前Platform执行的操作*/
 	UFUNCTION()
-	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+	virtual void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 	
 	/**玩家离开当前平台所执行的操作，如决定接下来生成的Platform以及删除当前Platform*/
 	UFUNCTION()
@@ -98,4 +108,9 @@ public:
 	FORCEINLINE float GetPlatformWidth() { return PlatformWidth; }
 
 	FORCEINLINE UStaticMeshComponent* GetMesh() { return Platform; }
+
+	/**移向新的位置*/
+	virtual void MoveToNewPos(FVector DeltaDistance);
+
+	virtual void MoveTick(float DeltaTime);
 };

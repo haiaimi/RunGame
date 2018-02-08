@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "MyFirstGame.h"
 #include "MyPlayerController.generated.h"
 
+class ARunPlatform_Beam;
 class ARunPlatform;
 class ABonus;
 /**
@@ -21,12 +23,17 @@ public:
 
 	/***/
 	ARunPlatform* TempPlatform;
-		
+	
+	/**当前连接的闪电平台*/
+	ARunPlatform_Beam* CurConnectedPlat;
+
 	/**要生成的平台*/
 	TSubclassOf<ARunPlatform> SpawnPlatform;
 
 	/**需要触发的平台*/
 	TSubclassOf<ARunPlatform> SpawnPlatform_Shoot;
+
+	TSubclassOf<ARunPlatform> SpawnPlatform_Beam;
 
 	/*分数奖励的蓝图对象*/
 	TSubclassOf<ABonus> Bonus_Score;
@@ -36,9 +43,16 @@ public:
 
 	/**生成的平台中的绝对方向信息*/
 	uint8 AbsoluteDir;
+	
+	TEnumAsByte<EWeaponType::Type> CurrentWeaponType;
+
+	/**当前玩家是否连接着平台*/
+	uint8 InConnectedToPlat : 1;
 
 public:
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction);
+
+	virtual void Destroyed()override;
 
 protected:
 	virtual void SetupInputComponent()override;
@@ -52,7 +66,12 @@ public:
 	/**根据上个一个平台（相对于数组里的）计算生成平台的位置*/
 	FTransform GetRandomSpawnTransf(ARunPlatform* PrePlatform);
 
+	/**获取生成闪电平台的位置*/
+	FTransform GetSpawnTransf_Beam(ARunPlatform* PrePlatform);
+
 	/**在当前平台上生成Bonus*/
 	void SpawnBonus_Score(ARunPlatform* CurPlatform);
+
+	void ChangeWeaponType(EWeaponType::Type WeaponType);
 
 };

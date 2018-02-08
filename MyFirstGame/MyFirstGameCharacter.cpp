@@ -60,14 +60,14 @@ AMyFirstGameCharacter::AMyFirstGameCharacter(const FObjectInitializer& ObjectIni
 	CameraBoom->SetRelativeRotation(FRotator(45.0f, 0.0f, 0.0f));
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
-	CurrentWeapon = EWeaponType::Type::Weapon_Instant;
+	CurrentWeaponType = EWeaponType::Type::Weapon_Instant;
 	ShootInternal = 0.f;
 	RunRate = 1.f; //默认加速动画播放速率
 
 	//默认玩家的移动速度
 	MaxAcclerateSpeed = 850.f;
 	MaxRunSpeed = 600.f;
-
+	
 	// Create a follow camera
     //FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	//FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
@@ -94,7 +94,7 @@ void AMyFirstGameCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AMyFirstGameCharacter::StopShoot);
 	PlayerInputComponent->BindAction("Targeting", IE_Pressed, this, &AMyFirstGameCharacter::Targeting);
 	PlayerInputComponent->BindAction("Targeting", IE_Released, this, &AMyFirstGameCharacter::StopTargeting);
-	PlayerInputComponent->BindAction("ShootProjectile", IE_Released, this, &AMyFirstGameCharacter::FireProjectile);
+	PlayerInputComponent->BindAction("ShootProjectile", IE_Released, this, &AMyFirstGameCharacter::Fire);
 	PlayerInputComponent->BindAction("NextWeapon", IE_Released, this, &AMyFirstGameCharacter::NextWeapon);
 	PlayerInputComponent->BindAction("PreWeapon", IE_Released, this, &AMyFirstGameCharacter::PreWeapon);
 	PlayerInputComponent->BindAction("Accelerate", IE_Pressed, this, &AMyFirstGameCharacter::StartAccelerate);
@@ -144,6 +144,9 @@ void AMyFirstGameCharacter::PostInitializeComponents()
 
 		CurWeapon = InterInventory[0];
 		EquipWeapon(CurWeapon);
+
+		if (InterInventory[1] != NULL)
+			PackupWeapon(InterInventory[1]);   
 	}
 }
 
@@ -154,12 +157,12 @@ void AMyFirstGameCharacter::OnResetVR()
 
 void AMyFirstGameCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		Jump();
+	Jump();
 }
 
 void AMyFirstGameCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		StopJumping();
+	StopJumping();
 }
 
 void AMyFirstGameCharacter::TurnAtRate(float Rate)
@@ -230,16 +233,8 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 		if (IsShooting)
 		{	
 			SetActorRotation(FRotator(0.f, GetControlRotation().Yaw, 0.f));     //人物射击时，把人物身体定向设置为控制器定向，即准心所指方向
-			if (CurrentWeapon == EWeaponType::Weapon_Instant)
-			{
-				ShootSpeed = 8;       //8发每秒
-			}
-			else if (CurrentWeapon == EWeaponType::Weapon_Projectile)
-			{
-				ShootSpeed = 6;       //6发每秒
-			}
 
-			float AnimRate = ComputeSuitRate(DeltaTime, ShootSpeed);
+			float AnimRate = ComputeSuitRate(ShootSpeed);
 
 			if (ShootInternal == 0)
 			{
@@ -410,26 +405,7 @@ void AMyFirstGameCharacter::Shoot(float AimRate)
 {
 	//先播放射击动画
 	PlayAnim(AimRate, ShootAim);
-
-	if (CurrentWeapon == EWeaponType::Weapon_Instant)
-	{
-		FHitResult Result = QueryCrossHair(200000.f);
-
-		if (Cast<ABoomActor>(Result.GetActor()))
-		{
-			//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, FString::Printf(TEXT("检测到目标！")), true);
-			ABoomActor* Aim = Cast<ABoomActor>(Result.GetActor());         //如果检测到目标就爆炸
-			if (Aim->CanBoom)
-			{
-				Aim->Boom();
-			}
-		}
-	}
-	else if (CurrentWeapon == EWeaponType::Weapon_Projectile)
-	{
-		FireProjectile();
-	}
-	
+	Fire();
 }
 
 FHitResult AMyFirstGameCharacter::QueryCrossHair(float Distance)
@@ -485,7 +461,7 @@ void AMyFirstGameCharacter::StopTargeting()
 	IsTargeting = false;
 }
 
-void AMyFirstGameCharacter::FireProjectile()
+void AMyFirstGameCharacter::Fire()
 {
 	FVector ShootDir;
 	FHitResult Result = QueryCrossHair(10000.f);
@@ -499,46 +475,19 @@ void AMyFirstGameCharacter::FireProjectile()
 		//ShootDir = (Controller->GetControlRotation() + FRotator(2.f, 0.f, 0.f)).Vector();      //Pitch旋转轴提高2度，以适配准心位置，这个方法实测不怎不行，偏移不好控制
 		ShootDir = ComputeShootDir(50000.f);     //计算合适的射击角度，这里设置位500米调整距离
 	}
-	FTransform SpawnTrans(FRotator::ZeroRotator, CurWeapon->GetFireLocation());
-
-	//第一种方法
-	ABullet* SpawnBullet = GetWorld()->SpawnActorDeferred<ABullet>(ProjectileWeapon, SpawnTrans, this, this);
-	if (SpawnBullet)
-	{
-		SpawnBullet->Instigator = this;
-		SpawnBullet->InitBulletVelocity(ShootDir);
-
-		UGameplayStatics::FinishSpawningActor(SpawnBullet, SpawnTrans);
-	}
-
-	//释放开火特效
-	if (CurWeapon->GetFireParticle())
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CurWeapon->GetFireParticle(), CurWeapon->GetFireLocation());
-	}
-	
-	//第二种方法
-	/*ABullet* SpawnBullet = Cast<ABullet>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, ProjectileWeapon, SpawnTrans));
-	if (SpawnBullet)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, "You have Shoot!");
-		SpawnBullet->Instigator = this;
-		SpawnBullet->InitBulletVelocity(ShootDir);
-
-		UGameplayStatics::FinishSpawningActor(SpawnBullet, SpawnTrans);
-	}*/
+	CurWeapon->Fire(ShootDir);
 }
 
 void AMyFirstGameCharacter::NextWeapon()
 {
-	CurrentWeapon = (CurrentWeapon + 1) % EWeaponType::Type::Weapon_Num;
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, CurrentWeapon == EWeaponType::Weapon_Instant ? "Current Weapon Is Weapon_Instant" : "Current Weapon Is Weapon_Projectile");
+	int32 NextWeaponIndex = (InterInventory.Find(CurWeapon) + 1) % InterInventory.Num();
+	EquipWeapon(InterInventory[NextWeaponIndex]); //装备下一个武器
 }
 
 void AMyFirstGameCharacter::PreWeapon()
 {
-	CurrentWeapon = FMath::Abs((CurrentWeapon - 1)) % EWeaponType::Type::Weapon_Num;
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, CurrentWeapon == EWeaponType::Weapon_Instant ? "Current Weapon Is Weapon_Instant" : "Current Weapon Is Weapon_Projectile");
+	int32 PreWeaponIndex = InterInventory.Find(CurWeapon) == 0 ? (InterInventory.Num() - 1) : (InterInventory.Find(CurWeapon) - 1) % InterInventory.Num();
+	EquipWeapon(InterInventory[PreWeaponIndex]); //装备下一个武器
 }
 
 float AMyFirstGameCharacter::PlayAnim(float rate, UAnimMontage* Anim)
@@ -551,13 +500,19 @@ float AMyFirstGameCharacter::PlayAnim(float rate, UAnimMontage* Anim)
 	return 0;
 }
 
-float AMyFirstGameCharacter::ComputeSuitRate(float CurTimePerFrame, int8 CurShootSpeed)
+float AMyFirstGameCharacter::ComputeSuitRate(int8 CurShootSpeed)
 {
-	float PerShootAnimTime = 6 * CurTimePerFrame;     //每发动画的时间
-	float CurPerShootTime = 1.f / CurShootSpeed;          //当前射速情况下，发射子弹间隔时间
-	float rate = PerShootAnimTime / CurPerShootTime;
+	
+	if (CurrentWeaponType == EWeaponType::Weapon_Beam)   //如果是闪电枪就按正常动画频率
+		return 1.f;
 
-	return rate;
+	else if (CurrentWeaponType == EWeaponType::Weapon_Projectile)
+	{
+		float PerShootAnimTime = 0.233f;    //每发动画的时间
+		float CurPerShootTime = 1.f / CurShootSpeed;          //当前射速情况下，发射子弹间隔时间
+		return PerShootAnimTime / CurPerShootTime;
+	}
+	return 1.f;
 }
 
 void AMyFirstGameCharacter::ToggleCrounchStat()
@@ -594,11 +549,37 @@ void AMyFirstGameCharacter::ToggleCrounchStat()
 	}
 }
 
-void AMyFirstGameCharacter::EquipWeapon(AWeapon_Gun* CurWeapon)
+void AMyFirstGameCharacter::EquipWeapon(AWeapon_Gun* curWeapon)
 {
-	this->CurWeapon = CurWeapon;
+	//设置当前武器类型，及射速
+	CurrentWeaponType = curWeapon->WeaponData.WeaponType;
+	AMyPlayerController* MPC = Cast<AMyPlayerController>(Controller);
+	if (MPC != NULL)
+		MPC->ChangeWeaponType(CurrentWeaponType);     //把武器类型参数传到Controller
+
+	ShootSpeed = curWeapon->WeaponData.ShootSpeed;
+
+	this->CurWeapon->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+	PackupWeapon(CurWeapon);
+	this->CurWeapon = curWeapon;
 	CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponSocket);       //把Weapon附着到玩家身上,记住是附着在网格上，而不是整个Actor
 	this->CurWeapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));
+}
+
+void AMyFirstGameCharacter::PackupWeapon(AWeapon_Gun* PackupWeapon)
+{
+	/*默认数组中第一个为一号武器，第二个为二号武器*/
+	int32 AttackIndex = InterInventory.Find(PackupWeapon);
+	if (AttackIndex == 0)
+	{
+		PackupWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FirstWeaponSocket);
+		PackupWeapon->SetActorRelativeRotation(FRotator(90.f, 0.f, 90.f));
+	}
+	else if (AttackIndex == 1)
+	{
+		PackupWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, SecondWeaponSocket);
+		PackupWeapon->SetActorRelativeRotation(FRotator(90.f, 0.f, 90.f));
+	}
 }
 
 void AMyFirstGameCharacter::ApplyBonus(class ABonus* BonusActor)
