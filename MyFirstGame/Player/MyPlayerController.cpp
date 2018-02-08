@@ -116,12 +116,18 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 
 void AMyPlayerController::Destroyed()
 {
-	Super::Destroyed();
-
 	int32 ArrayNum = PlatformArray.Num();
 	//删除平台数组释放空间
-	//for (int32 i = 0; i < ArrayNum; i++)
-		//PlatformArray.RemoveAt(ArrayNum);
+	for (int32 i = 0; i < ArrayNum; i++)
+	{
+		if (PlatformArray[i] != NULL)
+		{
+			PlatformArray[i]->DestroyActor();
+			PlatformArray[i] = NULL;
+		}
+	}
+
+	Super::Destroyed();
 }
 
 
