@@ -144,7 +144,7 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 		if (Cast<AMyFirstGameCharacter>(OtherActor))
 		{
 			IsSlope = false;
-			Platform->SetSimulatePhysics(true);  //开启物理模拟
+
 			if (OnFall.IsBound())
 				OnFall.Broadcast(); 
 
@@ -161,18 +161,27 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 			if (Cast<AMyPlayerController>(CurChar->Controller))
 			{
 				AMyPlayerController* MPC = Cast<AMyPlayerController>(CurChar->Controller);
-				if (NextPlatform != NULL)
-					if (MPC->CurPlatform != NextPlatform)
+				int32 FoundIndex;
+				if (MPC != NULL)
+					if (!MPC->PlatformArray.Find(MPC->CurPlatform, FoundIndex))
 						MPC->CurPlatform = NULL;     //玩家当前所在平台设为空
 			}
-			GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4秒后删除该平台，释放内存
+			StartDestroy();
 		}
 	}
 }
 
+void ARunPlatform::StartDestroy()
+{
+	Platform->SetSimulatePhysics(true);  //开启物理模拟
+	GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4秒后删除该平台，释放内存
+}
+
+
 void ARunPlatform::DestroyActor()
 {
 	Super::Destroy();
+
 	GetWorldTimerManager().ClearTimer(DestoryHandle);      //清除定时器
 	if (OnDestory.IsBound())
 	{
@@ -212,6 +221,15 @@ void ARunPlatform::MoveTick(float DeltaTime)
 		{
 			MoveToNew = false;
 			SpawnLocation = NewPos;
+
+			AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
+			if (MPC != NULL)
+			{
+				int32 StopIndex = MPC->PlatformArray.Find(this);
+
+				for (int32 i = 0; i < StopIndex; i++)
+					MPC->PlatformArray[i]->MoveToNew = false;
+			}
 		}
 	}
 }

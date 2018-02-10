@@ -84,12 +84,6 @@ void ARunPlatform_Beam::TickActor(float DeltaTime, enum ELevelTick TickType, FAc
 		if (MoveCycle >= 6)
 			MoveCycle = 0.f;
 	}
-	
-	/*if (WorldPlayer != NULL)
-		if (WorldPlayer->CurrentWeapon != EWeaponType::Weapon_Beam && BeamParticle != NULL)
-		{
-			BeamParticle->SetVisibility(false);
-		}*/
 }
 
 void ARunPlatform_Beam::AttachBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
@@ -133,6 +127,15 @@ void ARunPlatform_Beam::MoveTick(float DeltaTime)
 			{
 				MoveToNew = false;  //停止移动更新
 				TempSpawnLocation = SpawnLocation;
+
+				AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
+				if (MPC != NULL)
+				{
+					int32 StopIndex = MPC->PlatformArray.Find(this);
+
+					for (int32 i = 0; i < StopIndex; i++)
+						MPC->PlatformArray[i]->MoveToNew = false;
+				}
 			}
 		}
 		else
@@ -140,10 +143,10 @@ void ARunPlatform_Beam::MoveTick(float DeltaTime)
 			FVector NewPos = FMath::VInterpTo(GetActorLocation(), StopLocation + DeltaLoc, DeltaTime, 10.f);
 			SetActorLocation(NewPos);
 
-				if (NextPlatform != NULL)
-					if (!NextPlatform->MoveToNew)     //只有下一个平台没有移动时才执行下面操作
-						if ((NewPos - StopLocation).Size() > DeltaLoc.Size() / 2)     //移动超过相差距离一半时，就开始移动下一个平台
-							NextPlatform->MoveToNewPos(NextPlatToCur);
+			if (NextPlatform != NULL)
+				if (!NextPlatform->MoveToNew)   //只有下一个平台没有移动时才执行下面操作
+					if ((NewPos - StopLocation).Size() > DeltaLoc.Size() / 2)   //移动超过相差距离一半时，就开始移动下一个平台
+						NextPlatform->MoveToNewPos(NextPlatToCur);
 
 			if (NewPos == StopLocation + DeltaLoc)
 				MoveToNew = false;  //停止更新
@@ -167,9 +170,24 @@ void ARunPlatform_Beam::BeginOverlap(UPrimitiveComponent* OverlappedComponent, A
 	{
 		FVector CurDirY = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Y);    //获得Y方向的向量
 		FVector TouchDirY = FRotationMatrix(TouchedPlatform->GetActorRotation()).GetUnitAxis(EAxis::Y);   //获取碰撞的平台的Y方向
-		
-		if (CurDirY == -TouchDirY)
-			SpawnLocation += 400 * (-CurDirY);   //如果碰到其他平台就反方向移动一定距离
+		//下面是获取两个平台位置的X分量
+		float CurLocationX = SpawnLocation.X;
+		float TouchLocationX = TouchedPlatform->SpawnLocation.X;
+
+		if ((CurDirY + TouchDirY).IsNearlyZero() && !TouchedPlatform->MoveToNew)
+		{
+			if (this->PlatDir == EPlatformDirection::Absolute_Left && (CurLocationX - TouchLocationX) > 0)    //这是当前平台向左（绝对方向），并且被碰撞的平台在其右边（相对方向）
+				SpawnLocation += -50 * CurDirY;
+
+			if (this->PlatDir == EPlatformDirection::Absolute_Right && (CurLocationX - TouchLocationX) > 0)    //这是当前平台向右（绝对方向），并且被碰撞的平台在其右边（相对方向)
+				SpawnLocation += 50 * CurDirY;
+
+			if (this->PlatDir == EPlatformDirection::Absolute_Right && (CurLocationX - TouchLocationX) < 0)    //这是当前平台向右（绝对方向），并且被碰撞的平台在其左边（相对方向）
+				SpawnLocation += -50 * CurDirY;
+
+			if (this->PlatDir == EPlatformDirection::Absolute_Left && (CurLocationX - TouchLocationX) < 0)    //这是当前平台向左（绝对方向），并且被碰撞的平台在其左边（相对方向）
+				SpawnLocation += 50 * CurDirY;
+		}
 	}
 
 }

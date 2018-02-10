@@ -6,6 +6,7 @@
 #include "MyFirstGameCharacter.h"
 #include "RunPlatform.h"
 #include "Engine/Engine.h"
+#include "ConstructorHelpers.h"
 
 
 // Sets default values
@@ -26,6 +27,8 @@ ABonus::ABonus(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitial
 
 	RootComponent = BonusShape;
 	BonusQuery->SetupAttachment(BonusShape);
+
+	static ConstructorHelpers::FObjectFinder<UCurveFloat> CurveFinder(TEXT("/Game/Blueprint/RotateCurve"));
 }
 
 // Called when the game starts or when spawned
@@ -49,6 +52,12 @@ void ABonus::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunc
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 
+	RotateStartTime -= DeltaTime;
+	if (RotateStartTime <= 0)
+	//{
+		SetActorRotation(GetActorRotation() + FRotator(0.f, DeltaTime * 180.f, 0.f));
+		//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("进入旋转"));
+//	}
 }
 
 void ABonus::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -71,5 +80,4 @@ void ABonus::StartFall()
 	this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform); //从依赖Actor脱离
 
 	BonusShape->SetSimulatePhysics(true);     //开启物理模拟
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString("Start Fall"), true);
 }

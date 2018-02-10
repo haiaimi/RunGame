@@ -28,7 +28,7 @@ ABullet::ABullet(const FObjectInitializer& ObjectInitializer) :Super(ObjectIniti
 	BulletCollision->SetCollisionResponseToChannel(COLLISION_BOOMQUERY, ECollisionResponse::ECR_Ignore);  //忽略爆炸检测体
 	BulletCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Block);  
 	
-	BulletMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BulletMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	BulletMesh->SetCollisionObjectType(COLLISION_BOOMQUERY); 
 	BulletMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	RootComponent = BulletCollision;
@@ -79,7 +79,7 @@ void ABullet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (OwnerWeapon&&CurWeaponType == EWeaponType::Type::Weapon_Beam) //只有闪电枪才会更新
+	if (OwnerWeapon &&CurWeaponType == EWeaponType::Type::Weapon_Beam) //只有闪电枪才会更新
 	{
 		SpawnedParticle->SetBeamTargetPoint(0, OwnerWeapon->GetFireLocation(), 0);
 		//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, TEXT("Beam is in Update"));
@@ -95,12 +95,20 @@ void ABullet::OnImpact(const FHitResult& HitResult)
 		if(Aim->CanBoom)
 			Aim->Boom();
 	}
+	if (HitResult.GetComponent()->IsSimulatingPhysics() && HitResult.GetActor() != this)
+	{
+		if (CurWeaponType == EWeaponType::Weapon_Projectile)
+			HitResult.GetComponent()->AddImpulseAtLocation(GetVelocity() * 5, GetActorLocation());  //给前方的物体施加一个冲力
+		if (CurWeaponType == EWeaponType::Weapon_Beam)
+			HitResult.GetComponent()->AddImpulseAtLocation(GetVelocity() * 100, GetActorLocation());
+	}
+
 	Destroy();
 }
 
 void ABullet::InitBulletVelocity(const FVector& ShootDir)
 {
-	ProjectileComponent->Velocity = ProjectileComponent->InitialSpeed*ShootDir;
+	ProjectileComponent->Velocity = ProjectileComponent->InitialSpeed * ShootDir;
 }
 
 void ABullet::ChangeParticleSourceToPlatform(FVector SourcePoint)

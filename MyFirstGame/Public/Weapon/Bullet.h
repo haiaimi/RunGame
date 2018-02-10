@@ -25,7 +25,7 @@ public:
 
 	TWeakObjectPtr<AController> OwnerController;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet")
 	TEnumAsByte<EWeaponType::Type> CurWeaponType;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet")

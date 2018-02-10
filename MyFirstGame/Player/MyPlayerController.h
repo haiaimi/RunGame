@@ -42,7 +42,7 @@ public:
 	TArray<ARunPlatform*> PlatformArray;
 
 	/**生成的平台中的绝对方向信息*/
-	uint8 AbsoluteDir;
+	TEnumAsByte<EPlatformDirection::Type> AbsoluteDir;
 	
 	TEnumAsByte<EWeaponType::Type> CurrentWeaponType;
 
@@ -60,6 +60,9 @@ protected:
 	virtual void PostInitializeComponents()override;
 
 public:
+	/**随机生成平台的函数，指定生成的个数*/
+	void RandomSpawnPlatform(int32 SpawnNum);
+
 	/**用于自动生成平台,这是经过触发才能触发的平台*/
 	FTransform GetSpawnTransf_Shoot(ARunPlatform* PrePlatform);
 

@@ -10,6 +10,7 @@
 #include "Engine/Engine.h"
 #include "MyFirstGame.h"
 #include "Bonus.h"
+#include "Kismet/GameplayStatics.h"
 
 const float ShootPlatformAngle = 30.f;
 
@@ -79,8 +80,36 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 
-	ARunPlatform* AddPlatform;   //指向即将生成的平台
 	if (CurPlatform != TempPlatform && CurPlatform != NULL && !PlatformArray.Last()->MoveToNew)   //玩家所在平台发生变化，并且最后一个平台不在移动时
+	{
+		int32 CurPlatIndex = PlatformArray.Find(CurPlatform);     //当前所在平台在数组中的位置
+		int32 PrePlatIndex = PlatformArray.Find(TempPlatform);    //玩家所在上一个平台在数组的位置
+		RandomSpawnPlatform(CurPlatIndex - PrePlatIndex);
+	}
+}
+
+void AMyPlayerController::Destroyed()
+{
+	int32 ArrayNum = PlatformArray.Num();
+	//删除平台数组释放空间
+	for (int32 i = 0; i < ArrayNum; i++)
+	{
+		if (PlatformArray[i] != NULL)
+		{
+			PlatformArray[i]->DestroyActor();
+			PlatformArray[i] = NULL;
+		}
+	}
+
+	Super::Destroyed();
+}
+
+
+void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
+{
+	ARunPlatform* AddPlatform;   //指向即将生成的平台
+
+	for (int32 i = 0; i < SpawnNum; i++)
 	{
 		int32 Random_Shoot = FMath::Rand() % 100;  //生成随机数，用来决定是否生成触发平台
 		int32 Random_Bonus_Score = FMath::Rand() % 100;
@@ -105,31 +134,16 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 			AddPlatform->PlatDir = AbsoluteDir;
 			PlatformArray.Last()->NextPlatform = AddPlatform;  //指定下一个平台
 			PlatformArray.Push(AddPlatform);
-			PlatformArray.Remove(TempPlatform);  //移除已经走过的平台
+			PlatformArray[0]->StartDestroy();    //开始删除第一个平台
+			PlatformArray.RemoveAt(0);  //移除已经走过的平台
 			TempPlatform = CurPlatform;   //
+			GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, FString::Printf(TEXT("数组容量:%d"), PlatformArray.Num()));
 
 			if (Random_Bonus_Score >= 0 && Random_Bonus_Score < 30)
 				SpawnBonus_Score(AddPlatform);   //30的几率生成Bonus Score
 		}
 	}
 }
-
-void AMyPlayerController::Destroyed()
-{
-	int32 ArrayNum = PlatformArray.Num();
-	//删除平台数组释放空间
-	for (int32 i = 0; i < ArrayNum; i++)
-	{
-		if (PlatformArray[i] != NULL)
-		{
-			PlatformArray[i]->DestroyActor();
-			PlatformArray[i] = NULL;
-		}
-	}
-
-	Super::Destroyed();
-}
-
 
 FTransform AMyPlayerController::GetSpawnTransf_Shoot(ARunPlatform* PrePlatform)
 {
@@ -212,7 +226,7 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 
 		/**下面就是得出下一个生成平台的绝对世界方向*/
 		if (PrePlatform->PlatDir == EPlatformDirection::Absolute_Forward)
-			AbsoluteDir = Dir;
+			AbsoluteDir = (EPlatformDirection::Type)Dir;
 
 		else if (PrePlatform->PlatDir == EPlatformDirection::Absolute_Left)
 			AbsoluteDir = (Dir == 1) ? EPlatformDirection::Absolute_Left : EPlatformDirection::Absolute_Forward;
@@ -264,15 +278,21 @@ void AMyPlayerController::SpawnBonus_Score(ARunPlatform* const CurPlatform)
 
 		if (PlatformArray.Find(CurPlatform, CurPlatformIndex))
 		{
-			if (CurPlatform->PlatDir == PlatformArray[CurPlatformIndex - 1]->PlatDir)
-				BonusNum = CurPlatform->GetPlatformLength() / 100.f;
-			else
-				BonusNum = CurPlatform->GetPlatformLength() / 100.f - 1;
+			if (CurPlatformIndex >= 0 && CurPlatformIndex < PlatformArray.Num())
+				if (CurPlatform->PlatDir == PlatformArray[CurPlatformIndex - 1]->PlatDir)
+					BonusNum = CurPlatform->GetPlatformLength() / 100.f;
+				else
+					BonusNum = CurPlatform->GetPlatformLength() / 100.f - 1;
 		}
 
 		for (int32 i = 0; i < BonusNum; i++)
 		{
-			ABonus* SpawnBonus = GetWorld()->SpawnActor<ABonus>(Bonus_Score, FTransform(CurPlatform->GetActorRotation(), FirstSpawnLoc + 100 * i * SpawnDirX));
+			ABonus* SpawnBonus = GetWorld()->SpawnActorDeferred<ABonus>(Bonus_Score, FTransform(CurPlatform->GetActorRotation(), FirstSpawnLoc + 100 * i * SpawnDirX));
+			if (SpawnBonus)
+			{
+				SpawnBonus->RotateStartTime = 0.1f*i;
+				UGameplayStatics::FinishSpawningActor(SpawnBonus, FTransform(CurPlatform->GetActorRotation(), FirstSpawnLoc + 100 * i * SpawnDirX));
+			}
 			
 			SpawnBonus->AttachToActor(CurPlatform, FAttachmentTransformRules::KeepWorldTransform);
 			CurPlatform->OnDestory.AddUObject(SpawnBonus, &ABonus::DestroyActor);

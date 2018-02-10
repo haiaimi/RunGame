@@ -597,7 +597,7 @@ void AMyFirstGameCharacter::ApplyBonus(class ABonus* BonusActor)
 
 void AMyFirstGameCharacter::AddScore(int32 BonusScore)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::FormatAsNumber(BonusScore), true);
+	//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::FormatAsNumber(BonusScore), true);
 }
 
 void AMyFirstGameCharacter::AddSpeed(int32 BonusSpeed)

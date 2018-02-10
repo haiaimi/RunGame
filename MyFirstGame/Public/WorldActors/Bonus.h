@@ -53,6 +53,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bonus")
 	struct FBonusData BonusData;
 
+	float RotateStartTime;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void PostInitializeComponents()override;

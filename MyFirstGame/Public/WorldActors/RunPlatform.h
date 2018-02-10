@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "MyFirstGame.h"
 #include "RunPlatform.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FPlatformDestory);
@@ -62,7 +63,8 @@ public:
 	float SafeStayTime;
 
 	/**平台的绝对方向，以正X为前，负Y为左，正Y为右*/
-	uint8 PlatDir;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Platform")
+	TEnumAsByte<EPlatformDirection::Type> PlatDir;
 
 	/**此多播代理用于在其上面的奖励Actor销毁*/
 	FPlatformDestory OnDestory;
@@ -99,6 +101,8 @@ public:
 
 	/**在倾斜时所做的操作*/
 	void InSlope(float rate);
+
+	void StartDestroy();
 
 	void DestroyActor();
 
