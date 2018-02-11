@@ -129,7 +129,7 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 				AddPlatform = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray.Last()));
 		}
 
-		if (AddPlatform)
+		if (AddPlatform != NULL)
 		{
 			AddPlatform->PlatDir = AbsoluteDir;
 			PlatformArray.Last()->NextPlatform = AddPlatform;  //指定下一个平台

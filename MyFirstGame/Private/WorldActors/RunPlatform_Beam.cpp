@@ -88,24 +88,25 @@ void ARunPlatform_Beam::TickActor(float DeltaTime, enum ELevelTick TickType, FAc
 
 void ARunPlatform_Beam::AttachBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	GEngine->AddOnScreenDebugMessage(1, 2, FColor::Blue, TEXT("Have Overlap"));
 	ABullet* Temp = Cast<ABullet>(OtherActor);
-	if (Temp)
-	{
-		if (Temp->CurWeaponType == EWeaponType::Weapon_Beam)
-		{
-			BeamParticle = UGameplayStatics::SpawnEmitterAttached(Temp->OwnerWeapon->BeamEmitter, Platform, AttachSocket);    //再生成一个闪电粒子
-			BeamParticle->SetWorldScale3D(FVector(5.f, 5.f, 5.f));
-			BeamParticle->SetRelativeRotation(FRotator(0.f, 0.f, 90.f));
-			TargetGun = Temp->OwnerWeapon;
-			UpdateBeam = true;
-			IsInMove = false;
 
-			MoveToPlayerPlat();
-			StopLocation = GetActorLocation();
-			Temp->Destroy();
+	if (FVector::DotProduct(SweepResult.ImpactNormal, FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::X)) < 0)     //判断子弹是否从粒子背面射过来
+		if (Temp != NULL)
+		{
+			if (Temp->CurWeaponType == EWeaponType::Weapon_Beam)
+			{
+				BeamParticle = UGameplayStatics::SpawnEmitterAttached(Temp->OwnerWeapon->BeamEmitter, Platform, AttachSocket);    //再生成一个闪电粒子
+				BeamParticle->SetWorldScale3D(FVector(5.f, 5.f, 5.f));
+				BeamParticle->SetRelativeRotation(FRotator(0.f, 0.f, 90.f));
+				TargetGun = Temp->OwnerWeapon;
+				UpdateBeam = true;
+				IsInMove = false;
+
+				MoveToPlayerPlat();
+				StopLocation = GetActorLocation();
+				Temp->Destroy();
+			}
 		}
-	}
 }
 
 void ARunPlatform_Beam::MoveTick(float DeltaTime)

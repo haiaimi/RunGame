@@ -211,11 +211,11 @@ void ARunPlatform::MoveTick(float DeltaTime)
 	{
 		FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
 		SetActorLocation(NewPos);
-
-			if (NextPlatform != NULL)
-				if (!NextPlatform->MoveToNew)     //只有下一个平台没有移动时才执行下面操作
-					if ((NewPos - SpawnLocation).Size() > DeltaLoc.Size() / 2)     //移动超过相差距离一半时，就开始移动下一个平台
-						NextPlatform->MoveToNewPos(DeltaLoc);
+		
+		if (NextPlatform != NULL)
+			if (!NextPlatform->MoveToNew)     //只有下一个平台没有移动时才执行下面操作
+				if ((NewPos - SpawnLocation).Size() > DeltaLoc.Size() / 2)     //移动超过相差距离一半时，就开始移动下一个平台
+					NextPlatform->MoveToNewPos(DeltaLoc);
 
 		if (NewPos == SpawnLocation + DeltaLoc)
 		{

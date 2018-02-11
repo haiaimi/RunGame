@@ -27,8 +27,6 @@ ABonus::ABonus(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitial
 
 	RootComponent = BonusShape;
 	BonusQuery->SetupAttachment(BonusShape);
-
-	static ConstructorHelpers::FObjectFinder<UCurveFloat> CurveFinder(TEXT("/Game/Blueprint/RotateCurve"));
 }
 
 // Called when the game starts or when spawned

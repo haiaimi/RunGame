@@ -78,6 +78,7 @@ public:
 	uint8 MoveToNew : 1;
 
 	/**位移的相对距离*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")   //便于调试
 	FVector DeltaLoc;
 
 protected:
@@ -97,7 +98,7 @@ public:
 	
 	/**玩家离开当前平台所执行的操作，如决定接下来生成的Platform以及删除当前Platform*/
 	UFUNCTION()
-	void EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	virtual void EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	/**在倾斜时所做的操作*/
 	void InSlope(float rate);
