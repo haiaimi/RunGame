@@ -7,6 +7,7 @@
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "MyFirstGameCharacter.h"
 
 ARunPlatform_Physic::ARunPlatform_Physic(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitializer)
 {
@@ -17,11 +18,8 @@ ARunPlatform_Physic::ARunPlatform_Physic(const FObjectInitializer& ObjectInitial
 	AttachedMesh->SetupAttachment(ArrowDst);  //依附于箭头组件
 
 	//下面设置约束组件的属性
-	FConstrainComponentPropName ConstraintName1, ConstraintName2;
-	ConstraintName1.ComponentName = TEXT("AttachedMesh");
-	ConstraintName2.ComponentName = TEXT("Platform");
-	ConstraintComponent->ComponentName1 = ConstraintName1;
-	ConstraintComponent->ComponentName2 = ConstraintName2;
+	ConstraintComponent->ComponentName1.ComponentName = TEXT("AttachedMesh");
+	ConstraintComponent->ComponentName2.ComponentName = TEXT("Platform");
 	ConstraintComponent->SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, 45.f);
 	ConstraintComponent->SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Limited, 45.f);
 	ConstraintComponent->SetAngularTwistLimit(EAngularConstraintMotion::ACM_Limited, 45.f);
@@ -38,7 +36,6 @@ void ARunPlatform_Physic::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	Platform->SetSimulatePhysics(true);       //需要开启平台网格的物理模拟
 	if (LinkParticle != NULL)
 		SpawnedParticle = UGameplayStatics::SpawnEmitterAttached(LinkParticle, Platform, LinkSocket);
 
@@ -52,12 +49,30 @@ void ARunPlatform_Physic::TickActor(float DeltaTime, enum ELevelTick TickType, F
 		SpawnedParticle->SetBeamTargetPoint(0, AttachedMesh->GetComponentLocation() - FVector(0.f, 0.f, 50.f), 0);
 }
 
+void ARunPlatform_Physic::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	Super::BeginOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
+
+	if (CurChar != NULL)
+	{
+		Platform->SetSimulatePhysics(true);
+	}
+}
+
 void ARunPlatform_Physic::EndOverlap(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
 {
 	Super::EndOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
-	SpawnedParticle->SetVisibility(false);
-	AttachedMesh->SetSimulatePhysics(true);
-	//ConstraintComponent->DestroyPhysicsState();	//取消约束
-	ConstraintComponent->BreakConstraint();
+
+	if (Cast<AMyFirstGameCharacter>(OtherActor) != NULL)
+	{
+		SpawnedParticle->SetVisibility(false);
+		AttachedMesh->SetSimulatePhysics(true);
+		ConstraintComponent->BreakConstraint();    //取消约束
+	}
+}
+
+void ARunPlatform_Physic::MoveTick(float DeltaTime)
+{
+	Super::MoveTick(DeltaTime);
 }
 
