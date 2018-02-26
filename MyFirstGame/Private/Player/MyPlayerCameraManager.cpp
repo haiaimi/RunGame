@@ -3,6 +3,7 @@
 #include "MyPlayerCameraManager.h"
 #include "MyFirstGameCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerController.h"
 
 AMyPlayerCameraManager::AMyPlayerCameraManager(const FObjectInitializer& Initializer):Super(Initializer)
 {

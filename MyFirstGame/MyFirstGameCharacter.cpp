@@ -281,9 +281,22 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 		CanShoot = true;
 }
 
+void AMyFirstGameCharacter::Destroyed()
+{
+	int32 WeaponNum = InterInventory.Num();      //É¾³ýÉú³ÉµÄÎäÆ÷
+	for (int32 i = 0; i < WeaponNum; i++)
+	{
+		if (InterInventory[i] != NULL)
+			InterInventory[i]->Destroy();
+	}
+
+	Super::Destroyed();
+}
+
 void AMyFirstGameCharacter::AddControllerYawInput(float Val)
 {
 	Super::AddControllerYawInput(Val);
+
 	if (Val > 0)
 		IsToRight = true;
 
@@ -300,6 +313,9 @@ void AMyFirstGameCharacter::StopViewAround()
 {
 	CanShoot = true;
 	IsViewAround = false;
+
+	APlayerController* const PC = CastChecked<APlayerController>(Controller);
+	PC->SetControlRotation(FRotator(GetControlRotation().Pitch, GetActorRotation().Yaw, GetControlRotation().Roll));
 }
 
 void AMyFirstGameCharacter::StartAccelerate()

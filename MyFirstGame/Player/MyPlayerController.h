@@ -35,6 +35,8 @@ public:
 
 	TSubclassOf<ARunPlatform> SpawnPlatform_Beam;
 
+	TSubclassOf<ARunPlatform> SpawnPlatform_Physic;
+
 	/*分数奖励的蓝图对象*/
 	TSubclassOf<ABonus> Bonus_Score;
 
@@ -71,6 +73,9 @@ public:
 
 	/**获取生成闪电平台的位置*/
 	FTransform GetSpawnTransf_Beam(ARunPlatform* PrePlatform);
+
+	/**获取生成物理平台的位置*/
+	FTransform GetSpawnTransf_Physic(ARunPlatform* PrePlatform);
 
 	/**在当前平台上生成Bonus*/
 	void SpawnBonus_Score(ARunPlatform* CurPlatform);

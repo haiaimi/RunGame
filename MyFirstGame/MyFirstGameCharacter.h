@@ -196,6 +196,8 @@ public:
 
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction);
 
+	virtual void Destroyed()override;
+
 	///玩家动作相关，开门、观察视角
 	void UpdateStandCharacter();
 
