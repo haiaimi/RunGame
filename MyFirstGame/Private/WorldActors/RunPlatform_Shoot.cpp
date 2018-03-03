@@ -47,5 +47,6 @@ void ARunPlatform_Shoot::TickActor(float DeltaTime, enum ELevelTick TickType, FA
 			IsSlope = true;
 			InitiativeBoom->StartSimulatePhysic();
 		}
+
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 }

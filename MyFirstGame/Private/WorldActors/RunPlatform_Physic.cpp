@@ -39,6 +39,8 @@ void ARunPlatform_Physic::PostInitializeComponents()
 	if (LinkParticle != NULL)
 		SpawnedParticle = UGameplayStatics::SpawnEmitterAttached(LinkParticle, Platform, LinkSocket);
 
+	if (SpawnedParticle != nullptr)
+		SpawnedParticle->SetWorldRotation(FRotator(0.f, 90.f, 90.f));
 }
 
 void ARunPlatform_Physic::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
@@ -66,9 +68,21 @@ void ARunPlatform_Physic::EndOverlap(UPrimitiveComponent * OverlappedComponent, 
 	if (Cast<AMyFirstGameCharacter>(OtherActor) != NULL)
 	{
 		SpawnedParticle->SetVisibility(false);
-		AttachedMesh->SetSimulatePhysics(true);
+		if (!AttachedMesh->IsSimulatingPhysics())
+			AttachedMesh->SetSimulatePhysics(true);
+
 		ConstraintComponent->BreakConstraint();    //È¡ÏûÔ¼Êø
 	}
+}
+
+void ARunPlatform_Physic::StartDestroy()
+{
+	SpawnedParticle->SetVisibility(false);
+	if (!AttachedMesh->IsSimulatingPhysics())
+		AttachedMesh->SetSimulatePhysics(true);
+	ConstraintComponent->BreakConstraint();   
+
+	Super::StartDestroy();
 }
 
 void ARunPlatform_Physic::MoveTick(float DeltaTime)

@@ -173,8 +173,15 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 
 void ARunPlatform::StartDestroy()
 {
-	Platform->SetSimulatePhysics(true);  //开启物理模拟
+	if (!Platform->IsSimulatingPhysics())
+		Platform->SetSimulatePhysics(true);  //开启物理模拟
+
 	GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4秒后删除该平台，释放内存
+
+	if (FlyObstacleDestory.IsBound())
+	{
+		FlyObstacleDestory.Broadcast();
+	}
 }
 
 

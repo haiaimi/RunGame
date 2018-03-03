@@ -9,6 +9,7 @@
 
 DECLARE_MULTICAST_DELEGATE(FPlatformDestory);
 DECLARE_MULTICAST_DELEGATE(FPlatformFall);
+DECLARE_MULTICAST_DELEGATE(FFlyObstacleDestory);
 
 UCLASS()
 class MYFIRSTGAME_API ARunPlatform : public AActor
@@ -72,6 +73,11 @@ public:
 	/***/
 	FPlatformFall OnFall;
 
+	FFlyObstacleDestory FlyObstacleDestory;
+
+	/**当前绑定的飞行障碍的数目*/
+	int32 CurBoundFlyObstacleNum = 0;
+
 	/**初始生成平台的位置*/
 	FVector SpawnLocation;
 
@@ -103,7 +109,7 @@ public:
 	/**在倾斜时所做的操作*/
 	void InSlope(float rate);
 
-	void StartDestroy();
+	virtual void StartDestroy();
 
 	void DestroyActor();
 

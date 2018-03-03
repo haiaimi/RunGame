@@ -54,7 +54,6 @@ void ADoor::Tick(float DeltaTime)
 		{
 			IsInOpen = true;
 			IsInCloseRotate = false;
-			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, "Open The Door", true);
 			YawRotation = FMath::FInterpTo(DoorRoot->RelativeRotation.Yaw, 120.f, DeltaTime, 4.f);
 			DoorRoot->SetRelativeRotation(FRotator(0.0f, YawRotation, 0.0f));
 			
@@ -82,7 +81,6 @@ void ADoor::Tick(float DeltaTime)
 	{
 		if (IsInOpenRotate)
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, "Is In Open Rotate!", true);
 			YawRotation = FMath::FInterpTo(DoorRoot->RelativeRotation.Yaw, 120.f, DeltaTime, 4.f);
 			DoorRoot->SetRelativeRotation(FRotator(0.0f, YawRotation, 0.0f));
 
@@ -108,7 +106,6 @@ void ADoor::NotifyActorBeginOverlap(AActor* OtherActor)
 		CurChar->IsInDoorCollision = true;
 		CurChar->IsInOpen = IsInOpen;
 		CanbOperate = true;
-	//	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, "You Can Open The Door!", true);
 	}
 }
 
@@ -119,7 +116,6 @@ void  ADoor::NotifyActorEndOverlap(AActor* OtherActor)
 		CurChar->AvoidOpenDoor();
 		CurChar = NULL;
 		CanbOperate = false;
-	//	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, "You Can't Open The Door", true);
 	}
 }
 

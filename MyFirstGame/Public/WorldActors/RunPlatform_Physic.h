@@ -40,6 +40,8 @@ public:
 	UFUNCTION()
 	virtual void EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)override;
 	
+	virtual void StartDestroy()override;
+
 	virtual void MoveTick(float DeltaTime)override;
 
 protected:

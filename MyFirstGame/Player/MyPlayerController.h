@@ -10,8 +10,10 @@
 class ARunPlatform_Beam;
 class ARunPlatform;
 class ABonus;
+class AFlyObstacle;
 /**
  * 1、自动生成平台
+ * 2、生成飞行障碍
  */
 UCLASS()
 class MYFIRSTGAME_API AMyPlayerController : public APlayerController
@@ -37,11 +39,16 @@ public:
 
 	TSubclassOf<ARunPlatform> SpawnPlatform_Physic;
 
+	TSubclassOf<AFlyObstacle> SpawnFlyObstacle;
+
 	/*分数奖励的蓝图对象*/
 	TSubclassOf<ABonus> Bonus_Score;
 
 	/**存放当前所有平台的数组*/
 	TArray<ARunPlatform*> PlatformArray;
+
+	/**存放当前层飞行障碍的数组，以Shoot平台分层*/
+	TArray<AFlyObstacle*> FlyObstacleArray;
 
 	/**生成的平台中的绝对方向信息*/
 	TEnumAsByte<EPlatformDirection::Type> AbsoluteDir;
@@ -51,10 +58,20 @@ public:
 	/**当前玩家是否连接着平台*/
 	uint8 InConnectedToPlat : 1;
 
+	/**这是两个飞行障碍生成的最小间隔平台数*/
+	int32 FlyObstacleSpawnInterval;
+
+	/**每个平面上最多的飞行障碍*/
+	int32 MaxFlyObstacles = 3;
+
+	int32 CurFlyObstacles;
+
 public:
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction);
 
 	virtual void Destroyed()override;
+
+	virtual void BeginPlay()override;
 
 protected:
 	virtual void SetupInputComponent()override;
@@ -82,4 +99,6 @@ public:
 
 	void ChangeWeaponType(EWeaponType::Type WeaponType);
 
+	/**随机生成飞行障碍*/
+	void RandomSpawnFlyObstacle();
 };

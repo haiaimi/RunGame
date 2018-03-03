@@ -23,7 +23,6 @@ void AMyPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float
 	//FMatrix CameraTransform = FRotationMatrix(ViewRot)*CameraTranslation;
 	FMatrix ViewRotation = FRotationMatrix(ViewRot);
 	
-	//ViewLoc += ViewRotation.GetUnitAxis(EAxis::X)*-90.0f;
 	ViewLoc += ViewRotation.GetUnitAxis(EAxis::Y)*40.f;
 	ViewLoc += ViewRotation.GetUnitAxis(EAxis::Z)*20.f;
 	
@@ -32,12 +31,12 @@ void AMyPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float
 		AMyFirstGameCharacter* MyCharacter = Cast<AMyFirstGameCharacter>(OutVT.Target);
 
 		UCharacterMovementComponent* MyMoveComponent = MyCharacter->GetCharacterMovement();
-		if (MyMoveComponent->Velocity.Size() == 0)
+		if (MyMoveComponent->Velocity.Size() > -0.1f && MyMoveComponent->Velocity.Size() < 0.1f)        //由于有误差所以设定0.2的误差区间
 		{
 			MyCharacter->bUseControllerRotationYaw = false;
 			MyCharacter->UpdateStandCharacter();
 		}
-		if (MyMoveComponent->Velocity.Size() > 0 && !MyCharacter->IsCharacterViewAround())
+		if (MyMoveComponent->Velocity.Size() > 0.1f && !MyCharacter->IsCharacterViewAround())
 		{
 			MyCharacter->bUseControllerRotationYaw = true;
 		}
@@ -45,14 +44,15 @@ void AMyPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float
 		if (MyCharacter->IsCharacterViewAround())
 		{
 			MyCharacter->bUseControllerRotationYaw = false;
-			ViewLoc = FMath::VInterpTo(OutVT.POV.Location, ViewLoc + ViewRotation.GetUnitAxis(EAxis::X)*-180.0f, DeltaTime, 30);       
+			//ViewLoc = FMath::VInterpTo(OutVT.POV.Location, ViewLoc + ViewRotation.GetUnitAxis(EAxis::X)*-180.0f, DeltaTime, 30);       //该方法是摄像机向后移
+			ViewLoc += ViewRotation.GetUnitAxis(EAxis::X) * -120.0f;      //该方案是摄像机不后移
 			if (DefaultFOV != 90.f)
 				DefaultFOV = FMath::FInterpTo(DefaultFOV, 90.f, DeltaTime, 5.f);
 		}
 		else
 		{
 			//ViewLoc = FMath::VInterpTo(OutVT.POV.Location, ViewLoc + ViewRotation.GetUnitAxis(EAxis::X)*-120.0f, DeltaTime, 30);  //该效果会造成画面抖动
-			ViewLoc += ViewRotation.GetUnitAxis(EAxis::X)*-120.0f;
+			ViewLoc += ViewRotation.GetUnitAxis(EAxis::X) * -120.0f;
 			if (MyCharacter->PlayerIsTargeting())
 			{
 				//ViewLoc = FMath::VInterpTo(OutVT.POV.Location, ViewLoc + ViewRotation.GetUnitAxis(EAxis::X)*30.0f, DeltaTime, 30);
@@ -66,7 +66,7 @@ void AMyPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float
 			}
 		}
 	}
-		
+
 	OutVT.POV.Location = ViewLoc;
 	OutVT.POV.Rotation = FMath::RInterpTo(OutVT.POV.Rotation, ViewRot, DeltaTime, 50.0f);
 }

@@ -134,6 +134,9 @@ public:
 	/**玩家能否开枪*/
 	uint8 CanShoot : 1;
 
+	/**是否开始平滑恢复Controller的方向，这是在环顾后视角发生变化时的操作*/
+	uint8 IsSmoothController : 1;
+
 protected:
 
 	/** Resets HMD orientation in VR. */

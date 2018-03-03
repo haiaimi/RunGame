@@ -45,6 +45,7 @@ AMyFirstGameCharacter::AMyFirstGameCharacter(const FObjectInitializer& ObjectIni
 	IsInCrounch = false;    //初始状态是站立状态
 	IsInCrounchToStand = false; //初始状态不在动作中
 	IsInStandToCrounch = false;
+	IsSmoothController = false;
 
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
@@ -271,14 +272,44 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 
 	if (IsInAccelerate)
 		GetCharacterMovement()->MaxWalkSpeed = CurMaxAcclerateSpeed;       //把速度变为当前加速状态速度
+	else if (IsInCrounch)
+		GetCharacterMovement()->MaxWalkSpeed = 250;    //下蹲时的速度
 	else
-		GetCharacterMovement()->MaxWalkSpeed = CurMaxRunSpeed;   //速度改为当前正常跑步速度
+		GetCharacterMovement()->MaxWalkSpeed = MaxRunSpeed;      //速度改为当前正常跑步速度
 
 	//下面是判断是否可以开枪（根据速度阈值判断，大于800就会播放加速动画，由于状态机的设置，后期可以添加一个加速阈值接口给状态机，也就不能开枪）
 	if (GetCharacterMovement()->MaxWalkSpeed >= 800.f)
 		CanShoot = false;
 	else
 		CanShoot = true;
+
+	//在环顾旋转视角后将Controller平滑过渡到玩家(Actor)方向
+	if (IsSmoothController && Controller != NULL)
+	{
+		FVector ControllerDir = Controller->GetControlRotation().Vector().GetSafeNormal2D();
+		FVector CharDir = GetActorRotation().Vector().GetSafeNormal2D();
+		float SubDegree = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CharDir, ControllerDir)));      //获取两者相差的度数
+
+		float CharYaw = AdjustDegree(GetActorRotation().Yaw);
+		float ControllerYaw = AdjustDegree(Controller->GetControlRotation().Yaw);
+
+		float DeltaDegree = 0.f;
+		if (AdjustDegree(ControllerYaw + SubDegree) > CharYaw - 1.f && AdjustDegree(ControllerYaw + SubDegree) < CharYaw + 1.f)
+			DeltaDegree = SubDegree;
+		else
+			DeltaDegree = -SubDegree;
+
+		float NewControllerYaw = FMath::FInterpTo(ControllerYaw, ControllerYaw + DeltaDegree, DeltaTime, 10.f);
+		Controller->SetControlRotation(FRotator(0.f, AdjustDegree(NewControllerYaw), 0.f));
+
+		if (NewControllerYaw >= ControllerYaw + DeltaDegree - 5 && NewControllerYaw <= ControllerYaw + DeltaDegree + 5)
+		{
+			IsViewAround = false;
+			IsSmoothController = false;
+		}
+	}
+
+	//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, FString::Printf(TEXT("Player Speed:%f"), GetCharacterMovement()->Velocity.Size()), true);
 }
 
 void AMyFirstGameCharacter::Destroyed()
@@ -295,13 +326,14 @@ void AMyFirstGameCharacter::Destroyed()
 
 void AMyFirstGameCharacter::AddControllerYawInput(float Val)
 {
-	Super::AddControllerYawInput(Val);
+	if (!IsSmoothController)
+		Super::AddControllerYawInput(Val);
 
-	if (Val > 0)
-		IsToRight = true;
+		if (Val > 0)
+			IsToRight = true;
 
-	else if(Val < 0)
-		IsToRight = false;
+		else if (Val < 0)
+			IsToRight = false;
 }
 void AMyFirstGameCharacter::ViewAround()
 {
@@ -312,15 +344,13 @@ void AMyFirstGameCharacter::ViewAround()
 void AMyFirstGameCharacter::StopViewAround()
 {
 	CanShoot = true;
-	IsViewAround = false;
-
-	APlayerController* const PC = CastChecked<APlayerController>(Controller);
-	PC->SetControlRotation(FRotator(GetControlRotation().Pitch, GetActorRotation().Yaw, GetControlRotation().Roll));
+	IsSmoothController = true;
 }
 
 void AMyFirstGameCharacter::StartAccelerate()
 {
-	IsInAccelerate = true;       //加速跑的时候也不能射击
+	if (!IsInCrounch)       //在下蹲的时候不能加速
+		IsInAccelerate = true;       //加速跑的时候也不能射击
 }
 
 void AMyFirstGameCharacter::StopAccelerate()
@@ -343,11 +373,11 @@ FRotator AMyFirstGameCharacter::ComputeAimOffset()const
 	return FRotator::ZeroRotator;
 
 	//第二种方法
-	/*const FVector AimDirWS = GetBaseAimRotation().Vector();
-	const FVector AimDirLS = ActorToWorld().InverseTransformVectorNoScale(AimDirWS);    //获取两个旋转Vector的差，就是offset
-	const FRotator AimRotLS = AimDirLS.Rotation();
+	//const FVector AimDirWS = GetBaseAimRotation().Vector();
+	//const FVector AimDirLS = ActorToWorld().InverseTransformVectorNoScale(AimDirWS);    //获取两个旋转Vector的差，就是offset
+	//const FRotator AimRotLS = AimDirLS.Rotation();
 
-	return AimRotLS;*/
+	//return AimRotLS;
 }
 
 void AMyFirstGameCharacter::OperateDoor()
@@ -400,7 +430,7 @@ void AMyFirstGameCharacter::UpdateStandCharacter()
 				}
 			}
 		}
-		//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, FString::Printf(TEXT("Controller Yaw:%f,Character Yaw:%f,TestYawSub:%f"), ControllerCurYaw,CharacterYaw, SubAngle), true);
+		//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, FString::Printf(TEXT("Player Speed:%f"), GetCharacterMovement()->Velocity.Size()), true);
 	}
 }
 
@@ -460,7 +490,7 @@ FVector AMyFirstGameCharacter::ComputeShootDir(float AdjustDistance)
 		ViewRotation = MPC->GetControlRotation();
 		
 		FVector ForwardVec = FRotationMatrix(ViewRotation).GetUnitAxis(EAxis::X);         //获取某个轴的方向也可以使用矩阵
-		FVector ShootVec = ForwardVec*AdjustDistance + ViewLocation - CurWeapon->GetFireLocation();    //枪口位置到据玩家视线中心一定距离位置的方向
+		FVector ShootVec = ForwardVec * AdjustDistance + ViewLocation - CurWeapon->GetFireLocation();    //枪口位置到据玩家视线中心一定距离位置的方向
 
 		return ShootVec;
 	}
@@ -503,7 +533,7 @@ void AMyFirstGameCharacter::NextWeapon()
 void AMyFirstGameCharacter::PreWeapon()
 {
 	int32 PreWeaponIndex = InterInventory.Find(CurWeapon) == 0 ? (InterInventory.Num() - 1) : (InterInventory.Find(CurWeapon) - 1) % InterInventory.Num();
-	EquipWeapon(InterInventory[PreWeaponIndex]); //装备下一个武器
+	EquipWeapon(InterInventory[PreWeaponIndex]); //装备前一个武器
 }
 
 float AMyFirstGameCharacter::PlayAnim(float rate, UAnimMontage* Anim)
@@ -533,9 +563,9 @@ float AMyFirstGameCharacter::ComputeSuitRate(int8 CurShootSpeed)
 
 void AMyFirstGameCharacter::ToggleCrounchStat()
 {
-	if (!IsInStandToCrounch && !IsInCrounchToStand)             //如果不是在动作状态下才能进行切换
+	if (!IsInStandToCrounch && !IsInCrounchToStand && GetCharacterMovement()->Velocity.Size() <= MaxRunSpeed + 1)             //如果不是在动作状态下才能进行切换
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,"In Toggle");
+		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,"In Toggle");
 		IsInCrounch = IsInCrounch + 1;
 
 		if (IsInCrounch)
@@ -543,19 +573,19 @@ void AMyFirstGameCharacter::ToggleCrounchStat()
 			ActionAnimTime = PlayAnim(1.f, StandToCrounchAim); //动画播放的时间
 			CurActionTime = GetWorld()->GetTimeSeconds();          //获取动画开始时间
 			IsInStandToCrounch = true;
-			GetCharacterMovement()->MaxWalkSpeed = 300;
+			GetCharacterMovement()->MaxWalkSpeed = 250.f;
 
 			FVector CapLocation = GetCapsuleComponent()->GetComponentLocation();
 			GetCapsuleComponent()->SetCapsuleHalfHeight(48.f);     //人物蹲下，碰撞体也要随着变小，这里缩小为原来的一半
 			GetCapsuleComponent()->SetWorldLocation(CapLocation - FVector(0.f, 0.f, 48.f));
 			GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -48));
 		}
-		else
+		else 
 		{
 			ActionAnimTime = PlayAnim(1.f, CrounchToStandAim);
 			CurActionTime = GetWorld()->GetTimeSeconds();
 			IsInCrounchToStand = true;
-			GetCharacterMovement()->MaxWalkSpeed = 600;
+			GetCharacterMovement()->MaxWalkSpeed = MaxRunSpeed;
 
 			FVector CapLocation = GetCapsuleComponent()->GetComponentLocation();
 			GetCapsuleComponent()->SetCapsuleHalfHeight(96.f);
@@ -572,7 +602,7 @@ void AMyFirstGameCharacter::EquipWeapon(AWeapon_Gun* curWeapon)
 	AMyPlayerController* MPC = Cast<AMyPlayerController>(Controller);
 	if (MPC != NULL)
 		MPC->ChangeWeaponType(CurrentWeaponType);     //把武器类型参数传到Controller
-
+	
 	ShootSpeed = curWeapon->WeaponData.ShootSpeed;
 
 	this->CurWeapon->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
