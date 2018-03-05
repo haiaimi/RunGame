@@ -21,5 +21,8 @@ public:
 protected:
 	virtual void UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime)override;
 	
+	virtual void PostInitializeComponents()override;
 
+public:
+	virtual void BeginPlay()override;
 };

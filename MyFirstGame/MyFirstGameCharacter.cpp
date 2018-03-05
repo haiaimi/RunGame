@@ -70,9 +70,9 @@ AMyFirstGameCharacter::AMyFirstGameCharacter(const FObjectInitializer& ObjectIni
 	MaxRunSpeed = 600.f;
 	
 	// Create a follow camera
-    //FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+    FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	//FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	//FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -270,7 +270,7 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 		}
 	}
 
-	if (IsInAccelerate)
+	if (IsInAccelerate && !IsInCrounch)
 		GetCharacterMovement()->MaxWalkSpeed = CurMaxAcclerateSpeed;       //把速度变为当前加速状态速度
 	else if (IsInCrounch)
 		GetCharacterMovement()->MaxWalkSpeed = 250;    //下蹲时的速度
@@ -563,7 +563,7 @@ float AMyFirstGameCharacter::ComputeSuitRate(int8 CurShootSpeed)
 
 void AMyFirstGameCharacter::ToggleCrounchStat()
 {
-	if (!IsInStandToCrounch && !IsInCrounchToStand && GetCharacterMovement()->Velocity.Size() <= MaxRunSpeed + 1)             //如果不是在动作状态下才能进行切换
+	if (!IsInStandToCrounch && !IsInCrounchToStand)             
 	{
 		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,"In Toggle");
 		IsInCrounch = IsInCrounch + 1;

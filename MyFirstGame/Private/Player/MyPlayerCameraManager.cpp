@@ -4,6 +4,9 @@
 #include "MyFirstGameCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "Engine/Engine.h"
+#include "Camera/CameraActor.h"
+#include "Camera/CameraComponent.h"
 
 AMyPlayerCameraManager::AMyPlayerCameraManager(const FObjectInitializer& Initializer):Super(Initializer)
 {
@@ -11,6 +14,16 @@ AMyPlayerCameraManager::AMyPlayerCameraManager(const FObjectInitializer& Initial
 	ViewPitchMin = -70.f;
 	ViewPitchMax = 70.f;
 	FirstViewFOV = 60.f;
+}
+
+void AMyPlayerCameraManager::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+}
+
+void AMyPlayerCameraManager::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 void AMyPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime)
@@ -57,12 +70,20 @@ void AMyPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float
 			{
 				//ViewLoc = FMath::VInterpTo(OutVT.POV.Location, ViewLoc + ViewRotation.GetUnitAxis(EAxis::X)*30.0f, DeltaTime, 30);
 				if (DefaultFOV != 80.f)
-					DefaultFOV = FMath::FInterpTo(DefaultFOV, 75.f, DeltaTime, 5.f);
+				{
+					DefaultFOV = FMath::FInterpTo(DefaultFOV, 80.f, DeltaTime, 10.f);
+				}
+				FPostProcessSettings Temp;
+				Temp.bOverride_SceneFringeIntensity = true;
+				Temp.SceneFringeIntensity = 3.f;
+				OutVT.POV.PostProcessSettings = Temp;
 			}
 			else
 			{
 				if (DefaultFOV != 90.f)
-					DefaultFOV = FMath::FInterpTo(DefaultFOV, 90.f, DeltaTime, 5.f);
+				{
+					DefaultFOV = FMath::FInterpTo(DefaultFOV, 90.f, DeltaTime, 10.f);
+				}
 			}
 		}
 	}

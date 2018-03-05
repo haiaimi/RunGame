@@ -62,7 +62,7 @@ void AMyPlayerController::PostInitializeComponents()
 				CurPlatform = *It;
 				TempPlatform = CurPlatform;
 				PlatformArray[0] = *It;  //数组的第一个就是默认平台
-				GEngine->AddOnScreenDebugMessage(1, 5, FColor::Black, TEXT("检索成功"));
+				//GEngine->AddOnScreenDebugMessage(1, 5, FColor::Black, TEXT("检索成功"));
 				break;
 			}
 		}
