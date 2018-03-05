@@ -27,6 +27,8 @@ public:
 	/**飞行的目标位置*/
 	FVector FlyDst;
 
+	FVector HalfObstacleSize;
+
 	/**平台位置*/
 	//TArray<FVector> PlatformsLocation;
 
@@ -43,6 +45,9 @@ public:
 	/**飞行障碍物的加速度*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Obstacle")
 	float AccelerateSpeed;
+
+	/**减速到0的加速度，为负*/
+	float ToStopAccelerate;
 
 	/**当前速度*/
 	float CurSpeed;
@@ -69,4 +74,13 @@ public:
 	void StartDestroy();
 
 	void DestroyActor();
+
+	/**该函数是为了在障碍物寻找合适的停止位置，以免影响人物移动*/
+	void SelectSuitStopLocation(FVector MoveDir, float MoveDistance);
+
+	/**根据给出的速度，以及加速度求出导停止的距离*/
+	float ComputeDistanceToStop(float CurSpeed, float Accelerate);
+
+	/**根据给出的移动距离，初速度，计算移动到零时的加速度*/
+	float ComputeAccelerateToStop(float CurSpeed, float MoveDistance);
 };

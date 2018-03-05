@@ -5,6 +5,8 @@
 #include "MyFirstGameCharacter.h"
 #include "TimerManager.h"
 #include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
+#include "RunPlatform.h"
 
 
 // Sets default values
@@ -24,6 +26,7 @@ AFlyObstacle::AFlyObstacle(const FObjectInitializer& ObjectInitializer) :Super(O
 	//默认初速度与加速度
 	StartSpeed = CurSpeed = 0.f;
 	AccelerateSpeed = 200.f;
+	ToStopAccelerate = -AccelerateSpeed * 2;
 	IsOver = false;
 }
 
@@ -38,8 +41,8 @@ void AFlyObstacle::PostInitializeComponents()
 		QueryIsOverSubAngle();
 	}
 
-	FVector ObstacleSize = FlyObstacleMesh->Bounds.BoxExtent;
-	FlyObstacleMesh->SetRelativeLocation(FVector(-ObstacleSize.X, -ObstacleSize.Y, 0.f));
+	HalfObstacleSize = FlyObstacleMesh->Bounds.BoxExtent;
+	FlyObstacleMesh->SetRelativeLocation(FVector(-HalfObstacleSize.X, -HalfObstacleSize.Y, 0.f));
 }
 
 // Called when the game starts or when spawned
@@ -47,7 +50,17 @@ void AFlyObstacle::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	
+//测试条件编译
+#ifdef WITH_EDITOR
+	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("In Editor"));
+#elif PLATFORM_DESKTOP
+	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("In Windows"));
+
+#endif // WITH_EDITOR
+
+	//FCollisionObjectQueryParams
+	//FCollisionQueryParams
+	//GetWorld()->Sweep
 }
 
 // Called every frame
@@ -65,7 +78,7 @@ void AFlyObstacle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 		if (CurSpeed >= 2000.f)
 			CurSpeed = 2000.f;
 	}
-	else      //这是超过目标点的情况
+	else          //这是超过目标点的情况
 	{
 		if (CurSpeed > 0)
 		{
@@ -74,7 +87,7 @@ void AFlyObstacle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 
 			const FRotator ObstacleRotation = GetActorRotation();
 			SetActorRotation(FRotator(ObstacleRotation.Pitch, ObstacleRotation.Yaw + CurSpeed * DeltaTime, ObstacleRotation.Roll));
-			CurSpeed -= 2 * AccelerateSpeed * DeltaTime;
+			CurSpeed += ToStopAccelerate;
 			if (CurSpeed <= 0)
 			{
 				CurSpeed = 0;
@@ -120,4 +133,33 @@ void AFlyObstacle::DestroyActor()
 {
 	GetWorldTimerManager().ClearTimer(QueryAngler);
 	Destroy();
+}
+
+void AFlyObstacle::SelectSuitStopLocation(FVector MoveDir, float MoveDistance)
+{
+	FHitResult Result;
+	FCollisionObjectQueryParams ObjectQueryParams(ECollisionChannel::ECC_WorldDynamic);       //只检测平台网格,平台网格是WorldStatic
+	FCollisionQueryParams QueryParams(TEXT("ObstacleQuery"));
+	GetWorld()->SweepSingleByObjectType(Result,
+										GetActorLocation() + MoveDir * MoveDistance,
+										GetActorLocation() + MoveDir * MoveDistance + FVector(0.f, 0.f, -1.f)*200.f,
+										FQuat::Identity, ObjectQueryParams, 
+										FCollisionShape::MakeBox(HalfObstacleSize), 
+										QueryParams);
+
+	if (Cast<ARunPlatform>(Result.GetActor()))      //检测到平台
+	{
+		//先加移动距离200
+	}
+}
+
+float AFlyObstacle::ComputeDistanceToStop(float CurSpeed, float Accelerate)
+{
+	float MoveTime = FMath::Abs(CurSpeed / Accelerate);
+	return FMath::Abs(Accelerate*MoveTime*MoveTime) / 2;       //返回移动距离
+}
+
+float AFlyObstacle::ComputeAccelerateToStop(float CurSpeed, float MoveDistance)
+{
+	return -CurSpeed * CurSpeed / MoveDistance / 2;       //求出合适的加速度
 }
