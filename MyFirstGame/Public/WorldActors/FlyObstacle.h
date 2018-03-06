@@ -52,8 +52,17 @@ public:
 	/**当前速度*/
 	float CurSpeed;
 
+	/**记录该障碍到人物的最高的速度*/
+	float ToCharMaxSpeed;
+
 	/**是否已经超过目标点，超过就准备减速返回*/
 	uint8 IsOver : 1;
+
+	/**这是在还没有激活障碍物移动条件下，强制移动*/
+	uint8 ForceActive : 1;
+
+	/**障碍物静止的时间*/
+	float StopLengthTime;
 
 protected:
 	// Called when the game starts or when spawned
@@ -76,7 +85,7 @@ public:
 	void DestroyActor();
 
 	/**该函数是为了在障碍物寻找合适的停止位置，以免影响人物移动*/
-	void SelectSuitStopLocation(FVector MoveDir, float MoveDistance);
+	void SelectSuitStopAccelerate(FVector MoveDir, float CurSpeed, float MoveDistance);
 
 	/**根据给出的速度，以及加速度求出导停止的距离*/
 	float ComputeDistanceToStop(float CurSpeed, float Accelerate);

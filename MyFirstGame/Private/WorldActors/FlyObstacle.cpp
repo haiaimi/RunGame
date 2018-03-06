@@ -26,8 +26,9 @@ AFlyObstacle::AFlyObstacle(const FObjectInitializer& ObjectInitializer) :Super(O
 	//默认初速度与加速度
 	StartSpeed = CurSpeed = 0.f;
 	AccelerateSpeed = 200.f;
-	ToStopAccelerate = -AccelerateSpeed * 2;
 	IsOver = false;
+	ForceActive = false;
+	StopLengthTime = 0.f;
 }
 
 void AFlyObstacle::PostInitializeComponents()
@@ -49,18 +50,17 @@ void AFlyObstacle::PostInitializeComponents()
 void AFlyObstacle::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	ToStopAccelerate = -AccelerateSpeed * 2;
 //测试条件编译
 #ifdef WITH_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("In Editor"));
+
 #elif PLATFORM_DESKTOP
 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("In Windows"));
 
 #endif // WITH_EDITOR
 
-	//FCollisionObjectQueryParams
-	//FCollisionQueryParams
-	//GetWorld()->Sweep
 }
 
 // Called every frame
@@ -77,24 +77,47 @@ void AFlyObstacle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 		CurSpeed += AccelerateSpeed * DeltaTime;
 		if (CurSpeed >= 2000.f)
 			CurSpeed = 2000.f;
+
+		ToCharMaxSpeed = CurSpeed;
 	}
 	else          //这是超过目标点的情况
 	{
 		if (CurSpeed > 0)
 		{
+			if (ToCharMaxSpeed == CurSpeed)
+			{
+				if (ToCharMaxSpeed < 1000.f)
+				{
+					CurSpeed = ToCharMaxSpeed = 1000.f;      //使其最小的减速初速度为500，防止停在平台上过长时间
+				}
+				SelectSuitStopAccelerate(FlyDir, ToCharMaxSpeed, ComputeDistanceToStop(ToCharMaxSpeed, ToStopAccelerate));
+			}
+
 			IsOver = true;
 			SetActorLocation(GetActorLocation() + FlyDir * CurSpeed * DeltaTime);
-
 			const FRotator ObstacleRotation = GetActorRotation();
 			SetActorRotation(FRotator(ObstacleRotation.Pitch, ObstacleRotation.Yaw + CurSpeed * DeltaTime, ObstacleRotation.Roll));
-			CurSpeed += ToStopAccelerate;
-			if (CurSpeed <= 0)
+			CurSpeed += ToStopAccelerate * DeltaTime;
+			if (CurSpeed <= 0.f)
 			{
-				CurSpeed = 0;
+				CurSpeed = 0.f;
 				IsOver = false;
+				ToStopAccelerate = -AccelerateSpeed * 2;  //恢复默认的返回加速度
 			}
 		}
 	}
+
+	if (CurSpeed == 0.f)
+	{
+		StopLengthTime += DeltaTime;
+		if (StopLengthTime >= 5.f)
+		{
+			ForceActive = true;
+			StopLengthTime = 0.f;
+		}
+	}
+	else
+		ForceActive = false;
 }
 
 void AFlyObstacle::Destroyed()
@@ -105,19 +128,18 @@ void AFlyObstacle::Destroyed()
 
 void AFlyObstacle::QueryIsOverSubAngle()
 {
-	if (AimCharacter != nullptr && !IsOver)  //只有在非超过时才执行下面的操作
+	if ((AimCharacter != nullptr && !IsOver) || ForceActive)  //只有在非超过时才执行下面的操作
 	{
 		FVector CurBestDir = (AimCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal2D();
 		float SubAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CurBestDir, FlyDir)));    //算出相差角度
-		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::FormatAsNumber(SubAngle));
+		//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::FormatAsNumber(SubAngle));
 
-		if (SubAngle > 30.f && SubAngle < 150.f)
+		if ((SubAngle > 30.f && SubAngle < 150.f) || ForceActive)
 		{
 			FlyDir = CurBestDir;   //更改飞行角度
 			FlyDst = AimCharacter->GetActorLocation();    //更改飞行的目标位置
 		}
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, TEXT("Query Start"));
 	GetWorldTimerManager().SetTimer(QueryAngler, this, &AFlyObstacle::QueryIsOverSubAngle, 0.5f, false);    //每0.5秒检查一次
 }
 
@@ -135,7 +157,7 @@ void AFlyObstacle::DestroyActor()
 	Destroy();
 }
 
-void AFlyObstacle::SelectSuitStopLocation(FVector MoveDir, float MoveDistance)
+void AFlyObstacle::SelectSuitStopAccelerate(FVector MoveDir, float CurSpeed, float MoveDistance)
 {
 	FHitResult Result;
 	FCollisionObjectQueryParams ObjectQueryParams(ECollisionChannel::ECC_WorldDynamic);       //只检测平台网格,平台网格是WorldStatic
@@ -150,16 +172,23 @@ void AFlyObstacle::SelectSuitStopLocation(FVector MoveDir, float MoveDistance)
 	if (Cast<ARunPlatform>(Result.GetActor()))      //检测到平台
 	{
 		//先加移动距离200
+		MoveDistance += 200.f;
+		SelectSuitStopAccelerate(MoveDir, CurSpeed, MoveDistance);
+		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("调整加速度"));
+	} 
+	else
+	{
+		ToStopAccelerate = ComputeAccelerateToStop(CurSpeed, MoveDistance);
 	}
 }
 
 float AFlyObstacle::ComputeDistanceToStop(float CurSpeed, float Accelerate)
 {
 	float MoveTime = FMath::Abs(CurSpeed / Accelerate);
-	return FMath::Abs(Accelerate*MoveTime*MoveTime) / 2;       //返回移动距离
+	return FMath::Abs(Accelerate * MoveTime * MoveTime) / 2;       //返回移动距离
 }
 
 float AFlyObstacle::ComputeAccelerateToStop(float CurSpeed, float MoveDistance)
 {
-	return -CurSpeed * CurSpeed / MoveDistance / 2;       //求出合适的加速度
+	return -(CurSpeed * CurSpeed) / (MoveDistance * 2);       //求出合适的加速度
 }
