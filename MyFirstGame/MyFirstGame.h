@@ -40,3 +40,15 @@ namespace EBonusType
 		Bonus_Accelerate
 	};
 }
+
+UENUM()
+namespace EFlyObstacleToCharDir
+{
+	enum Type
+	{
+		FOTCD_Front,
+		FOTCD_Right,
+		FOTCD_Behind,
+		FOTCD_Left
+	};
+}

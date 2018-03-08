@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "MyFirstGame.h"
 #include "FlyObstacle.generated.h"
 
 UCLASS()
@@ -60,9 +61,18 @@ public:
 
 	/**这是在还没有激活障碍物移动条件下，强制移动*/
 	uint8 ForceActive : 1;
+	
+	/**是否需要显示方向*/
+	uint8 ShouldShowDir : 1;
 
 	/**障碍物静止的时间*/
 	float StopLengthTime;
+
+	/**当前相对于玩家的方向*/
+	TEnumAsByte<EFlyObstacleToCharDir::Type> CurDirToChar;
+	
+	/**用于显示障碍物相对于玩家的方向的定时器*/
+	FTimerHandle ShowDir;
 
 protected:
 	// Called when the game starts or when spawned
@@ -92,4 +102,7 @@ public:
 
 	/**根据给出的移动距离，初速度，计算移动到零时的加速度*/
 	float ComputeAccelerateToStop(float CurSpeed, float MoveDistance);
+
+	/**该函数用来显示平台相对于玩家的位置，以供提醒玩家*/
+	void ShowObstaclePosRelativeToChar();
 };

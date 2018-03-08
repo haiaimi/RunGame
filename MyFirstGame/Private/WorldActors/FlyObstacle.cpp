@@ -7,6 +7,7 @@
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "RunPlatform.h"
+#include "MyFirstGame.h"
 
 
 // Sets default values
@@ -29,6 +30,7 @@ AFlyObstacle::AFlyObstacle(const FObjectInitializer& ObjectInitializer) :Super(O
 	IsOver = false;
 	ForceActive = false;
 	StopLengthTime = 0.f;
+	ShouldShowDir = true;
 }
 
 void AFlyObstacle::PostInitializeComponents()
@@ -51,6 +53,7 @@ void AFlyObstacle::BeginPlay()
 {
 	Super::BeginPlay();
 
+	ShowObstaclePosRelativeToChar();
 	ToStopAccelerate = -AccelerateSpeed * 2;
 //测试条件编译
 #ifdef WITH_EDITOR
@@ -145,6 +148,7 @@ void AFlyObstacle::QueryIsOverSubAngle()
 
 void AFlyObstacle::StartDestroy()
 {
+	ShouldShowDir = false;
 	if (!FlyObstacleMesh->IsSimulatingPhysics())
 		FlyObstacleMesh->SetSimulatePhysics(true);
 
@@ -154,6 +158,8 @@ void AFlyObstacle::StartDestroy()
 void AFlyObstacle::DestroyActor()
 {
 	GetWorldTimerManager().ClearTimer(QueryAngler);
+	GetWorldTimerManager().ClearTimer(ShowDir);
+
 	Destroy();
 }
 
@@ -191,4 +197,56 @@ float AFlyObstacle::ComputeDistanceToStop(float CurSpeed, float Accelerate)
 float AFlyObstacle::ComputeAccelerateToStop(float CurSpeed, float MoveDistance)
 {
 	return -(CurSpeed * CurSpeed) / (MoveDistance * 2);       //求出合适的加速度
+}
+
+void AFlyObstacle::ShowObstaclePosRelativeToChar()
+{
+	if (AimCharacter != nullptr && ShouldShowDir)
+	{
+		const FMatrix CharOrient = FRotationMatrix(AimCharacter->GetActorRotation());
+		
+		const FVector CharFront = CharOrient.GetUnitAxis(EAxis::X);    //玩家正前方向
+		const FVector CharBehind = -CharFront;     //正后方
+		const FVector CharRight = CharOrient.GetUnitAxis(EAxis::Y);    //玩家正右方
+		const FVector CharLeft = -CharRight;  //玩家正左边
+
+		const FVector CharToObtsacleDir = (GetActorLocation() - AimCharacter->GetActorLocation()).GetSafeNormal2D();   //障碍物相对于玩家的方向
+
+		float FrontDegrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CharFront, CharToObtsacleDir)));
+		if (FrontDegrees < 45.f)
+			CurDirToChar = EFlyObstacleToCharDir::Type::FOTCD_Front;
+
+		float RightDegrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CharRight, CharToObtsacleDir)));
+		if (RightDegrees < 45.f)
+			CurDirToChar = EFlyObstacleToCharDir::Type::FOTCD_Right;
+
+		float BehindDegrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CharBehind, CharToObtsacleDir)));
+		if (BehindDegrees < 45.f)
+			CurDirToChar = EFlyObstacleToCharDir::Type::FOTCD_Behind;
+
+		float LeftDegrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CharLeft, CharToObtsacleDir)));
+		if (LeftDegrees < 45.f)
+			CurDirToChar = EFlyObstacleToCharDir::Type::FOTCD_Left;
+
+		switch(CurDirToChar)
+		{
+		case EFlyObstacleToCharDir::FOTCD_Front:
+			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("在前方! 速度为%4.2f m/s"), CurSpeed / 100.f));
+			break;
+
+		case EFlyObstacleToCharDir::FOTCD_Right:
+			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("在右方! 速度为%4.2f m/s"), CurSpeed / 100.f));
+			break;
+
+		case EFlyObstacleToCharDir::FOTCD_Behind:
+			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("在后方! 速度为%4.2f m/s"), CurSpeed / 100.f));
+			break;
+
+		case EFlyObstacleToCharDir::FOTCD_Left:
+			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("在左方! 速度为%4.2f m/s"), CurSpeed / 100.f));
+			break;
+		}
+
+		GetWorldTimerManager().SetTimer(ShowDir, this, &AFlyObstacle::ShowObstaclePosRelativeToChar, 1.f, true);
+	}
 }
