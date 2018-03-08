@@ -61,8 +61,11 @@ public:
 	/**这是两个飞行障碍生成的最小间隔平台数*/
 	int32 FlyObstacleSpawnInterval;
 
-	/**每个平面上最多的飞行障碍*/
-	int32 MaxFlyObstacles = 3;
+	/**每个平面上最多的飞行障碍，随着层数变高，生成的飞行障碍也变多*/
+	int32 MaxFlyObstacles;
+
+	/**当前已经生成的Shoot平台，要根据这个控制生成的FlyObstacle得数量*/
+	int32 CurSpawnedShootPlats;
 
 	int32 CurFlyObstacles;
 
@@ -101,4 +104,6 @@ public:
 
 	/**随机生成飞行障碍*/
 	void RandomSpawnFlyObstacle();
+
+	void AddMaxSpawnObstacles();
 };

@@ -58,7 +58,7 @@ void ARunPlatform::PostInitializeComponents()
 	QueryBox->SetRelativeLocation(FVector(PlatformSize.X, PlatformSize.Y, QueryBox->Bounds.BoxExtent.Z));  //然后设置检测碰撞体的位置
 	Platform->SetWorldScale3D(FVector(XScale, YScale, 1.f));
 
-	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Blue, FString::Printf(TEXT("X:%2f,Y:%2f,Z:%2f,Platform.X:%2f"), PlatformSize.X, PlatformSize.Y, BoxScale.Z, PlatformSize.X));
+	//GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Blue, FString::Printf(TEXT("X:%2f,Y:%2f,Z:%2f,Platform.X:%2f"), PlatformSize.X, PlatformSize.Y, BoxScale.Z, PlatformSize.X));
 	
 	PlatformLength = 2 * XScale * PlatformSize.X;
 	PlatformWidth = 2 * YScale * PlatformSize.Y;

@@ -38,6 +38,8 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	InConnectedToPlat = false;
 	CurConnectedPlat = NULL;
 	FlyObstacleSpawnInterval = -1;
+	MaxFlyObstacles = 1;     //游戏开始时飞行障碍数为0
+	CurSpawnedShootPlats = 0;
 }
 
 
@@ -158,10 +160,13 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 			PlatformArray[0]->StartDestroy();    //开始删除第一个平台
 			PlatformArray.RemoveAt(0);  //移除已经走过的平台
 			TempPlatform = CurPlatform;   //
-			GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, FString::Printf(TEXT("数组容量:%d"), PlatformArray.Num()));
+			//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, FString::Printf(TEXT("数组容量:%d"), PlatformArray.Num()));
 
 			if (Random_Bonus_Score >= 0 && Random_Bonus_Score < 30)
 				SpawnBonus_Score(AddPlatform);   //30的几率生成Bonus Score
+
+			if (AddPlatform->IsA(SpawnPlatform_Shoot))
+				AddMaxSpawnObstacles();
 
 			RandomSpawnFlyObstacle();     //这是随机生成飞行障碍
 		}
@@ -440,5 +445,14 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 			}
 		}
 		FlyObstacleArray.Reset();   //清空数组
+	}
+}
+
+void AMyPlayerController::AddMaxSpawnObstacles()
+{
+	CurSpawnedShootPlats++;
+	if (CurSpawnedShootPlats >= (MaxFlyObstacles * 10) && MaxFlyObstacles <= 4)      //最多可以有4个飞行障碍，太高会导致游戏难度高
+	{
+		MaxFlyObstacles++;
 	}
 }
