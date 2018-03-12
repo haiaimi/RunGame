@@ -6,3 +6,4 @@
 
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, MyFirstGame, "MyFirstGame" );
 
+DEFINE_LOG_CATEGORY(LogRunGame)

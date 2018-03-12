@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "RunPlatform.h"
 #include "MyFirstGame.h"
+#include "Player/MyPlayerController.h"
 
 
 // Sets default values
@@ -133,14 +134,23 @@ void AFlyObstacle::QueryIsOverSubAngle()
 {
 	if ((AimCharacter != nullptr && !IsOver) || ForceActive)  //只有在非超过时才执行下面的操作
 	{
-		FVector CurBestDir = (AimCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal2D();
-		float SubAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CurBestDir, FlyDir)));    //算出相差角度
-		//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::FormatAsNumber(SubAngle));
-
-		if ((SubAngle > 30.f && SubAngle < 150.f) || ForceActive)
+		bool IsOnPhysicPlatform = false;
+		if (AimCharacter->Controller != nullptr)
 		{
-			FlyDir = CurBestDir;   //更改飞行角度
-			FlyDst = AimCharacter->GetActorLocation();    //更改飞行的目标位置
+			AMyPlayerController* MPC = Cast<AMyPlayerController>(AimCharacter->Controller);
+			IsOnPhysicPlatform = MPC->CurPlatform->IsA(MPC->SpawnPlatform_Physic);    //玩家当前平台是物理平台就停止移动
+		}
+		if (!IsOnPhysicPlatform)
+		{
+			FVector CurBestDir = (AimCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal2D();
+			float SubAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CurBestDir, FlyDir)));    //算出相差角度
+																											   //GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::FormatAsNumber(SubAngle));
+
+			if ((SubAngle > 30.f && SubAngle < 150.f) || ForceActive)
+			{
+				FlyDir = CurBestDir;   //更改飞行角度
+				FlyDst = AimCharacter->GetActorLocation();    //更改飞行的目标位置
+			}
 		}
 	}
 	GetWorldTimerManager().SetTimer(QueryAngler, this, &AFlyObstacle::QueryIsOverSubAngle, 0.5f, false);    //每0.5秒检查一次
@@ -169,8 +179,8 @@ void AFlyObstacle::SelectSuitStopAccelerate(FVector MoveDir, float CurSpeed, flo
 	FCollisionObjectQueryParams ObjectQueryParams(ECollisionChannel::ECC_WorldDynamic);       //只检测平台网格,平台网格是WorldStatic
 	FCollisionQueryParams QueryParams(TEXT("ObstacleQuery"));
 	GetWorld()->SweepSingleByObjectType(Result,
-										GetActorLocation() + MoveDir * MoveDistance,
-										GetActorLocation() + MoveDir * MoveDistance + FVector(0.f, 0.f, -1.f)*200.f,
+										GetActorLocation() + MoveDir * MoveDistance + FVector(0.f, 0.f, 1.f)*400.f,
+										GetActorLocation() + MoveDir * MoveDistance + FVector(0.f, 0.f, -1.f)*400.f,
 										FQuat::Identity, ObjectQueryParams, 
 										FCollisionShape::MakeBox(HalfObstacleSize), 
 										QueryParams);

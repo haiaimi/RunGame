@@ -71,9 +71,14 @@ void ARunPlatform_Beam::TickActor(float DeltaTime, enum ELevelTick TickType, FAc
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 	
-	if (UpdateBeam && TargetGun != NULL && BeamParticle != NULL)
+	if (UpdateBeam && TargetGun != nullptr && BeamParticle)
 	{
-		BeamParticle->SetBeamTargetPoint(0, TargetGun->GetFireLocation(), 0);    //更新闪电目标
+		const FVector BeamSourcePoint = Platform->GetSocketLocation(AttachSocket);
+		const FVector BeamTargetPoint = TargetGun->GetFireLocation();
+		BeamParticle->SetBeamTargetPoint(0, BeamTargetPoint, 0);    //更新闪电目标
+
+		if ((BeamSourcePoint - BeamTargetPoint).Size() >= 2000.f)
+			DeActiveBeam();
 	}
 	if (MoveCurve && IsInMove)
 	{
@@ -91,7 +96,7 @@ void ARunPlatform_Beam::AttachBeginOverlap(UPrimitiveComponent* OverlappedCompon
 	ABullet* Temp = Cast<ABullet>(OtherActor);
 
 	if (FVector::DotProduct(SweepResult.ImpactNormal, FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::X)) < 0)     //判断子弹是否从粒子背面射过来
-		if (Temp != NULL)
+		if (Temp != nullptr)
 		{
 			if (Temp->CurWeaponType == EWeaponType::Weapon_Beam)
 			{
@@ -119,23 +124,26 @@ void ARunPlatform_Beam::MoveTick(float DeltaTime)
 			
 			SpawnLocation = FMath::VInterpTo(SpawnLocation, DstLoc, DeltaTime, 10.f);
 
-				if (NextPlatform != NULL)
+				if (NextPlatform != nullptr)
 					if (!NextPlatform->MoveToNew)     //只有下一个平台没有移动时才执行下面操作
 						if ((SpawnLocation - TempSpawnLocation).Size() > DeltaLoc.Size() / 2)  //移动超过相差距离一半时，就开始移动下一个平台
 							NextPlatform->MoveToNewPos(DeltaLoc);
 
-			if (SpawnLocation == DstLoc) //平台到达目标位置时
+			if ((SpawnLocation - DstLoc).Size() < 1.f) //平台到达目标位置时    注意浮点数、注意浮点数、注意浮点数！！！重要的事说三遍
 			{
 				MoveToNew = false;  //停止移动更新
 				TempSpawnLocation = SpawnLocation;
 
 				AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
-				if (MPC != NULL)
+				if (MPC != nullptr)
 				{
 					int32 StopIndex = MPC->PlatformArray.Find(this);
 
 					for (int32 i = 0; i < StopIndex; i++)
-						MPC->PlatformArray[i]->MoveToNew = false;
+					{
+						if (MPC->PlatformArray[i] != nullptr)
+							MPC->PlatformArray[i]->MoveToNew = false;
+					}
 				}
 			}
 		}
@@ -144,12 +152,12 @@ void ARunPlatform_Beam::MoveTick(float DeltaTime)
 			FVector NewPos = FMath::VInterpTo(GetActorLocation(), StopLocation + DeltaLoc, DeltaTime, 10.f);
 			SetActorLocation(NewPos);
 
-			if (NextPlatform != NULL)
+			if (NextPlatform != nullptr)
 				if (!NextPlatform->MoveToNew)   //只有下一个平台没有移动时才执行下面操作
 					if ((NewPos - StopLocation).Size() > DeltaLoc.Size() / 2)   //移动超过相差距离一半时，就开始移动下一个平台
 						NextPlatform->MoveToNewPos(NextPlatToCur);
 
-			if (NewPos == StopLocation + DeltaLoc)
+			if ((NewPos - (StopLocation + DeltaLoc)).Size() < 1.f)
 				MoveToNew = false;  //停止更新
 		}
 	}
@@ -160,14 +168,14 @@ void ARunPlatform_Beam::BeginOverlap(UPrimitiveComponent* OverlappedComponent, A
 	Super::BeginOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 
 	//玩家进入该平台时，删掉闪电粒子
-	if (CurChar != NULL && BeamParticle != NULL)
+	if (CurChar != nullptr && BeamParticle != nullptr)
 	{
 		BeamParticle->SetVisibility(false);
 		BeamParticle->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 	}
 
 	ARunPlatform* TouchedPlatform = Cast<ARunPlatform>(OtherActor);
-	if (TouchedPlatform != NULL)
+	if (TouchedPlatform)
 	{
 		FVector CurDirY = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Y);    //获得Y方向的向量
 		FVector TouchDirY = FRotationMatrix(TouchedPlatform->GetActorRotation()).GetUnitAxis(EAxis::Y);   //获取碰撞的平台的Y方向
@@ -197,12 +205,12 @@ void ARunPlatform_Beam::MoveToPlayerPlat()
 {
 	AMyPlayerController* MC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
 
-	if (MC != NULL)
+	if (MC != nullptr)
 	{
 		MC->InConnectedToPlat = true;
 		MC->CurConnectedPlat = this;
 		//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Black, FString::Printf(TEXT("Platform Num: %d"), MC->PlatformArray.Num()));
-		if (MC->CurPlatform != NULL)
+		if (MC->CurPlatform != nullptr)
 		{
 			FVector ToPlayerPos = MC->CurPlatform->GetActorLocation() - GetActorLocation();      //需要移动的距离
 
@@ -227,7 +235,7 @@ void ARunPlatform_Beam::MoveToPlayerPlat()
 				MoveToNewPos(FVector(0.f, ToPlayerPos.Y + PlatformLength, ToPlayerPos.Z));
 			}
 
-			if (NextPlatform != NULL)
+			if (NextPlatform != nullptr)
 				NextPlatToCur = GetActorLocation() + DeltaPos - NextPlatform->GetActorLocation();    //求出下一个普通平台到该平台的相对位置
 		}
 	}
@@ -235,6 +243,6 @@ void ARunPlatform_Beam::MoveToPlayerPlat()
 
 void ARunPlatform_Beam::DeActiveBeam()
 {
-	if (BeamParticle != NULL)
+	if (BeamParticle != nullptr)
 		BeamParticle->SetVisibility(false);
 }

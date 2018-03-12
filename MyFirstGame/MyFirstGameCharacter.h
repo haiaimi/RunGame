@@ -8,6 +8,7 @@
 #include "MyFirstGameCharacter.generated.h"
 
 class ABonus;
+class AFlyObstacle;
 
 UCLASS(config=Game)
 class AMyFirstGameCharacter : public ACharacter

@@ -18,6 +18,9 @@
 #include "MyFirstGame.h"
 #include "Engine/Engine.h"
 #include "Bonus.h"
+#include "FlyObstacle.h"
+#include "EngineUtils.h"
+#include "RunPlatform.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AMyFirstGameCharacter
@@ -317,8 +320,24 @@ void AMyFirstGameCharacter::Destroyed()
 	int32 WeaponNum = InterInventory.Num();      //删除生成的武器
 	for (int32 i = 0; i < WeaponNum; i++)
 	{
-		if (InterInventory[i] != NULL)
+		if (InterInventory[i] != nullptr)
 			InterInventory[i]->Destroy();
+	}
+
+	for (TActorIterator<AFlyObstacle> It(GetWorld()); It; ++It)
+	{
+		(*It)->DestroyActor();
+	}
+
+	AMyPlayerController* MPC = Cast<AMyPlayerController>(Controller);
+	if (MPC != nullptr)
+	{
+		int32 PlatNum = MPC->PlatformArray.Num();
+		for (int32 i = 0; i < PlatNum; ++i)
+		{
+			MPC->PlatformArray[i]->DestroyActor();
+			MPC->PlatformArray[i] = nullptr;
+		}
 	}
 
 	Super::Destroyed();
@@ -600,7 +619,7 @@ void AMyFirstGameCharacter::EquipWeapon(AWeapon_Gun* curWeapon)
 	//设置当前武器类型，及射速
 	CurrentWeaponType = curWeapon->WeaponData.WeaponType;
 	AMyPlayerController* MPC = Cast<AMyPlayerController>(Controller);
-	if (MPC != NULL)
+	if (MPC != nullptr)
 		MPC->ChangeWeaponType(CurrentWeaponType);     //把武器类型参数传到Controller
 	
 	ShootSpeed = curWeapon->WeaponData.ShootSpeed;

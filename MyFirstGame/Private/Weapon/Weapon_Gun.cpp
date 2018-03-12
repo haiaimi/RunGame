@@ -37,7 +37,7 @@ void AWeapon_Gun::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTic
 
 FVector AWeapon_Gun::GetFireLocation()
 {
-	if (GunMesh)
+	if (GunMesh != nullptr)
 	{
 		FVector FireLocation = GunMesh->GetSocketLocation(FirePoint);
 		return FireLocation;
@@ -47,7 +47,7 @@ FVector AWeapon_Gun::GetFireLocation()
 
 FTransform AWeapon_Gun::GetFireTransform()
 {
-	if (GunMesh)
+	if (GunMesh != nullptr)
 	{
 		return GunMesh->GetSocketTransform(FirePoint);
 	}
@@ -61,7 +61,7 @@ void AWeapon_Gun::Fire(FVector ShootDir)
 	
 	//第一种方法
 	ABullet* SpawnBullet = GetWorld()->SpawnActorDeferred<ABullet>(ProjectileWeapon, SpawnTrans, this);
-	if (SpawnBullet)
+	if (SpawnBullet != nullptr)
 	{
 		SpawnBullet->InitBulletVelocity(ShootDir);
 

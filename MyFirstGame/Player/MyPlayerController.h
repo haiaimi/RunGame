@@ -45,9 +45,11 @@ public:
 	TSubclassOf<ABonus> Bonus_Score;
 
 	/**存放当前所有平台的数组*/
+	UPROPERTY()
 	TArray<ARunPlatform*> PlatformArray;
 
 	/**存放当前层飞行障碍的数组，以Shoot平台分层*/
+	UPROPERTY()
 	TArray<AFlyObstacle*> FlyObstacleArray;
 
 	/**生成的平台中的绝对方向信息*/
@@ -57,6 +59,8 @@ public:
 
 	/**当前玩家是否连接着平台*/
 	uint8 InConnectedToPlat : 1;
+
+	uint32 IsInPause : 1;
 
 	/**这是两个飞行障碍生成的最小间隔平台数*/
 	int32 FlyObstacleSpawnInterval;
@@ -68,6 +72,10 @@ public:
 	int32 CurSpawnedShootPlats;
 
 	int32 CurFlyObstacles;
+
+	int32 HasSpawnedPlatNum = 0;
+
+	int32 HasSpawnedBeamPlatNum = 0;
 
 public:
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction);
@@ -106,4 +114,6 @@ public:
 	void RandomSpawnFlyObstacle();
 
 	void AddMaxSpawnObstacles();
+
+	void TogglePauseStat();
 };

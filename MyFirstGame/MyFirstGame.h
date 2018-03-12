@@ -7,6 +7,8 @@
 #define COLLISION_PROJECTILE   ECollisionChannel::ECC_GameTraceChannel1
 #define COLLISION_BOOMQUERY    ECollisionChannel::ECC_GameTraceChannel2
 
+DECLARE_LOG_CATEGORY_EXTERN(LogRunGame, Log, All);
+
 UENUM(BlueprintType)
 namespace EWeaponType
 {

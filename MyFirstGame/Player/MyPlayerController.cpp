@@ -36,16 +36,18 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 
 	CurrentWeaponType = EWeaponType::Weapon_Instant;
 	InConnectedToPlat = false;
-	CurConnectedPlat = NULL;
+	CurConnectedPlat = nullptr;
 	FlyObstacleSpawnInterval = -1;
 	MaxFlyObstacles = 1;     //游戏开始时飞行障碍数为0
 	CurSpawnedShootPlats = 0;
+	IsInPause = 0;
 }
 
 
 void AMyPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
+	InputComponent->BindAction("TogglePause", IE_Pressed, this, &AMyPlayerController::TogglePauseStat);
 }
 
 void AMyPlayerController::PostInitializeComponents()
@@ -76,7 +78,7 @@ void AMyPlayerController::PostInitializeComponents()
 	{
 		ARunPlatform* Temp = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray[i - 1]));
 	
-		if (Temp)
+		if (Temp != nullptr)
 		{
 			Temp->PlatDir = AbsoluteDir;
 			PlatformArray[i] = Temp;
@@ -94,37 +96,39 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 
-	if (PlatformArray.Last() != NULL)
-		if (CurPlatform != TempPlatform && CurPlatform != NULL && !PlatformArray.Last()->MoveToNew)   //玩家所在平台发生变化，并且最后一个平台不在移动时
+	if (PlatformArray.Last())
+	{
+		if (TempPlatform != CurPlatform && !PlatformArray.Last()->MoveToNew)   //玩家所在平台发生变化，并且最后一个平台不在移动时
 		{
+			UE_LOG(LogRunGame, Log, TEXT("生成前！"))
 			int32 CurPlatIndex = PlatformArray.Find(CurPlatform);     //当前所在平台在数组中的位置
-			int32 PrePlatIndex = PlatformArray.Find(TempPlatform);    //玩家所在上一个平台在数组的位置
-			RandomSpawnPlatform(CurPlatIndex - PrePlatIndex);
+			RandomSpawnPlatform(CurPlatIndex);
 		}
+	}
+
+	int32 PlatNum = PlatformArray.Num();
+	for (int32 i = 0; i < PlatNum; i++)
+	{
+		if (PlatformArray[i] != nullptr)
+			if (PlatformArray[i]->IsInDestroyed)
+			{
+				PlatformArray[i] = nullptr;
+				UE_LOG(LogRunGame, Log, TEXT("CurPlatNum: %d"),PlatformArray.Num())
+			}
+	}
 }
 
 void AMyPlayerController::Destroyed()
 {
-	int32 ArrayNum = PlatformArray.Num();
-	//删除平台数组释放空间
-	for (int32 i = 0; i < ArrayNum; i++)
-	{
-		if (PlatformArray[i] != NULL)
-		{
-			PlatformArray[i]->DestroyActor();
-			PlatformArray[i] = NULL;
-		}
-	}
-
 	Super::Destroyed();
 }
 
 
 void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 {
-	ARunPlatform* AddPlatform;   //指向即将生成的平台
+	ARunPlatform* AddPlatform = nullptr;   //指向即将生成的平台
 
-	for (int32 i = 0; i < SpawnNum; i++)
+	for (int32 i = 0; i < SpawnNum; ++i)
 	{
 		int32 Random_Shoot = FMath::Rand() % 100;  //生成随机数，用来决定是否生成触发平台
 		int32 Random_Beam = FMath::Rand() % 100;    //生成随机数，决定是否生成需要闪电枪触发的平台
@@ -152,12 +156,17 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 			}
 		}
 
-		if (AddPlatform != NULL)
+		if (AddPlatform != nullptr)
 		{
 			AddPlatform->PlatDir = AbsoluteDir;
 			PlatformArray.Last()->NextPlatform = AddPlatform;  //指定下一个平台
 			PlatformArray.Push(AddPlatform);
-			PlatformArray[0]->StartDestroy();    //开始删除第一个平台
+
+			if (PlatformArray[0] != nullptr)
+				if (!PlatformArray[0]->IsInDestroyed)
+					PlatformArray[0]->StartDestroy();  //开始删除第一个平台
+			
+			PlatformArray[0] = nullptr;
 			PlatformArray.RemoveAt(0);  //移除已经走过的平台
 			TempPlatform = CurPlatform;   //
 			//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, FString::Printf(TEXT("数组容量:%d"), PlatformArray.Num()));
@@ -169,8 +178,21 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 				AddMaxSpawnObstacles();
 
 			RandomSpawnFlyObstacle();     //这是随机生成飞行障碍
+			int32 NoNullNum = 0;
+			for (int32 i = 0; i < 10; ++i)
+			{
+				if (PlatformArray[i] != nullptr)
+					NoNullNum++;
+			}
+			if (AddPlatform->IsA(SpawnPlatform_Beam))
+				HasSpawnedBeamPlatNum++;
+
+			HasSpawnedPlatNum++;
+			UE_LOG(LogRunGame, Log, TEXT("PlatformArray num:%d, CurGameTime:%f, HasSpwanedPlatNum: %d, HasSpawnedBeamPlatNum: %d"), NoNullNum, GetWorld()->TimeSeconds, HasSpawnedPlatNum, HasSpawnedBeamPlatNum)
 		}
+		UE_LOG(LogRunGame, Log, TEXT("InSpwanPlatTick"))
 	}
+	UE_LOG(LogRunGame, Log, TEXT("OutSpwanPlatTick"))
 }
 
 FTransform AMyPlayerController::GetSpawnTransf_Shoot(ARunPlatform* PrePlatform)
@@ -271,7 +293,7 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 FTransform AMyPlayerController::GetSpawnTransf_Beam(ARunPlatform* PrePlatform)
 {
 	FTransform TempTrans;
-	if (PrePlatform)
+	if (PrePlatform != nullptr)
 	{
 		AbsoluteDir = PrePlatform->PlatDir;    //该平台只生成在相对前面的平台的前方
 		FVector CurLocation = PrePlatform->SpawnLocation;
@@ -289,7 +311,7 @@ FTransform AMyPlayerController::GetSpawnTransf_Beam(ARunPlatform* PrePlatform)
 FTransform AMyPlayerController::GetSpawnTransf_Physic(ARunPlatform* PrePlatform)
 {
 	FTransform TempTrans;
-	if (PrePlatform)
+	if (PrePlatform != nullptr)
 	{
 		AbsoluteDir = PrePlatform->PlatDir;    //该平台只生成在相对前面的平台的前方
 		FVector CurLocation = PrePlatform->SpawnLocation;
@@ -338,7 +360,7 @@ void AMyPlayerController::SpawnBonus_Score(ARunPlatform* const CurPlatform)
 		for (int32 i = 0; i < BonusNum; i++)
 		{
 			ABonus* SpawnBonus = GetWorld()->SpawnActorDeferred<ABonus>(Bonus_Score, FTransform(CurPlatform->GetActorRotation(), FirstSpawnLoc + 100 * i * SpawnDirX));
-			if (SpawnBonus)
+			if (SpawnBonus != nullptr)
 			{
 				SpawnBonus->RotateStartTime = 0.1f*i;
 				UGameplayStatics::FinishSpawningActor(SpawnBonus, FTransform(CurPlatform->GetActorRotation(), FirstSpawnLoc + 100 * i * SpawnDirX));
@@ -353,10 +375,10 @@ void AMyPlayerController::SpawnBonus_Score(ARunPlatform* const CurPlatform)
 
 void AMyPlayerController::ChangeWeaponType(EWeaponType::Type WeaponType)
 {
-	if (CurrentWeaponType == EWeaponType::Weapon_Beam && InConnectedToPlat && CurConnectedPlat != NULL)
+	if (CurrentWeaponType == EWeaponType::Weapon_Beam && InConnectedToPlat && CurConnectedPlat != nullptr)
 	{
 		CurConnectedPlat->DeActiveBeam();
-		CurConnectedPlat = NULL;
+		//CurConnectedPlat = nullptr;
 	}
 
 	//销毁所有Beam子弹
@@ -385,7 +407,7 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 
 	if (((CurNoShootPlatNum >= 7 && FlyObstacleSpawnInterval > 10) || FlyObstacleSpawnInterval == -1) && FlyObstacleArray.Num() < MaxFlyObstacles && RandomFlyObstacle < 40)    //40%的几率生成飞行障碍
 	{
-		if (SpawnFlyObstacle != NULL)
+		if (SpawnFlyObstacle != nullptr)
 		{
 			if (CurNoShootPlatNum < PlatNum && PlatformArray[CurNoShootPlatNum]->CurBoundFlyObstacleNum < MaxFlyObstacles)    
 			{
@@ -455,4 +477,13 @@ void AMyPlayerController::AddMaxSpawnObstacles()
 	{
 		MaxFlyObstacles++;
 	}
+}
+
+void AMyPlayerController::TogglePauseStat()
+{
+	IsInPause++;
+	if (IsInPause)
+		this->SetPause(true);
+	else
+		this->SetPause(false);
 }

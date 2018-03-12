@@ -41,6 +41,7 @@ ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(O
 	SafeStayTime = 0.3f;  //默认安全时间
 	PlatDir = EPlatformDirection::Absolute_Forward;  //默认向前
 	MoveToNew = false;
+	IsInDestroyed = false;
 }
 
 // Called when the game starts or when spawned
@@ -92,7 +93,7 @@ void ARunPlatform::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 			InSlope(rate);
 		}
 	}
-	if (CurChar != NULL && NoPlayerToSlope) //玩家在平台上（射击触发模式）
+	if (CurChar != nullptr && NoPlayerToSlope) //玩家在平台上（射击触发模式）
 	{
 		if (SafeStayTime <= 0)
 			SafeStayTime = 0.f;  //安全时间已过
@@ -148,7 +149,7 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 			if (OnFall.IsBound())
 				OnFall.Broadcast(); 
 
-			if (CurChar && Cast<ARunPlatform_Shoot>(this->NextPlatform) == NULL)  //只有下一个平台不是Shoot平台才会恢复移速
+			if (CurChar && Cast<ARunPlatform_Shoot>(this->NextPlatform) == nullptr)  //只有下一个平台不是Shoot平台才会恢复移速
 			{
 				//恢复玩家原本的移动速度,和动画播放速率
 				CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
@@ -162,9 +163,9 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 			{
 				AMyPlayerController* MPC = Cast<AMyPlayerController>(CurChar->Controller);
 				int32 FoundIndex;
-				if (MPC != NULL)
+				if (MPC != nullptr)
 					if (!MPC->PlatformArray.Find(MPC->CurPlatform, FoundIndex))
-						MPC->CurPlatform = NULL;     //玩家当前所在平台设为空
+						MPC->CurPlatform = nullptr;     //玩家当前所在平台设为空
 			}
 			StartDestroy();
 		}
@@ -173,6 +174,7 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 
 void ARunPlatform::StartDestroy()
 {
+	IsInDestroyed = true;
 	if (!Platform->IsSimulatingPhysics())
 		Platform->SetSimulatePhysics(true);  //开启物理模拟
 
@@ -209,7 +211,7 @@ void ARunPlatform::InSlope(float rate)
 	}
 }
 
-void ARunPlatform::MoveToNewPos(FVector DeltaDistance)
+void ARunPlatform::MoveToNewPos(const FVector DeltaDistance)
 {
 	MoveToNew = true;
 	DeltaLoc = DeltaDistance;   //设置移动的相对距离
@@ -222,23 +224,26 @@ void ARunPlatform::MoveTick(float DeltaTime)
 		FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
 		SetActorLocation(NewPos);
 		
-		if (NextPlatform != NULL)
+		if (NextPlatform != nullptr)
 			if (!NextPlatform->MoveToNew)     //只有下一个平台没有移动时才执行下面操作
 				if ((NewPos - SpawnLocation).Size() > DeltaLoc.Size() / 2)     //移动超过相差距离一半时，就开始移动下一个平台
 					NextPlatform->MoveToNewPos(DeltaLoc);
 
-		if (NewPos == SpawnLocation + DeltaLoc)
+		if ((NewPos - (SpawnLocation + DeltaLoc)).Size() < 1.f)
 		{
 			MoveToNew = false;
 			SpawnLocation = NewPos;
 
 			AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
-			if (MPC != NULL)
+			if (MPC != nullptr)
 			{
 				int32 StopIndex = MPC->PlatformArray.Find(this);
 
 				for (int32 i = 0; i < StopIndex; i++)
-					MPC->PlatformArray[i]->MoveToNew = false;
+				{
+					if (MPC->PlatformArray[i] != nullptr)
+						MPC->PlatformArray[i]->MoveToNew = false;
+				}
 			}
 		}
 	}

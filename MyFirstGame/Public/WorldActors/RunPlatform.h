@@ -33,13 +33,16 @@ public:
 	class AMyFirstGameCharacter* CurChar;
 
 	/**指向该平台的下一个平台的指针*/
-	ARunPlatform* NextPlatform;
+	ARunPlatform* NextPlatform = nullptr;
 
 	/**用于删除平台的时间句柄*/
 	FTimerHandle DestoryHandle;
 
 	/**是否开始倾斜*/
 	uint8 IsSlope : 1;
+
+	/**是否在删除中*/
+	uint32 IsInDestroyed : 1;
 
 	/**倾斜的角度，会有多种情况的倾斜*/
 	float SlopeAngle;
@@ -81,6 +84,7 @@ public:
 	/**初始生成平台的位置*/
 	FVector SpawnLocation;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")   //便于调试
 	uint8 MoveToNew : 1;
 
 	/**位移的相对距离*/
@@ -121,7 +125,7 @@ public:
 	FORCEINLINE UStaticMeshComponent* GetMesh() { return Platform; }
 
 	/**移向新的位置*/
-	virtual void MoveToNewPos(FVector DeltaDistance);
+	virtual void MoveToNewPos(const FVector DeltaDistance);
 
 	virtual void MoveTick(float DeltaTime);
 };
