@@ -14,6 +14,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Bullet.h"
 #include "FlyObstacle.h"
+#include "GameFramework/GameModeBase.h"
 
 const float ShootPlatformAngle = 30.f;
 
@@ -23,7 +24,7 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat(TEXT("/Game/Blueprint/RunPlatform_BP"));
 	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Shoot(TEXT("/Game/Blueprint/RunPlatform_Shoot_BP"));
 	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Beam(TEXT("/Game/Blueprint/RunPlatform_Beam_BP"));
-	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Physic(TEXT("/Game/Blueprint/RunPlatform_Physic_BP1"));
+	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Physic(TEXT("/Game/Blueprint/RunPlatform_Physic_BP"));
 	static ConstructorHelpers::FClassFinder<ABonus> FBonus_Score(TEXT("/Game/Blueprint/Bonus/Bonus_Score_BP"));
 	static ConstructorHelpers::FClassFinder<AFlyObstacle> FFlyObstacle(TEXT("/Game/Blueprint/FlyObstacle_BP"));
 
@@ -96,7 +97,7 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 
-	if (PlatformArray.Last())
+	if (PlatformArray.Last() != nullptr)
 	{
 		if (TempPlatform != CurPlatform && !PlatformArray.Last()->MoveToNew)   //玩家所在平台发生变化，并且最后一个平台不在移动时
 		{
@@ -481,9 +482,12 @@ void AMyPlayerController::AddMaxSpawnObstacles()
 
 void AMyPlayerController::TogglePauseStat()
 {
-	IsInPause++;
+	IsInPause = !IsInPause;
 	if (IsInPause)
 		this->SetPause(true);
 	else
-		this->SetPause(false);
+	{
+		AGameModeBase* const GameMode = GetWorld()->GetAuthGameMode();
+		GameMode->ClearPause();
+	}
 }

@@ -135,12 +135,13 @@ void AFlyObstacle::QueryIsOverSubAngle()
 	if ((AimCharacter != nullptr && !IsOver) || ForceActive)  //只有在非超过时才执行下面的操作
 	{
 		bool IsOnPhysicPlatform = false;
-		if (AimCharacter->Controller != nullptr)
+		if (AimCharacter->Controller)
 		{
 			AMyPlayerController* MPC = Cast<AMyPlayerController>(AimCharacter->Controller);
 			IsOnPhysicPlatform = MPC->CurPlatform->IsA(MPC->SpawnPlatform_Physic);    //玩家当前平台是物理平台就停止移动
 		}
-		if (!IsOnPhysicPlatform)
+
+		if (IsOnPhysicPlatform == false)
 		{
 			FVector CurBestDir = (AimCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal2D();
 			float SubAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CurBestDir, FlyDir)));    //算出相差角度

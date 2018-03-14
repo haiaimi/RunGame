@@ -66,7 +66,7 @@ void AMyPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float
 		{
 			//ViewLoc = FMath::VInterpTo(OutVT.POV.Location, ViewLoc + ViewRotation.GetUnitAxis(EAxis::X)*-120.0f, DeltaTime, 30);  //该效果会造成画面抖动
 			ViewLoc += ViewRotation.GetUnitAxis(EAxis::X) * -120.0f;
-			if (MyCharacter->PlayerIsTargeting())
+			if (MyCharacter->PlayerIsTargeting() /*&& !MyCharacter->IsInAccelerate*/)
 			{
 				//ViewLoc = FMath::VInterpTo(OutVT.POV.Location, ViewLoc + ViewRotation.GetUnitAxis(EAxis::X)*30.0f, DeltaTime, 30);
 				if (DefaultFOV != 80.f)

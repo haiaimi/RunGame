@@ -149,7 +149,7 @@ void AMyFirstGameCharacter::PostInitializeComponents()
 		CurWeapon = InterInventory[0];
 		EquipWeapon(CurWeapon);
 
-		if (InterInventory[1] != NULL)
+		if (InterInventory[1] != nullptr)
 			PackupWeapon(InterInventory[1]);   
 	}
 }
@@ -236,7 +236,8 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 	{
 		if (IsShooting)
 		{	
-			SetActorRotation(FRotator(0.f, GetControlRotation().Yaw, 0.f));     //人物射击时，把人物身体定向设置为控制器定向，即准心所指方向
+			//if (!IsTargeting)
+				//SetActorRotation(FRotator(0.f, GetControlRotation().Yaw, 0.f));     //人物射击时，把人物身体定向设置为控制器定向，即准心所指方向
 
 			float AnimRate = ComputeSuitRate(ShootSpeed);
 
@@ -273,10 +274,12 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 		}
 	}
 
-	if (IsInAccelerate && !IsInCrounch)
+	if (IsInAccelerate && !IsInCrounch && !IsTargeting)
 		GetCharacterMovement()->MaxWalkSpeed = CurMaxAcclerateSpeed;       //把速度变为当前加速状态速度
-	else if (IsInCrounch)
-		GetCharacterMovement()->MaxWalkSpeed = 250;    //下蹲时的速度
+
+	else if (IsInCrounch || IsTargeting)
+		GetCharacterMovement()->MaxWalkSpeed = 250;    //下蹲和瞄准时的速度
+
 	else
 		GetCharacterMovement()->MaxWalkSpeed = MaxRunSpeed;      //速度改为当前正常跑步速度
 
@@ -321,7 +324,10 @@ void AMyFirstGameCharacter::Destroyed()
 	for (int32 i = 0; i < WeaponNum; i++)
 	{
 		if (InterInventory[i] != nullptr)
+		{
 			InterInventory[i]->Destroy();
+			InterInventory[i] = nullptr;
+		}
 	}
 
 	for (TActorIterator<AFlyObstacle> It(GetWorld()); It; ++It)
@@ -469,7 +475,11 @@ float AMyFirstGameCharacter::AdjustDegree(const float in)const
 void AMyFirstGameCharacter::Shoot(float AimRate)
 {
 	//先播放射击动画
-	PlayAnim(AimRate, ShootAim);
+	if (IsTargeting && ShootAim_Ironsight)
+		PlayAnim(AimRate, ShootAim_Ironsight);
+	if (!IsTargeting && ShootAim)
+		PlayAnim(AimRate, ShootAim);
+
 	Fire();
 }
 
@@ -518,7 +528,7 @@ FVector AMyFirstGameCharacter::ComputeShootDir(float AdjustDistance)
 
 void AMyFirstGameCharacter::Targeting()
 {
-	IsTargeting = true;
+		IsTargeting = true;
 }
 
 void AMyFirstGameCharacter::StopTargeting()
@@ -589,7 +599,11 @@ void AMyFirstGameCharacter::ToggleCrounchStat()
 
 		if (IsInCrounch)
 		{
-			ActionAnimTime = PlayAnim(1.f, StandToCrounchAim); //动画播放的时间
+			if (IsTargeting && StandToCrounchAim_Ironsight)
+				ActionAnimTime = PlayAnim(1.f, StandToCrounchAim_Ironsight);
+			if (!IsTargeting && StandToCrounchAim)
+				ActionAnimTime = PlayAnim(1.f, StandToCrounchAim); //动画播放的时间
+
 			CurActionTime = GetWorld()->GetTimeSeconds();          //获取动画开始时间
 			IsInStandToCrounch = true;
 			GetCharacterMovement()->MaxWalkSpeed = 250.f;
@@ -601,7 +615,11 @@ void AMyFirstGameCharacter::ToggleCrounchStat()
 		}
 		else 
 		{
-			ActionAnimTime = PlayAnim(1.f, CrounchToStandAim);
+			if (IsTargeting && CrounchToStandAim_Ironsight)
+				ActionAnimTime = PlayAnim(1.f, CrounchToStandAim_Ironsight);
+			if (!IsTargeting && CrounchToStandAim)
+				ActionAnimTime = PlayAnim(1.f, CrounchToStandAim);
+
 			CurActionTime = GetWorld()->GetTimeSeconds();
 			IsInCrounchToStand = true;
 			GetCharacterMovement()->MaxWalkSpeed = MaxRunSpeed;
@@ -617,18 +635,21 @@ void AMyFirstGameCharacter::ToggleCrounchStat()
 void AMyFirstGameCharacter::EquipWeapon(AWeapon_Gun* curWeapon)
 {
 	//设置当前武器类型，及射速
-	CurrentWeaponType = curWeapon->WeaponData.WeaponType;
-	AMyPlayerController* MPC = Cast<AMyPlayerController>(Controller);
-	if (MPC != nullptr)
-		MPC->ChangeWeaponType(CurrentWeaponType);     //把武器类型参数传到Controller
-	
-	ShootSpeed = curWeapon->WeaponData.ShootSpeed;
+	if (curWeapon)
+	{
+		CurrentWeaponType = curWeapon->WeaponData.WeaponType;
+		AMyPlayerController* MPC = Cast<AMyPlayerController>(Controller);
+		if (MPC != nullptr)
+			MPC->ChangeWeaponType(CurrentWeaponType);     //把武器类型参数传到Controller
 
-	this->CurWeapon->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
-	PackupWeapon(CurWeapon);
-	this->CurWeapon = curWeapon;
-	CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponSocket);       //把Weapon附着到玩家身上,记住是附着在网格上，而不是整个Actor
-	this->CurWeapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));
+		this->ShootSpeed = curWeapon->WeaponData.ShootSpeed;
+
+		this->CurWeapon->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+		PackupWeapon(CurWeapon);
+		this->CurWeapon = curWeapon;
+		CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponSocket);       //把Weapon附着到玩家身上,记住是附着在网格上，而不是整个Actor
+		this->CurWeapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));
+	}
 }
 
 void AMyFirstGameCharacter::PackupWeapon(AWeapon_Gun* PackupWeapon)

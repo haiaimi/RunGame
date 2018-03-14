@@ -61,10 +61,20 @@ public:
 	UAnimMontage* ShootAim;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Aim_Motage")
+	UAnimMontage* ShootAim_Ironsight;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Aim_Motage")
 	UAnimMontage* StandToCrounchAim;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Aim_Motage")
 	UAnimMontage* CrounchToStandAim;
+
+	/**下面得是瞄准时得动作*/
+	UPROPERTY(EditDefaultsOnly, Category = "Aim_Motage")
+	UAnimMontage* CrounchToStandAim_Ironsight;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Aim_Motage")
+	UAnimMontage* StandToCrounchAim_Ironsight;
 
 	/**这里主要是修改玩家加速时动画的播放速率*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aim_Motage")
@@ -118,6 +128,7 @@ public:
 	float AddYaw = 0.f;
 
 	/**玩家是否在瞄准状态*/
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Anim_Space")
 	uint8 IsTargeting : 1;
 
 	/**玩家当前武器*/

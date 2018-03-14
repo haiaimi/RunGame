@@ -13,6 +13,7 @@ AMyFirstGameGameMode::AMyFirstGameGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+
 	PlayerControllerClass = AMyPlayerController::StaticClass();
 	HUDClass = AMyHUD::StaticClass();
 }
