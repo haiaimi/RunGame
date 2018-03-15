@@ -49,6 +49,7 @@ void AMyPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 	InputComponent->BindAction("TogglePause", IE_Pressed, this, &AMyPlayerController::TogglePauseStat);
+	InputComponent->BindAction("TestToAll", IE_Pressed, this, &AMyPlayerController::StartToAll);
 }
 
 void AMyPlayerController::PostInitializeComponents()
@@ -178,7 +179,7 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 			if (AddPlatform->IsA(SpawnPlatform_Shoot))
 				AddMaxSpawnObstacles();
 
-			RandomSpawnFlyObstacle();     //这是随机生成飞行障碍
+			//RandomSpawnFlyObstacle();     //这是随机生成飞行障碍
 			int32 NoNullNum = 0;
 			for (int32 i = 0; i < 10; ++i)
 			{
@@ -489,5 +490,17 @@ void AMyPlayerController::TogglePauseStat()
 	{
 		AGameModeBase* const GameMode = GetWorld()->GetAuthGameMode();
 		GameMode->ClearPause();
+	}
+}
+
+void AMyPlayerController::StartToAll()
+{
+	if (CurPlatform != nullptr)
+	{
+		if (CurPlatform->NextPlatform)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, TEXT("开始集合"));
+			CurPlatform->MoveToAllFun(FVector::ZeroVector);
+		}
 	}
 }

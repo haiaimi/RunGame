@@ -52,9 +52,9 @@ void ARunPlatform::PostInitializeComponents()
 	QueryBox->OnComponentBeginOverlap.AddDynamic(this, &ARunPlatform::BeginOverlap);  //为碰撞体添加碰撞响应
 	QueryBox->OnComponentEndOverlap.AddDynamic(this, &ARunPlatform::EndOverlap);   //碰撞结束时的响应
 
-	FVector PlatformSize = Platform->Bounds.BoxExtent;   //获取Platform的大小
-	FVector QuerySize = QueryBox->Bounds.BoxExtent; //获取碰撞体的大小
-	FVector BoxScale = FVector(PlatformSize.X / QuerySize.X, PlatformSize.Y / QuerySize.Y, 15 * PlatformSize.Z / QuerySize.Z);
+	const FVector PlatformSize = Platform->Bounds.BoxExtent;   //获取Platform的大小
+	const FVector QuerySize = QueryBox->Bounds.BoxExtent; //获取碰撞体的大小
+	const FVector BoxScale = FVector(PlatformSize.X / QuerySize.X, PlatformSize.Y / QuerySize.Y, 15 * PlatformSize.Z / QuerySize.Z);
 	QueryBox->SetWorldScale3D(BoxScale);      //根据Platform大小设置碰撞体尺寸
 	QueryBox->SetRelativeLocation(FVector(PlatformSize.X, PlatformSize.Y, QueryBox->Bounds.BoxExtent.Z));  //然后设置检测碰撞体的位置
 	Platform->SetWorldScale3D(FVector(XScale, YScale, 1.f));
@@ -102,6 +102,7 @@ void ARunPlatform::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 	}
 
 	MoveTick(DeltaTime);
+	MoveToAllTick(DeltaTime);
 }
 
 
@@ -217,11 +218,18 @@ void ARunPlatform::MoveToNewPos(const FVector DeltaDistance)
 	DeltaLoc = DeltaDistance;   //设置移动的相对距离
 }
 
+void ARunPlatform::MoveToAllFun(const FVector DeltaDistance)
+{
+	MoveToAll = true;
+	NoPlayerToSlope = true;     //停止平台旋转
+	DeltaLoc = DeltaDistance;
+}
+
 void ARunPlatform::MoveTick(float DeltaTime)
 {
-	if (MoveToNew)
+	if (MoveToNew && !MoveToAll)
 	{
-		FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
+		const FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
 		SetActorLocation(NewPos);
 		
 		if (NextPlatform != nullptr)
@@ -245,6 +253,42 @@ void ARunPlatform::MoveTick(float DeltaTime)
 						MPC->PlatformArray[i]->MoveToNew = false;
 				}
 			}
+		}
+	}
+}
+
+void ARunPlatform::MoveToAllTick(float DeltaTime)
+{
+	if (MoveToAll && !MoveToNew)
+	{
+		const FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
+		SetActorLocation(NewPos);
+
+		if(NextPlatform)
+			if(!NextPlatform->MoveToAll)
+				if ((NewPos - SpawnLocation).Size() >= (DeltaLoc.Size() / 2))     //移动超过相差距离一半时，就开始移动下一个平台
+				{
+					const AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
+					if (MPC != nullptr)
+					{
+						if (NextPlatform->IsA(MPC->SpawnPlatform) /*&& (this->IsA(MPC->SpawnPlatform) || this->IsA(MPC->SpawnPlatform_Shoot))*/)      //当下一个平台是普通平台，并且当前平台是普通平台或射击平台
+						{
+							GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("在循环中"));
+							NextPlatform->MoveToAllFun(DeltaLoc);
+						}
+						else
+						{
+							GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("在闪电平台循环中"));
+							const FVector NextDeltaPos = SpawnLocation + DeltaLoc - (NextPlatform->GetActorLocation() + NextPlatform->GetPlatformLength() * GetActorRotation().Vector());
+							NextPlatform->MoveToAllFun(NextDeltaPos);
+						}
+					}
+				}
+
+		if ((NewPos - (SpawnLocation + DeltaLoc)).Size() < 1.f)
+		{
+			SpawnLocation = NewPos;
+			MoveToAll = false;
 		}
 	}
 }

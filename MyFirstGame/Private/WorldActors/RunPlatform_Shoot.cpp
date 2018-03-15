@@ -20,9 +20,9 @@ void ARunPlatform_Shoot::PostInitializeComponents()
 	/*爆炸触发器就放在两个平台的中间*/
 	if (Trigger)
 	{
-		FVector SpawnDirX = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::X);
-		FVector SpawnDirY = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Y);
-		FVector SpawnDirZ = -FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Z);
+		const FVector SpawnDirX = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::X);
+		const FVector SpawnDirY = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Y);
+		const FVector SpawnDirZ = -FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Z);
 		FVector SpawnLocation = GetActorLocation() + SpawnDirX * GetPlatformLength() + SpawnDirY * GetPlatformWidth() / 2 + SpawnDirZ * GetPlatformWidth() / 2;
 
 		AimTrigger = GetWorld()->SpawnActor<ABoomActor>(Trigger, FTransform(FRotator::ZeroRotator, SpawnLocation));
@@ -49,4 +49,33 @@ void ARunPlatform_Shoot::TickActor(float DeltaTime, enum ELevelTick TickType, FA
 		}
 
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
+}
+
+void ARunPlatform_Shoot::MoveToAllTick(float DeltaTime)
+{
+	Super::MoveToAllTick(DeltaTime);
+
+	if (MoveToAll && !MoveToNew)
+	{
+		if (GetActorRotation().Pitch < -1.f)   //如果该平台已经旋转过
+		{
+			const float NewPitch = FMath::FInterpTo(GetActorRotation().Pitch, 0, DeltaTime, 10.f);
+			SetActorRotation(FRotator(NewPitch, GetActorRotation().Yaw, GetActorRotation().Roll));
+		}
+	}
+}
+
+void ARunPlatform_Shoot::MoveToAllFun(const FVector DeltaDistance)
+{
+	IsSlope = false;
+	DeltaLoc = DeltaDistance;
+	MoveToAll = true;
+
+	if (InitiativeBoom)
+	{
+		const FVector SpawnDirX = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::X);
+		const FVector SpawnDirY = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Y);
+		const FVector SpawnDirZ = -FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Z);
+		InitiativeBoom->SetActorRelativeLocation(SpawnDirY * GetPlatformWidth() / 2 + SpawnDirZ * (-100.f));
+	}
 }

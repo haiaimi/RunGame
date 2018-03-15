@@ -30,4 +30,8 @@ protected:
 	
 public:
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)override;
+
+	virtual void MoveToAllTick(float DeltaTime)override;
+
+	virtual void MoveToAllFun(const FVector DeltaDistance)override;
 };

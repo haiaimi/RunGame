@@ -47,7 +47,7 @@ public:
 	/**倾斜的角度，会有多种情况的倾斜*/
 	float SlopeAngle;
 
-	/**是否不需要玩家旋转*/
+	/**是否 不需要玩家旋转*/
 	uint8 NoPlayerToSlope : 1;
 
 	/**倾斜的最终角度*/
@@ -86,6 +86,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")   //便于调试
 	uint8 MoveToNew : 1;
+
+	/**移动到统一平台*/
+	uint8 MoveToAll : 1;
 
 	/**位移的相对距离*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")   //便于调试
@@ -127,5 +130,10 @@ public:
 	/**移向新的位置*/
 	virtual void MoveToNewPos(const FVector DeltaDistance);
 
+	virtual void MoveToAllFun(const FVector DeltaDistance);
+
 	virtual void MoveTick(float DeltaTime);
+
+	/**用于在奖励玩家所有平台合到一起*/
+	virtual void MoveToAllTick(float DeltaTime);
 };

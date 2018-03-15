@@ -116,4 +116,7 @@ public:
 	void AddMaxSpawnObstacles();
 
 	void TogglePauseStat();
+
+	/**所有平台集合*/
+	void StartToAll();
 };

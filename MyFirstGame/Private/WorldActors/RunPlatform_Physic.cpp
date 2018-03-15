@@ -30,6 +30,7 @@ ARunPlatform_Physic::ARunPlatform_Physic(const FObjectInitializer& ObjectInitial
 
 	NoPlayerToSlope = true;
 	SlopeAngle = 0.f;
+	IsToAll = false;
 }
 
 void ARunPlatform_Physic::PostInitializeComponents()
@@ -55,7 +56,7 @@ void ARunPlatform_Physic::BeginOverlap(UPrimitiveComponent* OverlappedComponent,
 {
 	Super::BeginOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 
-	if (CurChar != NULL)
+	if (CurChar != NULL && !IsToAll)
 	{
 		Platform->SetSimulatePhysics(true);
 	}
@@ -90,3 +91,9 @@ void ARunPlatform_Physic::MoveTick(float DeltaTime)
 	Super::MoveTick(DeltaTime);
 }
 
+void ARunPlatform_Physic::MoveToAllFun(const FVector DeltaDistance)
+{
+	MoveToAll = false;
+	IsToAll = true;
+	DeltaLoc = DeltaDistance;
+}
