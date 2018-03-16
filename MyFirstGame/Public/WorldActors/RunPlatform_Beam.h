@@ -81,7 +81,5 @@ public:
 
 	void DeActiveBeam();
 
-	virtual void MoveToAllTick(float DeltaTime)override;
-
 	virtual void MoveToAllFun(const FVector DeltaDistance)override;
 };

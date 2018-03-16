@@ -30,7 +30,7 @@ public:
 	class UArrowComponent* ArrowDst;
 
 	/**指向当前平台上的玩家*/
-	class AMyFirstGameCharacter* CurChar;
+	class AMyFirstGameCharacter* CurChar = nullptr;
 
 	/**指向该平台的下一个平台的指针*/
 	ARunPlatform* NextPlatform = nullptr;
@@ -89,6 +89,9 @@ public:
 
 	/**移动到统一平台*/
 	uint8 MoveToAll : 1;
+
+	/**是否在平台集合状态*/
+	uint8 IsToAll : 1;
 
 	/**位移的相对距离*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")   //便于调试

@@ -126,7 +126,7 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		{
 			IsSlope = true;      //随着平台倾斜逐渐减低速度
 		}
-		else
+		else 
 		{
 			InSlope(SlopeAngle / 60.f);   //斜坡直接降低人物的速度
 		}
@@ -221,8 +221,16 @@ void ARunPlatform::MoveToNewPos(const FVector DeltaDistance)
 void ARunPlatform::MoveToAllFun(const FVector DeltaDistance)
 {
 	MoveToAll = true;
+	IsToAll = true;
 	NoPlayerToSlope = true;     //停止平台旋转
 	DeltaLoc = DeltaDistance;
+	SlopeAngle = 0.f;
+
+	/*if (CurChar != nullptr)
+	{
+		CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
+		CurChar->CurMaxRunSpeed = MaxRunSpeed;
+	}*/
 }
 
 void ARunPlatform::MoveTick(float DeltaTime)
@@ -264,14 +272,14 @@ void ARunPlatform::MoveToAllTick(float DeltaTime)
 		const FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
 		SetActorLocation(NewPos);
 
-		if(NextPlatform)
-			if(!NextPlatform->MoveToAll)
+		if (NextPlatform)
+			if (!NextPlatform->MoveToAll)
 				if ((NewPos - SpawnLocation).Size() >= (DeltaLoc.Size() / 2))     //移动超过相差距离一半时，就开始移动下一个平台
 				{
 					const AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
 					if (MPC != nullptr)
 					{
-						if (NextPlatform->IsA(MPC->SpawnPlatform) /*&& (this->IsA(MPC->SpawnPlatform) || this->IsA(MPC->SpawnPlatform_Shoot))*/)      //当下一个平台是普通平台，并且当前平台是普通平台或射击平台
+						if (NextPlatform->IsA(MPC->SpawnPlatform) && (this->IsA(MPC->SpawnPlatform) || this->IsA(MPC->SpawnPlatform_Shoot)))      //当下一个平台是普通平台，并且当前平台是普通平台或射击平台
 						{
 							GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("在循环中"));
 							NextPlatform->MoveToAllFun(DeltaLoc);

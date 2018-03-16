@@ -31,9 +31,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Platform")
 	FName LinkSocket;
 
-	/**是否在平台集合状态*/
-	uint8 IsToAll : 1;
-
 public:
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)override;
 

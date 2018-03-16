@@ -249,39 +249,10 @@ void ARunPlatform_Beam::DeActiveBeam()
 
 void ARunPlatform_Beam::MoveToAllFun(const FVector DeltaDistance)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("执行闪电平台操作初始"));
-	MoveToAll = true;
+	Super::MoveToAllFun(DeltaDistance);
+
 	IsInMove = false;
-	DeltaLoc = DeltaDistance;
 	SpawnLocation = GetActorLocation();
 	if (ToParticle != nullptr)
 		ToParticle->SetVisibility(false);
-}
-
-void ARunPlatform_Beam::MoveToAllTick(float DeltaTime)
-{
-	if (MoveToAll && !MoveToNew)
-	{
-		const FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
-		SetActorLocation(NewPos);
-
-		if (NextPlatform)
-			if (!NextPlatform->MoveToAll)
-				if ((NewPos - SpawnLocation).Size() >= (DeltaLoc.Size() / 2))     //移动超过相差距离一半时，就开始移动下一个平台
-				{
-					GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("在循环中"));
-					const AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
-					if (MPC != nullptr)
-					{
-						const FVector NextDeltaPos = SpawnLocation + DeltaLoc + GetPlatformLength()*GetActorRotation().Vector() - NextPlatform->GetActorLocation();
-						NextPlatform->MoveToAllFun(NextDeltaPos);
-					}
-				}
-
-		if ((NewPos - (SpawnLocation + DeltaLoc)).Size() < 1.f)
-		{
-			SpawnLocation = NewPos;
-			MoveToAll = false;
-		}
-	}
 }

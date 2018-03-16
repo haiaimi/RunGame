@@ -93,7 +93,5 @@ void ARunPlatform_Physic::MoveTick(float DeltaTime)
 
 void ARunPlatform_Physic::MoveToAllFun(const FVector DeltaDistance)
 {
-	MoveToAll = false;
-	IsToAll = true;
-	DeltaLoc = DeltaDistance;
+	Super::MoveToAllFun(DeltaDistance);
 }

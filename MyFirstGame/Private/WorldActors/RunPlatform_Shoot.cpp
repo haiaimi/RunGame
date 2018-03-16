@@ -67,9 +67,10 @@ void ARunPlatform_Shoot::MoveToAllTick(float DeltaTime)
 
 void ARunPlatform_Shoot::MoveToAllFun(const FVector DeltaDistance)
 {
+	Super::MoveToAllFun(DeltaDistance);
+
+	DstRotation = GetActorRotation() - FRotator(SlopeAngle, 0.f, 0.f);
 	IsSlope = false;
-	DeltaLoc = DeltaDistance;
-	MoveToAll = true;
 
 	if (InitiativeBoom)
 	{
