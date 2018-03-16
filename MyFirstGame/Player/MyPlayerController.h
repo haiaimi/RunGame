@@ -60,6 +60,9 @@ public:
 	/**当前玩家是否连接着平台*/
 	uint8 InConnectedToPlat : 1;
 
+	/**平台是否在聚集状态*/
+	uint8 IsToAll : 1;
+
 	uint32 IsInPause : 1;
 
 	/**这是两个飞行障碍生成的最小间隔平台数*/
@@ -119,4 +122,6 @@ public:
 
 	/**所有平台集合*/
 	void StartToAll();
+
+	void NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef);
 };

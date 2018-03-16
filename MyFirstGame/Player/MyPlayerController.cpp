@@ -171,7 +171,8 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 			PlatformArray[0] = nullptr;
 			PlatformArray.RemoveAt(0);  //移除已经走过的平台
 			TempPlatform = CurPlatform;   //
-			//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, FString::Printf(TEXT("数组容量:%d"), PlatformArray.Num()));
+			if (IsToAll)
+				NewSpawnedPlatformToAll(AddPlatform);
 
 			if (Random_Bonus_Score >= 0 && Random_Bonus_Score < 30)
 				SpawnBonus_Score(AddPlatform);   //30的几率生成Bonus Score
@@ -495,12 +496,29 @@ void AMyPlayerController::TogglePauseStat()
 
 void AMyPlayerController::StartToAll()
 {
+	IsToAll = true;
 	if (CurPlatform != nullptr)
 	{
 		if (CurPlatform->NextPlatform)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, TEXT("开始集合"));
 			CurPlatform->MoveToAllFun(FVector::ZeroVector);
+		}
+	}
+}
+
+void AMyPlayerController::NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef)
+{
+	ARunPlatform* const FrontLastPlat = PlatformArray[PlatformArray.Num() - 2];
+	if (!FrontLastPlat->MoveToAll)     //该平台不在移动
+	{
+		if (NewPlatformRef->IsA(SpawnPlatform) && (FrontLastPlat->IsA(SpawnPlatform) || FrontLastPlat->IsA(SpawnPlatform_Shoot)))      //当下一个平台是普通平台，并且当前平台是普通平台或射击平台
+		{
+			NewPlatformRef->MoveToAllFun(FVector::ZeroVector);
+		}
+		else
+		{
+			const FVector NextDeltaPos = FrontLastPlat->SpawnLocation - (NewPlatformRef->GetActorLocation() + NewPlatformRef->GetPlatformLength() * FrontLastPlat->GetActorRotation().Vector());
+			NewPlatformRef->MoveToAllFun(NextDeltaPos);
 		}
 	}
 }
