@@ -46,6 +46,8 @@ public:
 
 	virtual void MoveToAllFun(const FVector DeltaDistance)override;
 
+	virtual void StopToAllFun(const FVector DeltaDistance)override;
+
 protected:
 	virtual void PostInitializeComponents()override;
 

@@ -41,11 +41,13 @@ void ARunPlatform_Shoot::PostInitializeComponents()
 void ARunPlatform_Shoot::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
 {
 	//如果爆炸就开始倾斜
-	if (AimTrigger != NULL)
+	if (AimTrigger != nullptr)
 		if (AimTrigger->IsBoom && !AimTrigger->CanBoom && InitiativeBoom != NULL)   //CanBoom是用来确定BoomActor是否已经炸过
 		{
 			IsSlope = true;
 			InitiativeBoom->StartSimulatePhysic();
+			InitiativeBoom = nullptr;
+			AimTrigger = nullptr;
 		}
 
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
@@ -55,28 +57,67 @@ void ARunPlatform_Shoot::MoveToAllTick(float DeltaTime)
 {
 	Super::MoveToAllTick(DeltaTime);
 
-	if (MoveToAll && !MoveToNew)
-	{
-		if (GetActorRotation().Pitch < -1.f)   //如果该平台已经旋转过
-		{
-			const float NewPitch = FMath::FInterpTo(GetActorRotation().Pitch, 0, DeltaTime, 10.f);
-			SetActorRotation(FRotator(NewPitch, GetActorRotation().Yaw, GetActorRotation().Roll));
-		}
-	}
+	//if (MoveToAll && !MoveToNew)
+	//{
+	//	if (GetActorRotation().Pitch < -1.f)   //如果该平台已经旋转过
+	//	{
+	//		const float NewPitch = FMath::FInterpTo(GetActorRotation().Pitch, 0, DeltaTime, 10.f);
+	//		SetActorRotation(FRotator(NewPitch, GetActorRotation().Yaw, GetActorRotation().Roll));
+	//	}
+	//}
+}
+
+void ARunPlatform_Shoot::StartDestroy()
+{
+	Super::StartDestroy();
+
+	//用于清除两个炸弹
+	if (AimTrigger != nullptr)
+		AimTrigger->DestroyActor();
+
+	if (InitiativeBoom != nullptr)
+		InitiativeBoom->DestroyActor();
 }
 
 void ARunPlatform_Shoot::MoveToAllFun(const FVector DeltaDistance)
 {
 	Super::MoveToAllFun(DeltaDistance);
 
-	DstRotation = GetActorRotation() - FRotator(SlopeAngle, 0.f, 0.f);
-	IsSlope = false;
+	DstRotation = FRotator(0.f, GetActorRotation().Yaw, GetActorRotation().Roll);
+	IsSlope = true;
 
 	if (InitiativeBoom)
 	{
 		const FVector SpawnDirX = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::X);
 		const FVector SpawnDirY = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Y);
 		const FVector SpawnDirZ = -FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Z);
-		InitiativeBoom->SetActorRelativeLocation(SpawnDirY * GetPlatformWidth() / 2 + SpawnDirZ * (-100.f));
+		InitiativeBoom->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		InitiativeBoom->SetActorLocation(GetActorLocation() + SpawnDirY * GetPlatformWidth() / 2 + SpawnDirZ * 400.f);
+		InitiativeBoom->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+	}
+
+}
+
+void ARunPlatform_Shoot::StopToAllFun(const FVector DeltaDistance)
+{
+	Super::StopToAllFun(DeltaDistance);
+
+	if (InitiativeBoom)
+	{
+		const FVector SpawnDirX = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::X);
+		const FVector SpawnDirY = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Y);
+		const FVector SpawnDirZ = -FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Z);
+		InitiativeBoom->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		InitiativeBoom->SetActorLocation(GetActorLocation() + SpawnDirY * GetPlatformWidth() / 2 - SpawnDirZ * 20.f + SpawnDirX * 20);
+		InitiativeBoom->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+	}
+
+	NoPlayerToSlope = true;
+	IsSlope = false;
+	DstRotation = FRotator(-SlopeAngle, GetActorRotation().Yaw, GetActorRotation().Roll);
+
+	if (AimTrigger == nullptr)
+	{
+		IsSlope = true;
 	}
 }

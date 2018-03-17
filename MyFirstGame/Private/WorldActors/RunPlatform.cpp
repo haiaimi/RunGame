@@ -42,6 +42,7 @@ ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(O
 	PlatDir = EPlatformDirection::Absolute_Forward;  //默认向前
 	MoveToNew = false;
 	IsInDestroyed = false;
+	MoveToOrigin = false;
 }
 
 // Called when the game starts or when spawned
@@ -103,6 +104,7 @@ void ARunPlatform::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 
 	MoveTick(DeltaTime);
 	MoveToAllTick(DeltaTime);
+	MoveToOriginTick(DeltaTime);
 }
 
 
@@ -126,7 +128,7 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		{
 			IsSlope = true;      //随着平台倾斜逐渐减低速度
 		}
-		else 
+		else if (!NoPlayerToSlope && !IsToAll)                //在无障碍模式下不减速
 		{
 			InSlope(SlopeAngle / 60.f);   //斜坡直接降低人物的速度
 		}
@@ -224,7 +226,6 @@ void ARunPlatform::MoveToAllFun(const FVector DeltaDistance)
 	IsToAll = true;
 	NoPlayerToSlope = true;     //停止平台旋转
 	DeltaLoc = DeltaDistance;
-	SlopeAngle = 0.f;
 
 	/*if (CurChar != nullptr)
 	{
@@ -233,9 +234,17 @@ void ARunPlatform::MoveToAllFun(const FVector DeltaDistance)
 	}*/
 }
 
+void ARunPlatform::StopToAllFun(const FVector DeltaDistance)
+{
+	MoveToOrigin = true;
+	NoPlayerToSlope = false;
+	IsToAll = false;
+	DeltaLoc = DeltaDistance;
+}
+
 void ARunPlatform::MoveTick(float DeltaTime)
 {
-	if (MoveToNew && !MoveToAll)
+	if (MoveToNew && !MoveToAll && !MoveToOrigin)
 	{
 		const FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
 		SetActorLocation(NewPos);
@@ -267,7 +276,7 @@ void ARunPlatform::MoveTick(float DeltaTime)
 
 void ARunPlatform::MoveToAllTick(float DeltaTime)
 {
-	if (MoveToAll && !MoveToNew)
+	if (MoveToAll && !MoveToNew && !MoveToOrigin)
 	{
 		const FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
 		SetActorLocation(NewPos);
@@ -297,6 +306,38 @@ void ARunPlatform::MoveToAllTick(float DeltaTime)
 		{
 			SpawnLocation = NewPos;
 			MoveToAll = false;
+		}
+	}
+}
+
+void ARunPlatform::MoveToOriginTick(float DeltaTime)
+{
+	if (MoveToOrigin && !MoveToNew && !MoveToAll)
+	{
+		const FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
+		SetActorLocation(NewPos);
+
+		if (NextPlatform)
+			if(!NextPlatform->MoveToOrigin)
+				if ((NewPos - SpawnLocation).Size() >= (DeltaLoc.Size() / 2))
+				{
+					const AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
+					if ((this->IsA(MPC->SpawnPlatform)||this->IsA(MPC->SpawnPlatform_Beam)||this->IsA(MPC->SpawnPlatform_Shoot))&&NextPlatform->IsA(MPC->SpawnPlatform))
+					{
+						NextPlatform->StopToAllFun(DeltaLoc);
+					}
+
+					else
+					{
+						const FVector NextDeltaPos = DeltaLoc + NextPlatform->DeltaLocToPrePlat + NextPlatform->GetPlatformLength() * NextPlatform->GetActorRotation().Vector();
+						NextPlatform->StopToAllFun(NextDeltaPos);
+					}
+				}
+
+		if ((NewPos - (SpawnLocation + DeltaLoc)).Size() < 1.f)
+		{
+			SpawnLocation = NewPos;
+			MoveToOrigin = false;
 		}
 	}
 }

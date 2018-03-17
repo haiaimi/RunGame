@@ -90,12 +90,18 @@ public:
 	/**移动到统一平台*/
 	uint8 MoveToAll : 1;
 
+	/**移到原本应在的位置*/
+	uint8 MoveToOrigin : 1;
+
 	/**是否在平台集合状态*/
 	uint8 IsToAll : 1;
 
 	/**位移的相对距离*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")   //便于调试
 	FVector DeltaLoc;
+
+	/**相对于前一个平台的偏移位置，用于恢复平台集合前的状态*/
+	FVector DeltaLocToPrePlat;
 
 protected:
 	// Called when the game starts or when spawned
@@ -135,8 +141,12 @@ public:
 
 	virtual void MoveToAllFun(const FVector DeltaDistance);
 
+	virtual void StopToAllFun(const FVector DeltaDistance);
+
 	virtual void MoveTick(float DeltaTime);
 
 	/**用于在奖励玩家所有平台合到一起*/
 	virtual void MoveToAllTick(float DeltaTime);
+
+	virtual void MoveToOriginTick(float DeltaTime);
 };

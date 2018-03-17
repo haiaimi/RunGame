@@ -80,7 +80,7 @@ void ARunPlatform_Beam::TickActor(float DeltaTime, enum ELevelTick TickType, FAc
 		if ((BeamSourcePoint - BeamTargetPoint).Size() >= 2000.f)
 			DeActiveBeam();
 	}
-	if (MoveCurve && IsInMove)
+	if (MoveCurve && IsInMove && !MoveToOrigin)
 	{
 		float RelativeDistance = MoveCurve->GetFloatValue(MoveCycle) * 100;
 		MoveCycle += DeltaTime;
@@ -255,4 +255,15 @@ void ARunPlatform_Beam::MoveToAllFun(const FVector DeltaDistance)
 	SpawnLocation = GetActorLocation();
 	if (ToParticle != nullptr)
 		ToParticle->SetVisibility(false);
+}
+
+void ARunPlatform_Beam::StopToAllFun(const FVector DeltaDistance)
+{
+	Super::StopToAllFun(DeltaDistance);
+
+	NoPlayerToSlope = true;
+	IsInMove = true;
+	MoveCycle = 0.f;
+	if (ToParticle != nullptr)
+		ToParticle->SetVisibility(true);
 }

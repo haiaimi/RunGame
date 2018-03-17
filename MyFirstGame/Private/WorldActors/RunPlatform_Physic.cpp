@@ -95,3 +95,11 @@ void ARunPlatform_Physic::MoveToAllFun(const FVector DeltaDistance)
 {
 	Super::MoveToAllFun(DeltaDistance);
 }
+
+void ARunPlatform_Physic::StopToAllFun(const FVector DeltaDistance)
+{
+	Super::StopToAllFun(DeltaDistance);
+
+	NoPlayerToSlope = true;
+}
+
