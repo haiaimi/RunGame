@@ -80,6 +80,8 @@ public:
 
 	int32 HasSpawnedBeamPlatNum = 0;
 
+	FVector DeltaLocToPrePlat;
+
 public:
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction);
 
@@ -122,6 +124,9 @@ public:
 
 	/**所有平台集合*/
 	void StartToAll();
+
+	/**停止集合，停止无障碍模式*/
+	void StopToAll();
 
 	void NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef);
 };

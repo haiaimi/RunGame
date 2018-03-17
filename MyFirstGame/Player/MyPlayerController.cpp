@@ -15,6 +15,7 @@
 #include "Bullet.h"
 #include "FlyObstacle.h"
 #include "GameFramework/GameModeBase.h"
+#include "Components/StaticMeshComponent.h"
 
 const float ShootPlatformAngle = 30.f;
 
@@ -50,6 +51,7 @@ void AMyPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 	InputComponent->BindAction("TogglePause", IE_Pressed, this, &AMyPlayerController::TogglePauseStat);
 	InputComponent->BindAction("TestToAll", IE_Pressed, this, &AMyPlayerController::StartToAll);
+	InputComponent->BindAction("StopToAll", IE_Pressed, this, &AMyPlayerController::StopToAll);
 }
 
 void AMyPlayerController::PostInitializeComponents()
@@ -180,7 +182,11 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 			if (AddPlatform->IsA(SpawnPlatform_Shoot))
 				AddMaxSpawnObstacles();
 
-			//RandomSpawnFlyObstacle();     //这是随机生成飞行障碍
+			AddPlatform->DeltaLocToPrePlat = DeltaLocToPrePlat;
+
+			if (!IsToAll)
+				RandomSpawnFlyObstacle();    //只有在非无障碍模式下才随机生成飞行障碍
+
 			int32 NoNullNum = 0;
 			for (int32 i = 0; i < 10; ++i)
 			{
@@ -212,8 +218,10 @@ FTransform AMyPlayerController::GetSpawnTransf_Shoot(ARunPlatform* PrePlatform)
 		FVector UpDir = RotatMatrix.GetUnitAxis(EAxis::Z);
 		float SlopeRadians = FMath::DegreesToRadians(ShootPlatformAngle);
 
-		FVector SpawnLocation = CurLocation + FMath::Cos(SlopeRadians)*PrePlatform->GetPlatformLength()*ForwardDir + FMath::Sin(SlopeRadians)*PrePlatform->GetPlatformLength()*UpDir;
+		const FVector DelLoc = FMath::Cos(SlopeRadians)*PrePlatform->GetPlatformLength()*ForwardDir + FMath::Sin(SlopeRadians)*PrePlatform->GetPlatformLength()*UpDir;
+		FVector SpawnLocation = CurLocation + DelLoc;
 		TempTrans = FTransform(CurRotation, SpawnLocation);
+		DeltaLocToPrePlat = DelLoc;
 	}
 	return TempTrans;
 }
@@ -289,6 +297,10 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 
 		else if (PrePlatform->PlatDir == EPlatformDirection::Absolute_Right)
 			AbsoluteDir = (Dir == 0) ? EPlatformDirection::Absolute_Forward : EPlatformDirection::Absolute_Right;
+
+		if (PrePlatform->IsA(SpawnPlatform_Physic))      //只有前一个平台是物理平台才会有附加偏移
+			DeltaLocToPrePlat = ForwardDir * PrePlatform->GetPlatformLength() * LengthScale;
+		else DeltaLocToPrePlat = FVector::ZeroVector;
 	}
 	return TempTrans;
 }
@@ -305,8 +317,11 @@ FTransform AMyPlayerController::GetSpawnTransf_Beam(ARunPlatform* PrePlatform)
 		FMatrix RotatMatrix = FRotationMatrix(CurRotation);
 		FVector ForwardDir = -RotatMatrix.GetUnitAxis(EAxis::X);
 
-		FVector SpawnLocation = CurLocation + ForwardDir * PrePlatform->GetPlatformLength() * 3;
+		const FVector DelLoc = ForwardDir * PrePlatform->GetPlatformLength() * 3;
+		FVector SpawnLocation = CurLocation + DelLoc;
 		TempTrans = FTransform(CurRotation, SpawnLocation);
+
+		DeltaLocToPrePlat = DelLoc;
 	}
 	return TempTrans;
 }
@@ -323,8 +338,11 @@ FTransform AMyPlayerController::GetSpawnTransf_Physic(ARunPlatform* PrePlatform)
 		FMatrix RotatMatrix = FRotationMatrix(CurRotation);
 		FVector ForwardDir = -RotatMatrix.GetUnitAxis(EAxis::X);
 
-		FVector SpawnLocation = CurLocation + ForwardDir * (PrePlatform->GetPlatformLength() + 200.f);
+		const FVector DelLoc = ForwardDir * (PrePlatform->GetPlatformLength() + 200.f);
+		FVector SpawnLocation = CurLocation + DelLoc;
 		TempTrans = FTransform(CurRotation, SpawnLocation);
+
+		DeltaLocToPrePlat = DelLoc;
 	}
 	return TempTrans;
 }
@@ -483,6 +501,7 @@ void AMyPlayerController::AddMaxSpawnObstacles()
 }
 
 void AMyPlayerController::TogglePauseStat()
+
 {
 	IsInPause = !IsInPause;
 	if (IsInPause)
@@ -503,6 +522,48 @@ void AMyPlayerController::StartToAll()
 		{
 			CurPlatform->MoveToAllFun(FVector::ZeroVector);
 		}
+	}
+
+	//销毁所有已存在的飞行障碍
+	for (TActorIterator<AFlyObstacle> It(GetWorld()); It; ++It)
+	{
+		if (*It)
+			(*It)->StartDestroy();
+	}
+}
+
+void AMyPlayerController::StopToAll()
+{
+	int32 ArrayNum = PlatformArray.Num();
+
+	IsToAll = false;
+	ARunPlatform* ToOriginStartPlat = nullptr;
+	
+	for (int32 i = 0; i < ArrayNum; ++i)
+	{
+		if (PlatformArray[i] != nullptr)
+		{
+			ToOriginStartPlat = PlatformArray[i];
+			break;
+		}
+	}
+
+	if (ToOriginStartPlat != nullptr)
+	{
+		if (ToOriginStartPlat->IsA(SpawnPlatform_Beam) || ToOriginStartPlat->IsA(SpawnPlatform_Shoot))
+		{
+			if (ToOriginStartPlat->NextPlatform)
+				ToOriginStartPlat->NextPlatform->StopToAllFun(FVector::ZeroVector);
+		}
+		else if (ToOriginStartPlat->IsA(SpawnPlatform_Physic))
+		{
+			if (!ToOriginStartPlat->Platform->IsSimulatingPhysics())
+				ToOriginStartPlat->Platform->SetSimulatePhysics(true);
+
+			ToOriginStartPlat->StopToAllFun(FVector::ZeroVector);
+		}
+		else
+			ToOriginStartPlat->StopToAllFun(FVector::ZeroVector);
 	}
 }
 
