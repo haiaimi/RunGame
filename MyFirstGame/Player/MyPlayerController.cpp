@@ -16,6 +16,7 @@
 #include "FlyObstacle.h"
 #include "GameFramework/GameModeBase.h"
 #include "Components/StaticMeshComponent.h"
+#include "TimerManager.h"
 
 const float ShootPlatformAngle = 30.f;
 
@@ -27,6 +28,7 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Beam(TEXT("/Game/Blueprint/RunPlatform_Beam_BP"));
 	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Physic(TEXT("/Game/Blueprint/RunPlatform_Physic_BP"));
 	static ConstructorHelpers::FClassFinder<ABonus> FBonus_Score(TEXT("/Game/Blueprint/Bonus/Bonus_Score_BP"));
+	static ConstructorHelpers::FClassFinder<ABonus> FBonus_NoObstacle(TEXT("/Game/Blueprint/Bonus/Bonus_NoObstacle_BP"));
 	static ConstructorHelpers::FClassFinder<AFlyObstacle> FFlyObstacle(TEXT("/Game/Blueprint/FlyObstacle_BP"));
 
 	SpawnPlatform = FSpawnPlat.Class;
@@ -34,6 +36,7 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	SpawnPlatform_Beam = FSpawnPlat_Beam.Class;
 	SpawnPlatform_Physic = FSpawnPlat_Physic.Class;
 	Bonus_Score = FBonus_Score.Class;
+	Bonus_NoObstacle = FBonus_NoObstacle.Class;
 	SpawnFlyObstacle = FFlyObstacle.Class;
 
 	CurrentWeaponType = EWeaponType::Weapon_Instant;
@@ -43,6 +46,7 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	MaxFlyObstacles = 1;     //游戏开始时飞行障碍数为0
 	CurSpawnedShootPlats = 0;
 	IsInPause = 0;
+	SpawnNoObsBonusParam = 0;
 }
 
 
@@ -50,7 +54,7 @@ void AMyPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 	InputComponent->BindAction("TogglePause", IE_Pressed, this, &AMyPlayerController::TogglePauseStat);
-	InputComponent->BindAction("TestToAll", IE_Pressed, this, &AMyPlayerController::StartToAll);
+	//InputComponent->BindAction("TestToAll", IE_Pressed, this, &AMyPlayerController::StartToAll);
 	InputComponent->BindAction("StopToAll", IE_Pressed, this, &AMyPlayerController::StopToAll);
 }
 
@@ -100,16 +104,20 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 
-	if (PlatformArray.Last() != nullptr)
+	if (PlatformArray.Num() > 0)
 	{
-		if (TempPlatform != CurPlatform && !PlatformArray.Last()->MoveToNew)   //玩家所在平台发生变化，并且最后一个平台不在移动时
+		ARunPlatform* LastPlatformRef = PlatformArray.Last();
+		if (LastPlatformRef != nullptr)
 		{
-			UE_LOG(LogRunGame, Log, TEXT("生成前！"))
-			int32 CurPlatIndex = PlatformArray.Find(CurPlatform);     //当前所在平台在数组中的位置
-			RandomSpawnPlatform(CurPlatIndex);
+			if (TempPlatform != CurPlatform && !PlatformArray.Last()->MoveToNew)   //玩家所在平台发生变化，并且最后一个平台不在移动时
+			{
+				UE_LOG(LogRunGame, Log, TEXT("生成前！"))
+					int32 CurPlatIndex = PlatformArray.Find(CurPlatform);     //当前所在平台在数组中的位置
+				RandomSpawnPlatform(CurPlatIndex);
+			}
 		}
 	}
-
+	
 	int32 PlatNum = PlatformArray.Num();
 	for (int32 i = 0; i < PlatNum; i++)
 	{
@@ -185,7 +193,16 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 			AddPlatform->DeltaLocToPrePlat = DeltaLocToPrePlat;
 
 			if (!IsToAll)
+			{
 				RandomSpawnFlyObstacle();    //只有在非无障碍模式下才随机生成飞行障碍
+				SpawnNoObsBonusParam++;
+
+				if (SpawnNoObsBonusParam >= PlatformArray.Num() * 3)
+				{
+					SpawnBonus_NoObstacle(AddPlatform);
+					SpawnNoObsBonusParam++;
+				}
+			}
 
 			int32 NoNullNum = 0;
 			for (int32 i = 0; i < 10; ++i)
@@ -394,6 +411,49 @@ void AMyPlayerController::SpawnBonus_Score(ARunPlatform* const CurPlatform)
 	}
 }
 
+void AMyPlayerController::SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform)
+{
+	int32 Random_Bonus_NoObs = FMath::Rand() % 100;
+	ABonus* SpawnedNoObsBonus = nullptr;
+
+	if (Random_Bonus_NoObs < 50)
+	{
+		FVector PlatformDir_X = FRotationMatrix(AttachedPlatform->GetActorRotation()).GetUnitAxis(EAxis::X);
+		FVector PlatformDir_Y = FRotationMatrix(AttachedPlatform->GetActorRotation()).GetUnitAxis(EAxis::Y);
+		FVector PlatformDir_Z = FRotationMatrix(AttachedPlatform->GetActorRotation()).GetUnitAxis(EAxis::Z);
+
+		if (AttachedPlatform->IsA(SpawnPlatform_Beam))
+		{
+			ARunPlatform* const PrePlatform = PlatformArray[PlatformArray.Num() - 2];
+			if (PrePlatform)
+			{
+				FVector PrePlatformDir_X = FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::X);
+				FVector PrePlatformDir_Y = FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::Y);
+				FVector PrePlatformDir_Z = FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::Z);
+				float SpawnDistanceToPre = -700.f + (FMath::Rand() % 14) * 100.f;
+
+				FVector SpawnLocation = PrePlatform->GetActorLocation() + PrePlatformDir_X * PrePlatform->GetPlatformLength() + PrePlatformDir_Y * (SpawnDistanceToPre + PrePlatform->GetPlatformWidth() / 2) + 200.f * PrePlatformDir_Z;
+				ABonus* const BeamSpawnedNoObsBonus = GetWorld()->SpawnActor<ABonus>(Bonus_NoObstacle, FTransform(PrePlatform->GetActorRotation(), SpawnLocation));
+				if(BeamSpawnedNoObsBonus)
+					BeamSpawnedNoObsBonus->AttachToActor(PrePlatform, FAttachmentTransformRules::KeepWorldTransform);
+			}
+		}
+		else if (AttachedPlatform->IsA(SpawnPlatform_Physic))
+		{
+			FVector SpawnLocation = AttachedPlatform->GetActorLocation() + (-PlatformDir_X) * AttachedPlatform->GetPlatformLength() * 2.f + PlatformDir_Y * AttachedPlatform->GetPlatformWidth() / 2 + 500.f * PlatformDir_Z;
+			SpawnedNoObsBonus = GetWorld()->SpawnActor<ABonus>(Bonus_NoObstacle, FTransform(AttachedPlatform->GetActorRotation(), SpawnLocation));
+		}
+		else
+		{
+			FVector SpawnLocation = AttachedPlatform->GetActorLocation() + PlatformDir_X * AttachedPlatform->GetPlatformLength()/2 + PlatformDir_Y * AttachedPlatform->GetPlatformWidth() / 2 + 200.f * PlatformDir_Z;
+			SpawnedNoObsBonus = GetWorld()->SpawnActor<ABonus>(Bonus_NoObstacle, FTransform(AttachedPlatform->GetActorRotation(), SpawnLocation));
+		}
+
+		if (SpawnedNoObsBonus != nullptr)
+			SpawnedNoObsBonus->AttachToActor(AttachedPlatform, FAttachmentTransformRules::KeepWorldTransform);
+	}
+}
+
 void AMyPlayerController::ChangeWeaponType(EWeaponType::Type WeaponType)
 {
 	if (CurrentWeaponType == EWeaponType::Weapon_Beam && InConnectedToPlat && CurConnectedPlat != nullptr)
@@ -513,14 +573,28 @@ void AMyPlayerController::TogglePauseStat()
 	}
 }
 
-void AMyPlayerController::StartToAll()
+void AMyPlayerController::StartToAll(int32 LastTime)
 {
 	IsToAll = true;
-	if (CurPlatform != nullptr)
+
+	int32 ArrayNum = PlatformArray.Num();
+
+	IsToAll = false;
+	ARunPlatform* ToAllStartPlat = nullptr;
+
+	for (int32 i = 0; i < ArrayNum; ++i)
 	{
-		if (CurPlatform->NextPlatform)
+		if (PlatformArray[i] != nullptr)
 		{
-			CurPlatform->MoveToAllFun(FVector::ZeroVector);
+			ToAllStartPlat = PlatformArray[i];
+			break;
+		}
+	}
+	if (ToAllStartPlat != nullptr)
+	{
+		if (ToAllStartPlat->NextPlatform)
+		{
+			ToAllStartPlat->MoveToAllFun(FVector::ZeroVector);
 		}
 	}
 
@@ -530,6 +604,8 @@ void AMyPlayerController::StartToAll()
 		if (*It)
 			(*It)->StartDestroy();
 	}
+
+	GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::StopToAll, LastTime, false);
 }
 
 void AMyPlayerController::StopToAll()

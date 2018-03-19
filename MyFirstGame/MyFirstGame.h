@@ -39,7 +39,8 @@ namespace EBonusType
 	{
 		Bonus_None,
 		Bonus_Score,
-		Bonus_Accelerate
+		Bonus_Accelerate,
+		Bonus_NoObstacle
 	};
 }
 

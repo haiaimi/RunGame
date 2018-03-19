@@ -12,11 +12,14 @@ struct FBonusData
 {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(EditDefaultsOnly, Category = "Data")
+	UPROPERTY(EditDefaultsOnly, Category = "Score")
 	int32 BonusScore;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Data")
+	UPROPERTY(EditDefaultsOnly, Category = "Speed")
 	int32 BonusSpeed;
+
+	UPROPERTY(EditDefaultsOnly, Category = "NoObstacle")
+	int32 NoObstacleTime;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	TEnumAsByte<EBonusType::Type> BonusType;
@@ -32,6 +35,7 @@ struct FBonusData
 	{
 		BonusScore = 1;
 		BonusSpeed = 50;
+		NoObstacleTime = 5;
 		BonusType = EBonusType::Bonus_None;
 		ShapeRotation = FRotator::ZeroRotator;
 		ShapeScale = FVector(1.f, 1.f, 1.f);

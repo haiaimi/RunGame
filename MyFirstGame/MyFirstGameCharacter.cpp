@@ -678,6 +678,12 @@ void AMyFirstGameCharacter::ApplyBonus(class ABonus* BonusActor)
 
 		else if (BonusType == EBonusType::Bonus_Accelerate)
 			AddSpeed(BonusActor->GetBonusSpeed());
+
+		else if (BonusType == EBonusType::Bonus_NoObstacle)
+		{
+			AMyPlayerController* MPC = Cast<AMyPlayerController>(Controller); 
+			MPC->StartToAll(BonusActor->BonusData.NoObstacleTime);
+		}
 	}
 }
 

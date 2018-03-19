@@ -41,8 +41,11 @@ public:
 
 	TSubclassOf<AFlyObstacle> SpawnFlyObstacle;
 
-	/*分数奖励的蓝图对象*/
+	/**分数奖励的蓝图对象*/
 	TSubclassOf<ABonus> Bonus_Score;
+
+	/**无障碍模式奖励对象*/
+	TSubclassOf<ABonus> Bonus_NoObstacle;
 
 	/**存放当前所有平台的数组*/
 	UPROPERTY()
@@ -63,6 +66,8 @@ public:
 	/**平台是否在聚集状态*/
 	uint8 IsToAll : 1;
 
+	int32 SpawnNoObsBonusParam;
+
 	uint32 IsInPause : 1;
 
 	/**这是两个飞行障碍生成的最小间隔平台数*/
@@ -82,8 +87,10 @@ public:
 
 	FVector DeltaLocToPrePlat;
 
+	FTimerHandle NoObstacleTime;
+
 public:
-	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction);
+	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)override;
 
 	virtual void Destroyed()override;
 
@@ -111,7 +118,9 @@ public:
 	FTransform GetSpawnTransf_Physic(ARunPlatform* PrePlatform);
 
 	/**在当前平台上生成Bonus*/
-	void SpawnBonus_Score(ARunPlatform* CurPlatform);
+	void SpawnBonus_Score(ARunPlatform* AttachedPlatform);
+
+	void SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform);
 
 	void ChangeWeaponType(EWeaponType::Type WeaponType);
 
@@ -122,8 +131,10 @@ public:
 
 	void TogglePauseStat();
 
-	/**所有平台集合*/
-	void StartToAll();
+	/**所有平台集合
+	  *Param LastTime 无障碍模式持续的时间	
+	  */
+	void StartToAll(int32 LastTime);
 
 	/**停止集合，停止无障碍模式*/
 	void StopToAll();
