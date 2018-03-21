@@ -265,7 +265,7 @@ public:
 
 	void PreWeapon();
 
-	void EquipWeapon(AWeapon_Gun* CurWeapon);
+	void EquipWeapon(AWeapon_Gun* const CurWeapon);
 
 	/*把武器收起放到背后*/
 	void PackupWeapon(AWeapon_Gun* PickupWeapon);

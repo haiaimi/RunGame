@@ -21,6 +21,7 @@
 #include "FlyObstacle.h"
 #include "EngineUtils.h"
 #include "RunPlatform.h"
+#include "RunGameState.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AMyFirstGameCharacter
@@ -556,13 +557,15 @@ void AMyFirstGameCharacter::Fire()
 void AMyFirstGameCharacter::NextWeapon()
 {
 	int32 NextWeaponIndex = (InterInventory.Find(CurWeapon) + 1) % InterInventory.Num();
-	EquipWeapon(InterInventory[NextWeaponIndex]); //装备下一个武器
+	AWeapon_Gun* const pNextWeapon = InterInventory[NextWeaponIndex];
+	EquipWeapon(pNextWeapon); //装备下一个武器
 }
 
 void AMyFirstGameCharacter::PreWeapon()
 {
 	int32 PreWeaponIndex = InterInventory.Find(CurWeapon) == 0 ? (InterInventory.Num() - 1) : (InterInventory.Find(CurWeapon) - 1) % InterInventory.Num();
-	EquipWeapon(InterInventory[PreWeaponIndex]); //装备前一个武器
+	AWeapon_Gun* const pPreWeapon = InterInventory[PreWeaponIndex];
+	EquipWeapon(pPreWeapon); //装备前一个武器
 }
 
 float AMyFirstGameCharacter::PlayAnim(float rate, UAnimMontage* Anim)
@@ -632,7 +635,7 @@ void AMyFirstGameCharacter::ToggleCrounchStat()
 	}
 }
 
-void AMyFirstGameCharacter::EquipWeapon(AWeapon_Gun* curWeapon)
+void AMyFirstGameCharacter::EquipWeapon(AWeapon_Gun* const curWeapon)
 {
 	//设置当前武器类型，及射速
 	if (curWeapon)
@@ -642,13 +645,13 @@ void AMyFirstGameCharacter::EquipWeapon(AWeapon_Gun* curWeapon)
 		if (MPC != nullptr)
 			MPC->ChangeWeaponType(CurrentWeaponType);     //把武器类型参数传到Controller
 
-		this->ShootSpeed = curWeapon->WeaponData.ShootSpeed;
+		ShootSpeed = curWeapon->WeaponData.ShootSpeed;
 
-		this->CurWeapon->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+		CurWeapon->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
 		PackupWeapon(CurWeapon);
-		this->CurWeapon = curWeapon;
+		CurWeapon = curWeapon;
 		CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponSocket);       //把Weapon附着到玩家身上,记住是附着在网格上，而不是整个Actor
-		this->CurWeapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));
+		CurWeapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));
 	}
 }
 
@@ -689,10 +692,14 @@ void AMyFirstGameCharacter::ApplyBonus(class ABonus* BonusActor)
 
 void AMyFirstGameCharacter::AddScore(int32 BonusScore)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::FormatAsNumber(BonusScore), true);
+	ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
+	if (RGS)
+	{
+		RGS->PlayerScore += BonusScore;
+	}
 }
 
 void AMyFirstGameCharacter::AddSpeed(int32 BonusSpeed)
 {
-
+	
 }

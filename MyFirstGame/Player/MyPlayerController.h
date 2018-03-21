@@ -87,6 +87,9 @@ public:
 
 	FVector DeltaLocToPrePlat;
 
+	/**玩家移动距离*/
+	float PlayerMoveDistance = 0.f;
+
 	FTimerHandle NoObstacleTime;
 
 public:
@@ -132,7 +135,7 @@ public:
 	void TogglePauseStat();
 
 	/**所有平台集合
-	  *Param LastTime 无障碍模式持续的时间	
+	  *@Param LastTime 无障碍模式持续的时间	
 	  */
 	void StartToAll(int32 LastTime);
 

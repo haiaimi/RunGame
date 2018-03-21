@@ -67,6 +67,8 @@ void ABoomActor::Boom()
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BoomEmitter, GetActorTransform());
 	}
 	WhatToBoom->SetVisibility(false);
+	WhatToBoom->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
 	if (GetWorld())
 	{
 		GetWorldTimerManager().SetTimer(SpawnParticle, this, &ABoomActor::DestroyActor, 2.f, false);

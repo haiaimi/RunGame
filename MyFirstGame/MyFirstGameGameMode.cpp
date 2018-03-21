@@ -4,6 +4,7 @@
 #include "MyFirstGameCharacter.h"
 #include "UI/MyHUD.h"
 #include "UObject/ConstructorHelpers.h"
+#include "RunGameState.h"
 
 AMyFirstGameGameMode::AMyFirstGameGameMode()
 {
@@ -15,5 +16,6 @@ AMyFirstGameGameMode::AMyFirstGameGameMode()
 	}
 
 	PlayerControllerClass = AMyPlayerController::StaticClass();
+	GameStateClass = ARunGameState::StaticClass();
 	HUDClass = AMyHUD::StaticClass();
 }

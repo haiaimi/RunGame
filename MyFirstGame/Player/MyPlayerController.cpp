@@ -17,6 +17,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "Components/StaticMeshComponent.h"
 #include "TimerManager.h"
+#include "RunGameState.h"
 
 const float ShootPlatformAngle = 30.f;
 
@@ -111,8 +112,19 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 		{
 			if (TempPlatform != CurPlatform && !PlatformArray.Last()->MoveToNew)   //玩家所在平台发生变化，并且最后一个平台不在移动时
 			{
-				UE_LOG(LogRunGame, Log, TEXT("生成前！"))
-					int32 CurPlatIndex = PlatformArray.Find(CurPlatform);     //当前所在平台在数组中的位置
+				int32 CurPlatIndex = PlatformArray.Find(CurPlatform);     //当前所在平台在数组中的位置
+				
+				PlayerMoveDistance = PlayerMoveDistance + (CurPlatform->GetActorLocation() - TempPlatform->GetActorLocation()).Size2D();
+	
+				if (CurPlatform->IsA(SpawnPlatform_Shoot))
+				{
+					ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
+					if (RGS)
+					{
+						RGS->PlayerHeight = Cast<AMyFirstGameCharacter>(GetPawn())->GetActorLocation().Z;
+					}
+				}
+				GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::Printf(TEXT("Player Distance: %f, Template Lenght: %f, DeltaDistance: %f"), PlayerMoveDistance, TempPlatform->GetPlatformLength(), (CurPlatform->GetActorLocation() - TempPlatform->GetActorLocation()).Size2D()));
 				RandomSpawnPlatform(CurPlatIndex);
 			}
 		}
@@ -194,13 +206,13 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 
 			if (!IsToAll)
 			{
-				RandomSpawnFlyObstacle();    //只有在非无障碍模式下才随机生成飞行障碍
+				//RandomSpawnFlyObstacle();    //只有在非无障碍模式下才随机生成飞行障碍
 				SpawnNoObsBonusParam++;
 
 				if (SpawnNoObsBonusParam >= PlatformArray.Num() * 3)
 				{
 					SpawnBonus_NoObstacle(AddPlatform);
-					SpawnNoObsBonusParam++;
+					SpawnNoObsBonusParam = 0;
 				}
 			}
 
@@ -459,7 +471,7 @@ void AMyPlayerController::ChangeWeaponType(EWeaponType::Type WeaponType)
 	if (CurrentWeaponType == EWeaponType::Weapon_Beam && InConnectedToPlat && CurConnectedPlat != nullptr)
 	{
 		CurConnectedPlat->DeActiveBeam();
-		//CurConnectedPlat = nullptr;
+		CurConnectedPlat = nullptr;
 	}
 
 	//销毁所有Beam子弹
@@ -579,7 +591,6 @@ void AMyPlayerController::StartToAll(int32 LastTime)
 
 	int32 ArrayNum = PlatformArray.Num();
 
-	IsToAll = false;
 	ARunPlatform* ToAllStartPlat = nullptr;
 
 	for (int32 i = 0; i < ArrayNum; ++i)
