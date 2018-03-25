@@ -88,7 +88,7 @@ public:
 	FVector DeltaLocToPrePlat;
 
 	/**玩家移动距离*/
-	float PlayerMoveDistance = 0.f;
+	//float PlayerMoveDistance = 0.f;
 
 	FTimerHandle NoObstacleTime;
 
@@ -139,6 +139,7 @@ public:
 	  */
 	void StartToAll(int32 LastTime);
 
+	void StartToAllTest();
 	/**停止集合，停止无障碍模式*/
 	void StopToAll();
 

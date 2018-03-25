@@ -695,7 +695,7 @@ void AMyFirstGameCharacter::AddScore(int32 BonusScore)
 	ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
 	if (RGS)
 	{
-		RGS->PlayerScore += BonusScore;
+		RGS->UpdatePlayerScore(BonusScore);
 	}
 }
 

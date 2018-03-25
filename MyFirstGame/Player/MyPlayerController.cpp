@@ -55,7 +55,7 @@ void AMyPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 	InputComponent->BindAction("TogglePause", IE_Pressed, this, &AMyPlayerController::TogglePauseStat);
-	//InputComponent->BindAction("TestToAll", IE_Pressed, this, &AMyPlayerController::StartToAll);
+	InputComponent->BindAction("TestToAll", IE_Pressed, this, &AMyPlayerController::StartToAllTest);
 	InputComponent->BindAction("StopToAll", IE_Pressed, this, &AMyPlayerController::StopToAll);
 }
 
@@ -110,21 +110,22 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 		ARunPlatform* LastPlatformRef = PlatformArray.Last();
 		if (LastPlatformRef != nullptr)
 		{
-			if (TempPlatform != CurPlatform && !PlatformArray.Last()->MoveToNew)   //玩家所在平台发生变化，并且最后一个平台不在移动时
+			if (TempPlatform != CurPlatform && !PlatformArray.Last()->MoveToNew && CurPlatform != nullptr)   //玩家所在平台发生变化，并且最后一个平台不在移动时
 			{
 				int32 CurPlatIndex = PlatformArray.Find(CurPlatform);     //当前所在平台在数组中的位置
 				
-				PlayerMoveDistance = PlayerMoveDistance + (CurPlatform->GetActorLocation() - TempPlatform->GetActorLocation()).Size2D();
-	
-				if (CurPlatform->IsA(SpawnPlatform_Shoot))
+				ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
+
+				if (RGS)
 				{
-					ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
-					if (RGS)
+					RGS->AddPlayerDistance((CurPlatform->GetActorLocation() - TempPlatform->GetActorLocation()).Size2D());
+
+					if (CurPlatform->IsA(SpawnPlatform_Shoot))
 					{
-						RGS->PlayerHeight = Cast<AMyFirstGameCharacter>(GetPawn())->GetActorLocation().Z;
+						RGS->AddPlayerHeight(CurPlatform->GetActorLocation().Z);
 					}
 				}
-				GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::Printf(TEXT("Player Distance: %f, Template Lenght: %f, DeltaDistance: %f"), PlayerMoveDistance, TempPlatform->GetPlatformLength(), (CurPlatform->GetActorLocation() - TempPlatform->GetActorLocation()).Size2D()));
+				//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::Printf(TEXT("Player Distance: %f, Template Lenght: %f, DeltaDistance: %f"), PlayerMoveDistance, TempPlatform->GetPlatformLength(), (CurPlatform->GetActorLocation() - TempPlatform->GetActorLocation()).Size2D()));
 				RandomSpawnPlatform(CurPlatIndex);
 			}
 		}
@@ -329,6 +330,7 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 
 		if (PrePlatform->IsA(SpawnPlatform_Physic))      //只有前一个平台是物理平台才会有附加偏移
 			DeltaLocToPrePlat = ForwardDir * PrePlatform->GetPlatformLength() * LengthScale;
+
 		else DeltaLocToPrePlat = FVector::ZeroVector;
 	}
 	return TempTrans;
@@ -617,6 +619,31 @@ void AMyPlayerController::StartToAll(int32 LastTime)
 	}
 
 	GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::StopToAll, LastTime, false);
+}
+
+void AMyPlayerController::StartToAllTest()
+{
+	IsToAll = true;
+
+	int32 ArrayNum = PlatformArray.Num();
+
+	ARunPlatform* ToAllStartPlat = nullptr;
+
+	for (int32 i = 0; i < ArrayNum; ++i)
+	{
+		if (PlatformArray[i] != nullptr)
+		{
+			ToAllStartPlat = PlatformArray[i];
+			break;
+		}
+	}
+	if (ToAllStartPlat != nullptr)
+	{
+		if (ToAllStartPlat->NextPlatform)
+		{
+			ToAllStartPlat->MoveToAllFun(FVector::ZeroVector);
+		}
+	}
 }
 
 void AMyPlayerController::StopToAll()

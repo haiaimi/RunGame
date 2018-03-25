@@ -56,9 +56,10 @@ void ARunPlatform_Physic::BeginOverlap(UPrimitiveComponent* OverlappedComponent,
 {
 	Super::BeginOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 
-	if (CurChar != NULL && !IsToAll)
+	if (CurChar != nullptr && !IsToAll)
 	{
-		Platform->SetSimulatePhysics(true);
+		if (!Platform->IsSimulatingPhysics())
+			Platform->SetSimulatePhysics(true);
 	}
 }
 
