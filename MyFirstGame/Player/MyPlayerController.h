@@ -66,6 +66,9 @@ public:
 	/**平台是否在聚集状态*/
 	uint8 IsToAll : 1;
 
+	/**是否在停止集合的动画中*/
+	uint8 IsInStopToAllAnim : 1;
+
 	int32 SpawnNoObsBonusParam;
 
 	uint32 IsInPause : 1;
@@ -140,8 +143,14 @@ public:
 	void StartToAll(int32 LastTime);
 
 	void StartToAllTest();
+
+	/**进入停止集合的状态，但是不会执行实际操作*/
+	void ToStopToAllState();
+
 	/**停止集合，停止无障碍模式*/
 	void StopToAll();
+
+	void StopToAllAnimEnd();
 
 	void NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef);
 };

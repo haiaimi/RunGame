@@ -7,6 +7,7 @@
 #include "RunGameState.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpdateScore, float, NewScore);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FRemind);
 
 UCLASS()
 class MYFIRSTGAME_API ARunGameState : public AGameStateBase
@@ -17,6 +18,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FUpdateScore UpdateScoreDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FRemind RemindDelegate;
 
 	/**Íæ¼ÒµÃ·Ö*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")

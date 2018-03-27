@@ -18,6 +18,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "TimerManager.h"
 #include "RunGameState.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 const float ShootPlatformAngle = 30.f;
 
@@ -126,7 +127,8 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 					}
 				}
 				//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::Printf(TEXT("Player Distance: %f, Template Lenght: %f, DeltaDistance: %f"), PlayerMoveDistance, TempPlatform->GetPlatformLength(), (CurPlatform->GetActorLocation() - TempPlatform->GetActorLocation()).Size2D()));
-				RandomSpawnPlatform(CurPlatIndex);
+				if (!IsInStopToAllAnim)
+					RandomSpawnPlatform(CurPlatIndex);
 			}
 		}
 	}
@@ -618,7 +620,7 @@ void AMyPlayerController::StartToAll(int32 LastTime)
 			(*It)->StartDestroy();
 	}
 
-	GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::StopToAll, LastTime, false);
+	GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::ToStopToAllState, LastTime, false);
 }
 
 void AMyPlayerController::StartToAllTest()
@@ -646,10 +648,31 @@ void AMyPlayerController::StartToAllTest()
 	}
 }
 
+void AMyPlayerController::ToStopToAllState()
+{
+	//一秒后才执行实际操作，但是已经开始进入状态
+	GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::StopToAll, 1, false);
+	IsInStopToAllAnim = true;
+
+	//此时要限制玩家跳跃
+	AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
+	if (MC)
+	{
+		MC->GetCharacterMovement()->JumpZVelocity = 0.f;
+	}
+
+	ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
+	if (RGS)
+	{
+		if (RGS->RemindDelegate.IsBound())
+			RGS->RemindDelegate.Broadcast();
+	}
+}
+
 void AMyPlayerController::StopToAll()
 {
 	int32 ArrayNum = PlatformArray.Num();
-
+	
 	IsToAll = false;
 	ARunPlatform* ToOriginStartPlat = nullptr;
 	
@@ -678,6 +701,21 @@ void AMyPlayerController::StopToAll()
 		}
 		else
 			ToOriginStartPlat->StopToAllFun(FVector::ZeroVector);
+	}
+
+	//预估动画在两秒后结束
+	GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::StopToAllAnimEnd, 1.5f, false);
+}
+
+void AMyPlayerController::StopToAllAnimEnd()
+{
+	IsInStopToAllAnim = false;
+
+	//下面就要恢复玩家跳跃
+	AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
+	if (MC)
+	{
+		MC->GetCharacterMovement()->JumpZVelocity = 500.f;
 	}
 }
 
