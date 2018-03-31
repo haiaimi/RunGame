@@ -43,4 +43,8 @@ public:
 	void AddPlayerHeight(float AddHeight);
 
 	void UpdatePlayerScore(float AddScore);
+
+	void EndGame();
+
+	void RestartGame();
 };

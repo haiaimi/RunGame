@@ -34,3 +34,15 @@ void ARunGameState::UpdatePlayerScore(float AddScore)
 		UpdateScoreDelegate.Broadcast(PlayerScore);
 	}
 }
+
+void ARunGameState::EndGame()
+{
+
+}
+
+void ARunGameState::RestartGame()
+{
+	PlayerScore = 0.f;
+	PlayerHeight = 0.f;
+	PlayerDistance = 0.f;
+}

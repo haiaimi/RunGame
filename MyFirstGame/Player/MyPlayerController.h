@@ -15,6 +15,9 @@ class AFlyObstacle;
  * 1、自动生成平台
  * 2、生成飞行障碍
  */
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStopGame);
+
 UCLASS()
 class MYFIRSTGAME_API AMyPlayerController : public APlayerController
 {
@@ -73,6 +76,10 @@ public:
 
 	uint32 IsInPause : 1;
 
+	/**游戏是否已结束*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	uint32 bIsGameEnd : 1;
+
 	/**这是两个飞行障碍生成的最小间隔平台数*/
 	int32 FlyObstacleSpawnInterval;
 
@@ -94,6 +101,9 @@ public:
 	//float PlayerMoveDistance = 0.f;
 
 	FTimerHandle NoObstacleTime;
+
+	UPROPERTY(BlueprintAssignable)
+	FStopGame StopGameDelegate;
 
 public:
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)override;
@@ -135,7 +145,11 @@ public:
 
 	void AddMaxSpawnObstacles();
 
+	UFUNCTION(BlueprintCallable)
 	void TogglePauseStat();
+
+	UFUNCTION(BlueprintCallable)
+	void QuitGame();
 
 	/**所有平台集合
 	  *@Param LastTime 无障碍模式持续的时间	
@@ -153,4 +167,6 @@ public:
 	void StopToAllAnimEnd();
 
 	void NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef);
+
+	void RestartGame();
 };

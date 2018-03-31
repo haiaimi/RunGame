@@ -130,6 +130,20 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 				if (!IsInStopToAllAnim)
 					RandomSpawnPlatform(CurPlatIndex);
 			}
+
+			if (!IsInPause)
+			{
+				AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
+				if (MC)
+				{
+					float FallDistance = LastPlatformRef->GetActorLocation().Z - MC->GetActorLocation().Z;      //玩家下落距离，超过一定距离则认为游戏结束
+					if (FallDistance > 2000.f)
+					{
+						bIsGameEnd = true;
+						TogglePauseStat();
+					}
+				}
+			}
 		}
 	}
 	
@@ -580,13 +594,23 @@ void AMyPlayerController::TogglePauseStat()
 
 {
 	IsInPause = !IsInPause;
+
 	if (IsInPause)
+	{
+		if (StopGameDelegate.IsBound())
+			StopGameDelegate.Broadcast();
+
 		this->SetPause(true);
+	}
 	else
 	{
-		AGameModeBase* const GameMode = GetWorld()->GetAuthGameMode();
-		GameMode->ClearPause();
+		this->SetPause(false);
 	}
+}
+
+void AMyPlayerController::QuitGame()
+{
+	this->ConsoleCommand("quit");
 }
 
 void AMyPlayerController::StartToAll(int32 LastTime)
