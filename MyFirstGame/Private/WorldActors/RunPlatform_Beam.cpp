@@ -280,3 +280,17 @@ void ARunPlatform_Beam::StopToAllFun(const FVector DeltaDistance)
 	if (ToParticle != nullptr)
 		ToParticle->SetVisibility(true);
 }
+
+void ARunPlatform_Beam::MoveToAllTick(float DeltaTime)
+{
+	Super::MoveToAllTick(DeltaTime);
+
+	TempSpawnLocation = SpawnLocation;
+}
+
+void ARunPlatform_Beam::MoveToOriginTick(float DeltaTime)
+{
+	Super::MoveToOriginTick(DeltaTime);
+
+	TempSpawnLocation = SpawnLocation;
+}

@@ -738,7 +738,7 @@ void AMyPlayerController::StartToAllTest()
 void AMyPlayerController::ToStopToAllState()
 {
 	//一秒后才执行实际操作，但是已经开始进入状态
-	GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::StopToAll, 1, false);
+	GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::StopToAll, 2, false);
 	IsInStopToAllAnim = true;
 
 	//此时要限制玩家跳跃

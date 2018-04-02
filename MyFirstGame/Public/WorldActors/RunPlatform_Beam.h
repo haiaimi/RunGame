@@ -86,4 +86,8 @@ public:
 	virtual void MoveToAllFun(const FVector DeltaDistance)override;
 
 	virtual void StopToAllFun(const FVector DeltaDistance)override;
+
+	virtual void MoveToAllTick(float DeltaTime)override;
+
+	virtual void MoveToOriginTick(float DeltaTime)override;
 };
