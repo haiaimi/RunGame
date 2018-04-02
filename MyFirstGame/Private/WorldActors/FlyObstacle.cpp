@@ -9,6 +9,7 @@
 #include "RunPlatform.h"
 #include "MyFirstGame.h"
 #include "Player/MyPlayerController.h"
+#include "RunGameState.h"
 
 
 // Sets default values
@@ -162,6 +163,10 @@ void AFlyObstacle::StartDestroy()
 	ShouldShowDir = false;
 	if (!FlyObstacleMesh->IsSimulatingPhysics())
 		FlyObstacleMesh->SetSimulatePhysics(true);
+
+	ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
+	if (RGS)
+		RGS->UpdatePlayerScore(1000.f);     //摧毁一个飞行障碍就加1000分
 
 	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AFlyObstacle::DestroyActor, 4.f, false);
 }

@@ -201,6 +201,19 @@ void ARunPlatform_Beam::BeginOverlap(UPrimitiveComponent* OverlappedComponent, A
 
 }
 
+void ARunPlatform_Beam::StartDestroy()
+{
+	Super::StartDestroy();
+
+	AMyPlayerController* MC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
+
+	if (MC != nullptr)
+	{
+		MC->InConnectedToPlat = false;
+		MC->CurConnectedPlat = nullptr;
+	}
+}
+
 void ARunPlatform_Beam::MoveToPlayerPlat()
 {
 	AMyPlayerController* MC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());

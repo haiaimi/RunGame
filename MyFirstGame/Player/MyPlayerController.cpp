@@ -19,8 +19,9 @@
 #include "TimerManager.h"
 #include "RunGameState.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerStart.h"
 
-const float ShootPlatformAngle = 30.f;
+static const float ShootPlatformAngle = 30.f;
 
 AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -66,35 +67,7 @@ void AMyPlayerController::PostInitializeComponents()
 	PlatformArray.SetNum(10);       //平台数组的容量为10
 	FlyObstacleArray.SetNum(0);
 
-	//获取游戏世界中预设的一个平台，（默认的一个）
-	for (TActorIterator<ARunPlatform> It(GetWorld()); It; ++It)
-	{
-		if ((*It)->Tags.Num())
-		{
-			if ((*It)->Tags[0] == TEXT("StartPlatform"))   //如果是指定的开始平台就开始
-			{
-				CurPlatform = *It;
-				TempPlatform = CurPlatform;
-				PlatformArray[0] = *It;  //数组的第一个就是默认平台
-				//GEngine->AddOnScreenDebugMessage(1, 5, FColor::Black, TEXT("检索成功"));
-				break;
-			}
-		}
-	}
-
-	//下面是逐步生成10个平台
-	int32 ArrayNum = PlatformArray.Num();
-	for (int32 i = 1; i < ArrayNum; i++)
-	{
-		ARunPlatform* Temp = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray[i - 1]));
-	
-		if (Temp != nullptr)
-		{
-			Temp->PlatDir = AbsoluteDir;
-			PlatformArray[i] = Temp;
-			PlatformArray[i - 1]->NextPlatform = PlatformArray[i];
-		}
-	}
+	InitPlatforms();
 }
 
 void AMyPlayerController::BeginPlay()
@@ -164,6 +137,93 @@ void AMyPlayerController::Destroyed()
 	Super::Destroyed();
 }
 
+void AMyPlayerController::InitPlatforms()
+{
+	CurPlatform = nullptr;
+	//清空数组中的平台
+	for (auto iter : PlatformArray)
+	{
+		if (iter != nullptr)
+			iter->StartDestroy();
+	}
+
+	// 销毁所有已存在的飞行障碍
+	for (TActorIterator<AFlyObstacle> It(GetWorld()); It; ++It)
+	{
+		if (*It)
+			(*It)->StartDestroy();
+	}
+	FlyObstacleArray.Reset(0); //清空飞行障碍数组
+
+	//获取游戏世界中预设的一个平台，（默认的一个）
+	for (TActorIterator<ARunPlatform> It(GetWorld()); It; ++It)
+	{
+		if ((*It)->Tags.Num())
+		{
+			if ((*It)->Tags[0] == TEXT("StartPlatform") && !(*It)->IsInDestroyed)   //如果是指定的开始平台就开始
+			{
+				CurPlatform = *It;
+				TempPlatform = CurPlatform;
+				PlatformArray[0] = *It;  //数组的第一个就是默认平台
+										
+				break;
+			}
+		}
+	}
+
+	if (!CurPlatform)   //没有找到适合的平台就重新生成一个
+	{
+		ARunPlatform* Spawned = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, FVector(3310.f, 1330.f, 20.f), FRotator(0.f, 180.f, 0.f));
+		if (Spawned)
+		{
+			CurPlatform = Spawned;
+			TempPlatform = CurPlatform;
+			PlatformArray[0] = Spawned;
+		}
+	}
+
+	//下面是逐步生成10个平台
+	int32 ArrayNum = PlatformArray.Num();
+	for (int32 i = 1; i < ArrayNum; i++)
+	{
+		ARunPlatform* Temp = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray[i - 1]));
+
+		if (Temp != nullptr)
+		{
+			Temp->PlatDir = AbsoluteDir;
+			PlatformArray[i] = Temp;
+			PlatformArray[i - 1]->NextPlatform = PlatformArray[i];
+		}
+	}
+}
+
+void AMyPlayerController::RestartGame()
+{
+	//查找PlayerStart
+	APlayerStart* Start = nullptr;
+	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+	{	//使用第一个找到的Start
+		if (*It)
+		{
+			Start = *It;
+			break;
+		}
+	}
+	if (Start && GetPawn())
+	{
+		APawn* MC = GetPawn();
+		MC->TeleportTo(Start->GetActorLocation(), Start->GetActorRotation());     //把玩家移到开始的位置
+	}
+
+	InitPlatforms();
+
+	ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
+	if (RGS)
+	{
+		RGS->RestartGame();
+		RGS->UpdatePlayerScore(0.f);
+	}
+}
 
 void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 {
@@ -223,7 +283,7 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 
 			if (!IsToAll)
 			{
-				//RandomSpawnFlyObstacle();    //只有在非无障碍模式下才随机生成飞行障碍
+				RandomSpawnFlyObstacle();    //只有在非无障碍模式下才随机生成飞行障碍
 				SpawnNoObsBonusParam++;
 
 				if (SpawnNoObsBonusParam >= PlatformArray.Num() * 3)
@@ -510,13 +570,16 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 
 	for (int32 i = 0; i < PlatNum; ++i)
 	{ 
-		if (!PlatformArray[i]->IsA(SpawnPlatform_Shoot))
-			CurNoShootPlatNum++;    //从0开始非Shoot平台的数目
-		else
-			break;
+		if (PlatformArray[i] != nullptr)
+		{
+			if (!PlatformArray[i]->IsA(SpawnPlatform_Shoot))
+				CurNoShootPlatNum++;    //从0开始非Shoot平台的数目
+			else
+				break;
+		}
 	}
 
-	if (((CurNoShootPlatNum >= 7 && FlyObstacleSpawnInterval > 10) || FlyObstacleSpawnInterval == -1) && FlyObstacleArray.Num() < MaxFlyObstacles && RandomFlyObstacle < 40)    //40%的几率生成飞行障碍
+	if (((CurNoShootPlatNum >= 7 && FlyObstacleSpawnInterval > 10) || FlyObstacleSpawnInterval == -1) && FlyObstacleArray.Num() < MaxFlyObstacles && RandomFlyObstacle < 10)    //10%的几率生成飞行障碍
 	{
 		if (SpawnFlyObstacle != nullptr)
 		{

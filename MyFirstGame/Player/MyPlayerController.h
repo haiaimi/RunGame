@@ -118,6 +118,13 @@ protected:
 	virtual void PostInitializeComponents()override;
 
 public:
+	/**用于初始化平台*/
+	void InitPlatforms();
+
+	/**重新开始游戏*/
+	UFUNCTION(BlueprintCallable)
+	void RestartGame();
+
 	/**随机生成平台的函数，指定生成的个数*/
 	void RandomSpawnPlatform(int32 SpawnNum);
 
@@ -167,6 +174,4 @@ public:
 	void StopToAllAnimEnd();
 
 	void NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef);
-
-	void RestartGame();
 };

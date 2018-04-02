@@ -81,6 +81,8 @@ public:
 
 	void DeActiveBeam();
 
+	virtual void StartDestroy()override;
+
 	virtual void MoveToAllFun(const FVector DeltaDistance)override;
 
 	virtual void StopToAllFun(const FVector DeltaDistance)override;
