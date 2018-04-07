@@ -139,7 +139,8 @@ void AFlyObstacle::QueryIsOverSubAngle()
 		if (AimCharacter->Controller)
 		{
 			AMyPlayerController* MPC = Cast<AMyPlayerController>(AimCharacter->Controller);
-			IsOnPhysicPlatform = MPC->CurPlatform->IsA(MPC->SpawnPlatform_Physic);    //玩家当前平台是物理平台就停止移动
+			if (MPC->CurPlatform != nullptr)
+				IsOnPhysicPlatform = MPC->CurPlatform->IsA(MPC->SpawnPlatform_Physic);    //玩家当前平台是物理平台就停止移动
 		}
 
 		if (IsOnPhysicPlatform == false)

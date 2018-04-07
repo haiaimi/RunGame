@@ -64,7 +64,7 @@ void AMyPlayerController::SetupInputComponent()
 void AMyPlayerController::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	PlatformArray.SetNum(10);       //平台数组的容量为10
+	PlatformArray.SetNum(20);       //平台数组的容量为10
 	FlyObstacleArray.SetNum(0);
 
 	InitPlatforms();
@@ -109,27 +109,29 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 				AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
 				if (MC)
 				{
-					float FallDistance = LastPlatformRef->GetActorLocation().Z - MC->GetActorLocation().Z;      //玩家下落距离，超过一定距离则认为游戏结束
-					if (FallDistance > 2000.f)
+					int32 PlatNum = PlatformArray.Num();
+					for (int32 i = 0; i < PlatNum; i++)
 					{
-						bIsGameEnd = true;
-						TogglePauseStat();
+						if (PlatformArray[i] != nullptr)
+							if (PlatformArray[i]->IsInDestroyed)
+							{
+								PlatformArray[i] = nullptr;
+							}
+							else
+							{
+								float FallDistance = PlatformArray[i]->GetActorLocation().Z - MC->GetActorLocation().Z;      //玩家下落距离，超过一定距离则认为游戏结束
+								if (FallDistance > 2000.f)
+								{
+									bIsGameEnd = true;
+									TogglePauseStat();
+								}
+							}
 					}
 				}
 			}
 		}
 	}
-	
-	int32 PlatNum = PlatformArray.Num();
-	for (int32 i = 0; i < PlatNum; i++)
-	{
-		if (PlatformArray[i] != nullptr)
-			if (PlatformArray[i]->IsInDestroyed)
-			{
-				PlatformArray[i] = nullptr;
-				UE_LOG(LogRunGame, Log, TEXT("CurPlatNum: %d"),PlatformArray.Num())
-			}
-	}
+
 }
 
 void AMyPlayerController::Destroyed()
@@ -211,8 +213,11 @@ void AMyPlayerController::RestartGame()
 	}
 	if (Start && GetPawn())
 	{
-		APawn* MC = GetPawn();
+		AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
 		MC->TeleportTo(Start->GetActorLocation(), Start->GetActorRotation());     //把玩家移到开始的位置
+		MC->IsInAccelerate = false;
+		MC->IsTargeting = false;
+		this->SetControlRotation(Start->GetActorRotation());
 	}
 
 	InitPlatforms();
@@ -223,6 +228,7 @@ void AMyPlayerController::RestartGame()
 		RGS->RestartGame();
 		RGS->UpdatePlayerScore(0.f);
 	}
+	bIsGameEnd = false;    //游戏已重启
 }
 
 void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
@@ -524,8 +530,12 @@ void AMyPlayerController::SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform)
 
 				FVector SpawnLocation = PrePlatform->GetActorLocation() + PrePlatformDir_X * PrePlatform->GetPlatformLength() + PrePlatformDir_Y * (SpawnDistanceToPre + PrePlatform->GetPlatformWidth() / 2) + 200.f * PrePlatformDir_Z;
 				ABonus* const BeamSpawnedNoObsBonus = GetWorld()->SpawnActor<ABonus>(Bonus_NoObstacle, FTransform(PrePlatform->GetActorRotation(), SpawnLocation));
-				if(BeamSpawnedNoObsBonus)
+				if (BeamSpawnedNoObsBonus != nullptr)
+				{
 					BeamSpawnedNoObsBonus->AttachToActor(PrePlatform, FAttachmentTransformRules::KeepWorldTransform);
+					AttachedPlatform->OnDestory.AddUObject(BeamSpawnedNoObsBonus, &ABonus::DestroyActor);
+					AttachedPlatform->OnFall.AddUObject(BeamSpawnedNoObsBonus, &ABonus::StartFall);
+				}
 			}
 		}
 		else if (AttachedPlatform->IsA(SpawnPlatform_Physic))
@@ -540,7 +550,11 @@ void AMyPlayerController::SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform)
 		}
 
 		if (SpawnedNoObsBonus != nullptr)
+		{
 			SpawnedNoObsBonus->AttachToActor(AttachedPlatform, FAttachmentTransformRules::KeepWorldTransform);
+			AttachedPlatform->OnDestory.AddUObject(SpawnedNoObsBonus, &ABonus::DestroyActor);
+			AttachedPlatform->OnFall.AddUObject(SpawnedNoObsBonus, &ABonus::StartFall);
+		}
 	}
 }
 

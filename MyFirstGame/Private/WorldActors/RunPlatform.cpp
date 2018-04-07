@@ -154,9 +154,6 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 		{
 			IsSlope = false;
 
-			if (OnFall.IsBound())
-				OnFall.Broadcast(); 
-
 			if (CurChar && Cast<ARunPlatform_Shoot>(this->NextPlatform) == nullptr)  //只有下一个平台不是Shoot平台才会恢复移速
 			{
 				//恢复玩家原本的移动速度,和动画播放速率
@@ -187,6 +184,10 @@ void ARunPlatform::StartDestroy()
 		Platform->SetSimulatePhysics(true);  //开启物理模拟
 
 	GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4秒后删除该平台，释放内存
+
+	//奖励物体开始下落
+	if (OnFall.IsBound())
+		OnFall.Broadcast();
 
 	if (FlyObstacleDestory.IsBound())
 	{
