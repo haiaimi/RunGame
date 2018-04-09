@@ -47,6 +47,7 @@ AMyFirstGameCharacter::AMyFirstGameCharacter(const FObjectInitializer& ObjectIni
 
 	CanShoot = true;
 	IsInCrounch = false;    //初始状态是站立状态
+	IsTargeting = false;
 	IsInCrounchToStand = false; //初始状态不在动作中
 	IsInStandToCrounch = false;
 	IsSmoothController = false;
@@ -69,10 +70,6 @@ AMyFirstGameCharacter::AMyFirstGameCharacter(const FObjectInitializer& ObjectIni
 	ShootInternal = 0.f;
 	RunRate = 1.f; //默认加速动画播放速率
 
-	//默认玩家的移动速度
-	MaxAcclerateSpeed = 850.f;
-	MaxRunSpeed = 600.f;
-	
 	// Create a follow camera
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	//FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
@@ -279,10 +276,10 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 		GetCharacterMovement()->MaxWalkSpeed = CurMaxAcclerateSpeed;       //把速度变为当前加速状态速度
 
 	else if (IsInCrounch || IsTargeting)
-		GetCharacterMovement()->MaxWalkSpeed = 250;    //下蹲和瞄准时的速度
+		GetCharacterMovement()->MaxWalkSpeed = 250.f;    //下蹲和瞄准时的速度
 
 	else
-		GetCharacterMovement()->MaxWalkSpeed = MaxRunSpeed;      //速度改为当前正常跑步速度
+		GetCharacterMovement()->MaxWalkSpeed = CurMaxRunSpeed;      //速度改为当前正常跑步速度
 
 	//下面是判断是否可以开枪（根据速度阈值判断，大于800就会播放加速动画，由于状态机的设置，后期可以添加一个加速阈值接口给状态机，也就不能开枪）
 	if (GetCharacterMovement()->MaxWalkSpeed >= 800.f)
@@ -529,7 +526,7 @@ FVector AMyFirstGameCharacter::ComputeShootDir(float AdjustDistance)
 
 void AMyFirstGameCharacter::Targeting()
 {
-		IsTargeting = true;
+	IsTargeting = true;
 }
 
 void AMyFirstGameCharacter::StopTargeting()

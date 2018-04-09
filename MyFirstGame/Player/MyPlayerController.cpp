@@ -20,8 +20,10 @@
 #include "RunGameState.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerStart.h"
+#include "RunGameSave.h"
 
 static const float ShootPlatformAngle = 30.f;
+static const FString RSaveGameSlot("RSaveGameSlot");
 
 AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -41,7 +43,7 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	Bonus_Score = FBonus_Score.Class;
 	Bonus_NoObstacle = FBonus_NoObstacle.Class;
 	SpawnFlyObstacle = FFlyObstacle.Class;
-
+	
 	CurrentWeaponType = EWeaponType::Weapon_Instant;
 	InConnectedToPlat = false;
 	CurConnectedPlat = nullptr;
@@ -68,6 +70,7 @@ void AMyPlayerController::PostInitializeComponents()
 	FlyObstacleArray.SetNum(0);
 
 	InitPlatforms();
+	SaveGameSlot = RSaveGameSlot;
 }
 
 void AMyPlayerController::BeginPlay()
@@ -100,7 +103,7 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 					}
 				}
 				//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::Printf(TEXT("Player Distance: %f, Template Lenght: %f, DeltaDistance: %f"), PlayerMoveDistance, TempPlatform->GetPlatformLength(), (CurPlatform->GetActorLocation() - TempPlatform->GetActorLocation()).Size2D()));
-				if (!IsInStopToAllAnim)
+				if (!PlatformArray.Last()->MoveToOrigin)
 					RandomSpawnPlatform(CurPlatIndex);
 			}
 
@@ -122,9 +125,9 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 								float FallDistance = PlatformArray[i]->GetActorLocation().Z - MC->GetActorLocation().Z;      //玩家下落距离，超过一定距离则认为游戏结束
 								if (FallDistance > 2000.f)
 								{
-									bIsGameEnd = true;
-									TogglePauseStat();
+									SaveGame();      //游戏结束，暂停并保存游戏数据
 								}
+									break;   //结束循环
 							}
 					}
 				}
@@ -217,6 +220,11 @@ void AMyPlayerController::RestartGame()
 		MC->TeleportTo(Start->GetActorLocation(), Start->GetActorRotation());     //把玩家移到开始的位置
 		MC->IsInAccelerate = false;
 		MC->IsTargeting = false;
+
+		//恢复玩家速度
+		MC->IsInAccelerate = false;
+		MC->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
+		MC->CurMaxRunSpeed = MaxRunSpeed;
 		this->SetControlRotation(Start->GetActorRotation());
 	}
 
@@ -228,6 +236,10 @@ void AMyPlayerController::RestartGame()
 		RGS->RestartGame();
 		RGS->UpdatePlayerScore(0.f);
 	}
+	GetWorldTimerManager().ClearTimer(NoObstacleTime);
+	GetWorldTimerManager().ValidateHandle(NoObstacleTime);  //重新激活计时器
+	IsToAll = false;
+	CurSpawnedShootPlats = 0; //重置已生成平台数目
 	bIsGameEnd = false;    //游戏已重启
 }
 
@@ -276,7 +288,7 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 			PlatformArray[0] = nullptr;
 			PlatformArray.RemoveAt(0);  //移除已经走过的平台
 			TempPlatform = CurPlatform;   //
-			if (IsToAll)
+			if (PlatformArray.Last()->IsToAll || IsToAll)
 				NewSpawnedPlatformToAll(AddPlatform);
 
 			if (Random_Bonus_Score >= 0 && Random_Bonus_Score < 30)
@@ -756,11 +768,11 @@ void AMyPlayerController::ToStopToAllState()
 	IsInStopToAllAnim = true;
 
 	//此时要限制玩家跳跃
-	AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
+	/*AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
 	if (MC)
 	{
 		MC->GetCharacterMovement()->JumpZVelocity = 0.f;
-	}
+	}*/
 
 	ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
 	if (RGS)
@@ -805,20 +817,20 @@ void AMyPlayerController::StopToAll()
 	}
 
 	//预估动画在两秒后结束
-	GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::StopToAllAnimEnd, 1.5f, false);
+	//GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::StopToAllAnimEnd, 1.5f, false);
 }
 
-void AMyPlayerController::StopToAllAnimEnd()
-{
-	IsInStopToAllAnim = false;
-
-	//下面就要恢复玩家跳跃
-	AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
-	if (MC)
-	{
-		MC->GetCharacterMovement()->JumpZVelocity = 500.f;
-	}
-}
+//void AMyPlayerController::StopToAllAnimEnd()
+//{
+//	IsInStopToAllAnim = false;
+//
+//	//下面就要恢复玩家跳跃
+//	AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
+//	if (MC)
+//	{
+//		MC->GetCharacterMovement()->JumpZVelocity = 500.f;
+//	}
+//}
 
 void AMyPlayerController::NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef)
 {
@@ -834,5 +846,37 @@ void AMyPlayerController::NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef)
 			const FVector NextDeltaPos = FrontLastPlat->SpawnLocation - (NewPlatformRef->GetActorLocation() + NewPlatformRef->GetPlatformLength() * FrontLastPlat->GetActorRotation().Vector());
 			NewPlatformRef->MoveToAllFun(NextDeltaPos);
 		}
+	}
+}
+
+void AMyPlayerController::SaveGame()
+{
+	bIsGameEnd = true;
+	TogglePauseStat();
+	ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
+
+	URunGameSave* RunSaveGame = Cast<URunGameSave>(UGameplayStatics::LoadGameFromSlot(RSaveGameSlot, 0));
+	
+	if (RunSaveGame)   //加载成功
+	{
+		if (RGS)
+		{
+			float NewScore = RGS->PlayerScore;
+			RunSaveGame->Scores.Add(NewScore);
+			RunSaveGame->Scores.Sort();   //数组进行排序
+			RunSaveGame->Scores.RemoveAt(0);     //移除
+			UGameplayStatics::SaveGameToSlot(RunSaveGame, RSaveGameSlot, 0);  //保存玩家分数
+		}
+	}
+	else  
+	{
+		URunGameSave* _RunSaveGame = Cast<URunGameSave>(UGameplayStatics::CreateSaveGameObject(URunGameSave::StaticClass()));
+		if (_RunSaveGame)
+		{
+			_RunSaveGame->Scores.SetNumZeroed(10);
+			if (RGS)
+				_RunSaveGame->Scores[_RunSaveGame->Scores.Num() - 1] = RGS->PlayerScore;
+		}
+		UGameplayStatics::SaveGameToSlot(_RunSaveGame, RSaveGameSlot, 0);  //保存玩家分数
 	}
 }

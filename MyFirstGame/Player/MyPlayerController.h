@@ -58,6 +58,9 @@ public:
 	UPROPERTY()
 	TArray<AFlyObstacle*> FlyObstacleArray;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FString SaveGameSlot;
+
 	/**生成的平台中的绝对方向信息*/
 	TEnumAsByte<EPlatformDirection::Type> AbsoluteDir;
 	
@@ -171,7 +174,9 @@ public:
 	/**停止集合，停止无障碍模式*/
 	void StopToAll();
 
-	void StopToAllAnimEnd();
+	//void StopToAllAnimEnd();
 
 	void NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef);
+
+	void SaveGame();
 };

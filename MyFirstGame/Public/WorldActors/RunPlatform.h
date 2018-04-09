@@ -59,7 +59,7 @@ public:
 	float YScale = 1;
 
 	/**玩家正常情况下的最大速度*/
-	float MaxAcclerateSpeed, MaxRunSpeed;
+	//float MaxAcclerateSpeed, MaxRunSpeed;
 
 	float PlatformLength, PlatformWidth;
 

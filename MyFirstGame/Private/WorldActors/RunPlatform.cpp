@@ -125,8 +125,10 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 	if (Cast<AMyFirstGameCharacter>(OtherActor))
 	{
 		CurChar = Cast<AMyFirstGameCharacter>(OtherActor);   //当前在平台上的玩家
-		MaxAcclerateSpeed = CurChar->MaxAcclerateSpeed;
-		MaxRunSpeed = CurChar->MaxRunSpeed;
+		/*MaxAcclerateSpeed = CurChar->MaxAcclerateSpeed;
+		MaxRunSpeed = CurChar->MaxRunSpeed;*/
+		CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
+		CurChar->CurMaxRunSpeed = MaxRunSpeed;
 
 		/*下面进行控制人物移动速度，来模拟人上坡的减速，注意配合动画*/
 		if (!NoPlayerToSlope)

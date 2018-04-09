@@ -10,6 +10,10 @@
 class ABonus;
 class AFlyObstacle;
 
+//默认玩家的移动速度
+const float MaxAcclerateSpeed = 850.f;
+const float MaxRunSpeed = 600.f;
+
 UCLASS(config=Game)
 class AMyFirstGameCharacter : public ACharacter
 {
@@ -103,9 +107,6 @@ public:
 
 	/**是否在加速*/
 	uint8 IsInAccelerate : 1;
-
-	/**玩家最大的跑步和加速时的速度*/
-	float MaxRunSpeed, MaxAcclerateSpeed;
 
 	/**玩家移动中变化后的速度（在平台上）*/
 	float CurMaxRunSpeed, CurMaxAcclerateSpeed;
