@@ -87,7 +87,7 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 		ARunPlatform* LastPlatformRef = PlatformArray.Last();
 		if (LastPlatformRef != nullptr)
 		{
-			if (TempPlatform != CurPlatform && !PlatformArray.Last()->MoveToNew && CurPlatform != nullptr)   //玩家所在平台发生变化，并且最后一个平台不在移动时
+			if (TempPlatform != CurPlatform && !PlatformArray.Last()->MoveToNew && CurPlatform != nullptr && !PlatformArray.Last()->MoveToOrigin && !PlatformArray.Last()->MoveToAll)   //玩家所在平台发生变化，并且最后一个平台不在移动时
 			{
 				int32 CurPlatIndex = PlatformArray.Find(CurPlatform);     //当前所在平台在数组中的位置
 				
@@ -103,8 +103,7 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 					}
 				}
 				//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::Printf(TEXT("Player Distance: %f, Template Lenght: %f, DeltaDistance: %f"), PlayerMoveDistance, TempPlatform->GetPlatformLength(), (CurPlatform->GetActorLocation() - TempPlatform->GetActorLocation()).Size2D()));
-				if (!PlatformArray.Last()->MoveToOrigin)
-					RandomSpawnPlatform(CurPlatIndex);
+				RandomSpawnPlatform(CurPlatIndex);
 			}
 
 			if (!IsInPause)
@@ -125,6 +124,8 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 								float FallDistance = PlatformArray[i]->GetActorLocation().Z - MC->GetActorLocation().Z;      //玩家下落距离，超过一定距离则认为游戏结束
 								if (FallDistance > 2000.f)
 								{
+									bIsGameEnd = true;
+									TogglePauseStat();
 									SaveGame();      //游戏结束，暂停并保存游戏数据
 								}
 									break;   //结束循环
@@ -229,13 +230,9 @@ void AMyPlayerController::RestartGame()
 	}
 
 	InitPlatforms();
+	if (!bIsGameEnd)
+		SaveGame(); //保存本次游戏得分
 
-	ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
-	if (RGS)
-	{
-		RGS->RestartGame();
-		RGS->UpdatePlayerScore(0.f);
-	}
 	GetWorldTimerManager().ClearTimer(NoObstacleTime);
 	GetWorldTimerManager().ValidateHandle(NoObstacleTime);  //重新激活计时器
 	IsToAll = false;
@@ -683,16 +680,19 @@ void AMyPlayerController::TogglePauseStat()
 
 {
 	IsInPause = !IsInPause;
+	AMyPlayerCameraManager* MPCM = Cast<AMyPlayerCameraManager>(PlayerCameraManager);
 
 	if (IsInPause)
 	{
 		if (StopGameDelegate.IsBound())
 			StopGameDelegate.Broadcast();
 
+		MPCM->StartGaussianUI();
 		this->SetPause(true);
 	}
 	else
 	{
+		MPCM->StopGaussianUI();
 		this->SetPause(false);
 	}
 }
@@ -700,6 +700,7 @@ void AMyPlayerController::TogglePauseStat()
 void AMyPlayerController::QuitGame()
 {
 	this->ConsoleCommand("quit");
+	SaveGame();
 }
 
 void AMyPlayerController::StartToAll(int32 LastTime)
@@ -851,8 +852,6 @@ void AMyPlayerController::NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef)
 
 void AMyPlayerController::SaveGame()
 {
-	bIsGameEnd = true;
-	TogglePauseStat();
 	ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
 
 	URunGameSave* RunSaveGame = Cast<URunGameSave>(UGameplayStatics::LoadGameFromSlot(RSaveGameSlot, 0));
@@ -863,7 +862,7 @@ void AMyPlayerController::SaveGame()
 		{
 			float NewScore = RGS->PlayerScore;
 			RunSaveGame->Scores.Add(NewScore);
-			RunSaveGame->Scores.Sort();   //数组进行排序
+			RunSaveGame->Scores.Sort();   //数组进行排序,注意是升序
 			RunSaveGame->Scores.RemoveAt(0);     //移除
 			UGameplayStatics::SaveGameToSlot(RunSaveGame, RSaveGameSlot, 0);  //保存玩家分数
 		}
@@ -878,5 +877,11 @@ void AMyPlayerController::SaveGame()
 				_RunSaveGame->Scores[_RunSaveGame->Scores.Num() - 1] = RGS->PlayerScore;
 		}
 		UGameplayStatics::SaveGameToSlot(_RunSaveGame, RSaveGameSlot, 0);  //保存玩家分数
+	}
+	//清空当前分数
+	if (RGS)
+	{
+		RGS->RestartGame();
+		RGS->UpdatePlayerScore(0.f);
 	}
 }

@@ -116,8 +116,6 @@ void ARunPlatform::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 void ARunPlatform::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//WorldPlayerController = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
 }
 
 void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
@@ -150,6 +148,7 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 
 void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	
 	if (SafeStayTime == 0)   //在安全时间内不会触发该函数内容
 	{
 		if (Cast<AMyFirstGameCharacter>(OtherActor))
@@ -166,14 +165,19 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 			}
 			QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);  //这里要把该平台的碰撞体检测关闭
 
-			if (Cast<AMyPlayerController>(CurChar->Controller))
+			if (CurChar)
 			{
 				AMyPlayerController* MPC = Cast<AMyPlayerController>(CurChar->Controller);
-				int32 FoundIndex;
-				if (MPC != nullptr)
-					if (!MPC->PlatformArray.Find(MPC->CurPlatform, FoundIndex))
-						MPC->CurPlatform = nullptr;     //玩家当前所在平台设为空
+				if (MPC)
+				{
+					int32 FoundIndex;
+					if (MPC != nullptr)
+						if (!MPC->PlatformArray.Find(MPC->CurPlatform, FoundIndex))
+							MPC->CurPlatform = nullptr;     //玩家当前所在平台设为空
+				}
+				CurChar = nullptr;
 			}
+			
 			StartDestroy();
 		}
 	}
@@ -181,6 +185,7 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 
 void ARunPlatform::StartDestroy()
 {
+	IsSlope = false;
 	IsInDestroyed = true;
 	if (!Platform->IsSimulatingPhysics())
 		Platform->SetSimulatePhysics(true);  //开启物理模拟
@@ -324,7 +329,6 @@ void ARunPlatform::MoveToOriginTick(float DeltaTime)
 				{
 					NextPlatform->StopToAllFun(DeltaLoc);
 				}
-
 				else
 				{
 					const FVector NextDeltaPos = DeltaLoc + NextPlatform->DeltaLocToPrePlat + NextPlatform->GetPlatformLength() * NextPlatform->GetActorRotation().Vector();

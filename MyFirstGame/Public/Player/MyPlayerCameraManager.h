@@ -18,6 +18,8 @@ class MYFIRSTGAME_API AMyPlayerCameraManager : public APlayerCameraManager
 public:
 	float FirstViewFOV;
 
+	uint32 bUIGaussian : 1;
+
 protected:
 	virtual void UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime)override;
 	
@@ -25,4 +27,11 @@ protected:
 
 public:
 	virtual void BeginPlay()override;
+
+	/**ÓÃÓÚUI±³¾°Ä£ºý*/
+	UFUNCTION(BlueprintCallable)
+	void StartGaussianUI();
+
+	UFUNCTION(BlueprintCallable)
+	void StopGaussianUI();
 };

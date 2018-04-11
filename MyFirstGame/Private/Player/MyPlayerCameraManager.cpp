@@ -76,6 +76,15 @@ void AMyPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float
 				FPostProcessSettings Temp;
 				Temp.bOverride_SceneFringeIntensity = true;
 				Temp.SceneFringeIntensity = 3.f;
+
+				if (bUIGaussian)
+				{
+					Temp.bOverride_DepthOfFieldMethod = true;
+					Temp.DepthOfFieldMethod = EDepthOfFieldMethod::DOFM_Gaussian;
+					Temp.bOverride_DepthOfFieldFocalDistance = true;
+					Temp.DepthOfFieldFocalDistance = 10.f;
+				}
+
 				OutVT.POV.PostProcessSettings = Temp;
 			}
 			else
@@ -86,9 +95,32 @@ void AMyPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float
 				}
 			}
 		}
+
+		if (bUIGaussian)
+		{
+			FPostProcessSettings Temp;
+			Temp.bOverride_DepthOfFieldMethod = true;
+			Temp.DepthOfFieldMethod = EDepthOfFieldMethod::DOFM_Gaussian;
+			Temp.bOverride_DepthOfFieldFocalDistance = true;
+			Temp.DepthOfFieldFocalDistance = 1.f;
+			Temp.bOverride_DepthOfFieldNearTransitionRegion = true;
+			Temp.DepthOfFieldNearTransitionRegion = 0.f;
+			Temp.bOverride_DepthOfFieldFarTransitionRegion = true;
+			Temp.DepthOfFieldFarTransitionRegion = 0.f;
+			OutVT.POV.PostProcessSettings = Temp;
+		}
 	}
 
 	OutVT.POV.Location = ViewLoc;
 	OutVT.POV.Rotation = FMath::RInterpTo(OutVT.POV.Rotation, ViewRot, DeltaTime, 50.0f);
 }
 
+void AMyPlayerCameraManager::StartGaussianUI()
+{
+	bUIGaussian = true;
+}
+
+void AMyPlayerCameraManager::StopGaussianUI()
+{
+	bUIGaussian = false;
+}
