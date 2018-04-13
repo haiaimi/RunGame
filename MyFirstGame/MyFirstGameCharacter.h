@@ -283,7 +283,7 @@ public:
 	///下面是玩家的奖励如分数、速度
 	void ApplyBonus(class ABonus* BonusActor);
 
-	void AddScore(int32 BonusScore);
+	void AddScore(class ABonus* BonusActor);
 
 	void AddSpeed(int32 BonusSpeed);
 

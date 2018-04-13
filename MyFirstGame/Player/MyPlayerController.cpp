@@ -21,6 +21,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerStart.h"
 #include "RunGameSave.h"
+#include "Engine/LocalPlayer.h"
 
 static const float ShootPlatformAngle = 30.f;
 static const FString RSaveGameSlot("RSaveGameSlot");
@@ -76,6 +77,9 @@ void AMyPlayerController::PostInitializeComponents()
 void AMyPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetLocalPlayer()->ViewportClient->Viewport->ViewportResizedEvent.AddUObject(this, &AMyPlayerController::UpdateProjectionData);
+	//GetLocalPlayer()->GetProjectionData(GetLocalPlayer()->ViewportClient->Viewport, eSSP_FULL, ProjectionData);     //获取投影信息
 }
 
 void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
@@ -226,6 +230,10 @@ void AMyPlayerController::RestartGame()
 		MC->IsInAccelerate = false;
 		MC->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
 		MC->CurMaxRunSpeed = MaxRunSpeed;
+
+		//如果玩家在下蹲状态就恢复站立状态
+		if (MC->IsInCrounch)
+			MC->ToggleCrounchStat();
 		this->SetControlRotation(Start->GetActorRotation());
 	}
 
@@ -276,7 +284,6 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 		{
 			AddPlatform->PlatDir = AbsoluteDir;
 			PlatformArray.Last()->NextPlatform = AddPlatform;  //指定下一个平台
-			PlatformArray.Push(AddPlatform);
 
 			if (PlatformArray[0] != nullptr)
 				if (!PlatformArray[0]->IsInDestroyed)
@@ -294,6 +301,7 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 			if (AddPlatform->IsA(SpawnPlatform_Shoot))
 				AddMaxSpawnObstacles();
 
+			PlatformArray.Push(AddPlatform);
 			AddPlatform->DeltaLocToPrePlat = DeltaLocToPrePlat;
 
 			if (!IsToAll)
@@ -467,6 +475,7 @@ FTransform AMyPlayerController::GetSpawnTransf_Physic(ARunPlatform* PrePlatform)
 		DeltaLocToPrePlat = DelLoc;
 	}
 	return TempTrans;
+	//GetLocalPlayer()->ViewportClient->Viewport->ViewportResizedEvent;
 }
 
 void AMyPlayerController::SpawnBonus_Score(ARunPlatform* const CurPlatform)
@@ -502,7 +511,7 @@ void AMyPlayerController::SpawnBonus_Score(ARunPlatform* const CurPlatform)
 
 		for (int32 i = 0; i < BonusNum; i++)
 		{
-			ABonus* SpawnBonus = GetWorld()->SpawnActorDeferred<ABonus>(Bonus_Score, FTransform(CurPlatform->GetActorRotation(), FirstSpawnLoc + 100 * i * SpawnDirX));
+			ABonus* SpawnBonus = GetWorld()->SpawnActorDeferred<ABonus>(Bonus_Score, FTransform(CurPlatform->GetActorRotation(), FirstSpawnLoc + 100 * i * SpawnDirX), this);
 			if (SpawnBonus != nullptr)
 			{
 				SpawnBonus->RotateStartTime = 0.1f*i;
@@ -527,6 +536,9 @@ void AMyPlayerController::SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform)
 		FVector PlatformDir_Y = FRotationMatrix(AttachedPlatform->GetActorRotation()).GetUnitAxis(EAxis::Y);
 		FVector PlatformDir_Z = FRotationMatrix(AttachedPlatform->GetActorRotation()).GetUnitAxis(EAxis::Z);
 
+		FActorSpawnParameters SpawnParameter;
+		SpawnParameter.Owner = this;
+		
 		if (AttachedPlatform->IsA(SpawnPlatform_Beam))
 		{
 			ARunPlatform* const PrePlatform = PlatformArray[PlatformArray.Num() - 2];
@@ -538,7 +550,7 @@ void AMyPlayerController::SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform)
 				float SpawnDistanceToPre = -700.f + (FMath::Rand() % 14) * 100.f;
 
 				FVector SpawnLocation = PrePlatform->GetActorLocation() + PrePlatformDir_X * PrePlatform->GetPlatformLength() + PrePlatformDir_Y * (SpawnDistanceToPre + PrePlatform->GetPlatformWidth() / 2) + 200.f * PrePlatformDir_Z;
-				ABonus* const BeamSpawnedNoObsBonus = GetWorld()->SpawnActor<ABonus>(Bonus_NoObstacle, FTransform(PrePlatform->GetActorRotation(), SpawnLocation));
+				ABonus* const BeamSpawnedNoObsBonus = GetWorld()->SpawnActor<ABonus>(Bonus_NoObstacle, FTransform(PrePlatform->GetActorRotation(), SpawnLocation), SpawnParameter);
 				if (BeamSpawnedNoObsBonus != nullptr)
 				{
 					BeamSpawnedNoObsBonus->AttachToActor(PrePlatform, FAttachmentTransformRules::KeepWorldTransform);
@@ -550,13 +562,13 @@ void AMyPlayerController::SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform)
 		else if (AttachedPlatform->IsA(SpawnPlatform_Physic))
 		{
 			FVector SpawnLocation = AttachedPlatform->GetActorLocation() + (-PlatformDir_X) * AttachedPlatform->GetPlatformLength() * 2.f + PlatformDir_Y * AttachedPlatform->GetPlatformWidth() / 2 + 500.f * PlatformDir_Z;
-			SpawnedNoObsBonus = GetWorld()->SpawnActor<ABonus>(Bonus_NoObstacle, FTransform(AttachedPlatform->GetActorRotation(), SpawnLocation));
+			SpawnedNoObsBonus = GetWorld()->SpawnActor<ABonus>(Bonus_NoObstacle, FTransform(AttachedPlatform->GetActorRotation(), SpawnLocation), SpawnParameter);
 		}
 		else
 		{
 			FVector SpawnLocation = AttachedPlatform->GetActorLocation() + PlatformDir_X * AttachedPlatform->GetPlatformLength()/2 + PlatformDir_Y * AttachedPlatform->GetPlatformWidth() / 2 + 200.f * PlatformDir_Z;
-			SpawnedNoObsBonus = GetWorld()->SpawnActor<ABonus>(Bonus_NoObstacle, FTransform(AttachedPlatform->GetActorRotation(), SpawnLocation));
-		}
+			SpawnedNoObsBonus = GetWorld()->SpawnActor<ABonus>(Bonus_NoObstacle, FTransform(AttachedPlatform->GetActorRotation(), SpawnLocation), SpawnParameter);
+		}	
 
 		if (SpawnedNoObsBonus != nullptr)
 		{
@@ -660,7 +672,7 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 			{
 				PlatformArray[CurNoShootPlatNum]->FlyObstacleDestory.AddUObject(CurObstacle, &AFlyObstacle::StartDestroy);       //开始绑定
 				PlatformArray[CurNoShootPlatNum]->CurBoundFlyObstacleNum++;
-				GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("已绑定"));
+				//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("已绑定"));
 			}
 		}
 		FlyObstacleArray.Reset();   //清空数组
@@ -699,8 +711,8 @@ void AMyPlayerController::TogglePauseStat()
 
 void AMyPlayerController::QuitGame()
 {
-	this->ConsoleCommand("quit");
 	SaveGame();
+	this->ConsoleCommand("quit");
 }
 
 void AMyPlayerController::StartToAll(int32 LastTime)
@@ -835,19 +847,18 @@ void AMyPlayerController::StopToAll()
 
 void AMyPlayerController::NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef)
 {
-	ARunPlatform* const FrontLastPlat = PlatformArray[PlatformArray.Num() - 2];
-	if (!FrontLastPlat->MoveToAll)     //该平台不在移动
+	ARunPlatform* const FrontLastPlat = PlatformArray.Last();
+	
+	if (NewPlatformRef->IsA(SpawnPlatform) && (FrontLastPlat->IsA(SpawnPlatform) || FrontLastPlat->IsA(SpawnPlatform_Shoot)))      //当下一个平台是普通平台，并且当前平台是普通平台或射击平台
 	{
-		if (NewPlatformRef->IsA(SpawnPlatform) && (FrontLastPlat->IsA(SpawnPlatform) || FrontLastPlat->IsA(SpawnPlatform_Shoot)))      //当下一个平台是普通平台，并且当前平台是普通平台或射击平台
-		{
-			NewPlatformRef->MoveToAllFun(FVector::ZeroVector);
-		}
-		else
-		{
-			const FVector NextDeltaPos = FrontLastPlat->SpawnLocation - (NewPlatformRef->GetActorLocation() + NewPlatformRef->GetPlatformLength() * FrontLastPlat->GetActorRotation().Vector());
-			NewPlatformRef->MoveToAllFun(NextDeltaPos);
-		}
+		NewPlatformRef->MoveToAllFun(FVector::ZeroVector);
 	}
+	else
+	{
+		const FVector NextDeltaPos = FrontLastPlat->SpawnLocation - (NewPlatformRef->GetActorLocation() + NewPlatformRef->GetPlatformLength() * FrontLastPlat->GetActorRotation().Vector());
+		NewPlatformRef->MoveToAllFun(NextDeltaPos);
+	}
+	
 }
 
 void AMyPlayerController::SaveGame()
@@ -884,4 +895,9 @@ void AMyPlayerController::SaveGame()
 		RGS->RestartGame();
 		RGS->UpdatePlayerScore(0.f);
 	}
+}
+
+void AMyPlayerController::UpdateProjectionData(FViewport* NewViewPort, uint32 flags)
+{
+
 }

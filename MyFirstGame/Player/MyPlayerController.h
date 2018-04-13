@@ -11,6 +11,7 @@ class ARunPlatform_Beam;
 class ARunPlatform;
 class ABonus;
 class AFlyObstacle;
+
 /**
  * 1、自动生成平台
  * 2、生成飞行障碍
@@ -100,6 +101,10 @@ public:
 
 	FVector DeltaLocToPrePlat;
 
+	/**记分板相对于右上角锚点的位置*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	FVector2D ScoreBorderRelativeToTopLeft;
+
 	/**玩家移动距离*/
 	//float PlayerMoveDistance = 0.f;
 
@@ -179,4 +184,6 @@ public:
 	void NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef);
 
 	void SaveGame();
+
+	void UpdateProjectionData(FViewport* NewViewPort, uint32 flags);
 };

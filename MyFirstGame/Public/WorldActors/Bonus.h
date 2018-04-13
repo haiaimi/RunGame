@@ -7,6 +7,8 @@
 #include "MyFirstGame.h"
 #include "Bonus.generated.h"
 
+struct FSceneViewProjectionData;
+
 USTRUCT()
 struct FBonusData
 {
@@ -57,7 +59,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bonus")
 	struct FBonusData BonusData;
 
+	class AMyPlayerController* ControllerRef;
+
 	float RotateStartTime;
+
+	uint32 bISMoveToScoreBorder : 1;
+
+	struct FSceneViewProjectionData ProjectionData;
 
 protected:
 	// Called when the game starts or when spawned
@@ -66,6 +74,8 @@ protected:
 public:
 	// Called every frame
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)override;
+
+	virtual void BeginPlay()override;
 
 public:
 	UFUNCTION()
@@ -78,4 +88,7 @@ public:
 	void DestroyActor();
 
 	void StartFall();
+
+	/**金币移向UI的特效*/
+	void MoveToScoreBorder(float DeltaTime);
 };

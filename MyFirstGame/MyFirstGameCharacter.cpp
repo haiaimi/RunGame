@@ -674,7 +674,7 @@ void AMyFirstGameCharacter::ApplyBonus(class ABonus* BonusActor)
 	if (BonusType != EBonusType::Bonus_None)
 	{
 		if (BonusType == EBonusType::Bonus_Score)
-			AddScore(BonusActor->GetBonusScore());
+			AddScore(BonusActor);
 
 		else if (BonusType == EBonusType::Bonus_Accelerate)
 			AddSpeed(BonusActor->GetBonusSpeed());
@@ -687,12 +687,12 @@ void AMyFirstGameCharacter::ApplyBonus(class ABonus* BonusActor)
 	}
 }
 
-void AMyFirstGameCharacter::AddScore(int32 BonusScore)
+void AMyFirstGameCharacter::AddScore(class ABonus* BonusActor)
 {
 	ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
 	if (RGS)
 	{
-		RGS->UpdatePlayerScore(BonusScore);
+		RGS->UpdatePlayerScore(BonusActor->GetBonusScore());
 	}
 }
 
