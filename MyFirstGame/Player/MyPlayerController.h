@@ -185,5 +185,5 @@ public:
 
 	void SaveGame();
 
-	void UpdateProjectionData(FViewport* NewViewPort, uint32 flags);
+	void ScreenShoot();
 };

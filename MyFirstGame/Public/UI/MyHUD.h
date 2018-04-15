@@ -19,4 +19,6 @@ public:
 		virtual void DrawHUD();
 	
 		UTexture2D* CrosshairTex;
+
+		uint32 bDrawCrosshair : 1;
 };

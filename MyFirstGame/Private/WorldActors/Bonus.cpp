@@ -99,7 +99,7 @@ void ABonus::StartFall()
 {
 	this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform); //从依赖Actor脱离
 
-	if (!BonusShape->IsSimulatingPhysics())
+	if (!BonusShape->IsSimulatingPhysics() && !bISMoveToScoreBorder)
 		BonusShape->SetSimulatePhysics(true);     //开启物理模拟
 }
 void ABonus::MoveToScoreBorder(float DeltaTime)
@@ -118,8 +118,8 @@ void ABonus::MoveToScoreBorder(float DeltaTime)
 		
 		FVector NewLocation = FMath::VInterpConstantTo(GetActorLocation(), WorldPosition + WorldDirection * 500.f, DeltaTime, 2000.f);
 		FVector NewScale = GetActorScale3D() - DeltaTime * FVector(0.2f, 0.2f, 0.2f);
-		if (NewScale.X < 0 || NewScale.Y < 0 || NewScale.Z < 0)
-			NewScale = FVector(0.01f, 0.01f, 0.01f);
+		if (NewScale.X < 0.2 || NewScale.Y < 0.2 || NewScale.Z < 0.2)
+			NewScale = FVector(0.2f, 0.2f, 0.2f);
 
 		SetActorScale3D(NewScale);
 		

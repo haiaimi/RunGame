@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "RunGameState.h"
+#include "TimerManager.h"
 
 
 ARunGameState::ARunGameState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -9,8 +10,16 @@ ARunGameState::ARunGameState(const FObjectInitializer& ObjectInitializer) : Supe
 	PlayerScore = 0.f;
 	PlayerHeight = 0.f;
 	Bonus_Score_Num = 0;
+	HasSurvivedTime = -1.f;
 }
 
+void ARunGameState::BeginPlay()
+{
+	Super::BeginPlay();
+
+	NotifyIntegerMinutes();
+	HasSurvivedTime = 0.f;    // ±º‰÷√¡„
+}
 
 void ARunGameState::AddPlayerDistance(float AddDistance)
 {
@@ -37,7 +46,7 @@ void ARunGameState::UpdatePlayerScore(float AddScore)
 
 void ARunGameState::EndGame()
 {
-
+	
 }
 
 void ARunGameState::RestartGame()
@@ -45,4 +54,19 @@ void ARunGameState::RestartGame()
 	PlayerScore = 0.f;
 	PlayerHeight = 0.f;
 	PlayerDistance = 0.f;
+	HasSurvivedTime = -1.f;
+	GetWorldTimerManager().ClearTimer(GameTimer);
+	GetWorldTimerManager().ValidateHandle(GameTimer);
+
+	NotifyIntegerMinutes();
+	HasSurvivedTime = 0.f;
+}
+
+void ARunGameState::NotifyIntegerMinutes()
+{
+	if (NotifyTimeDlegate.IsBound() && HasSurvivedTime != -1.f)
+		NotifyTimeDlegate.Broadcast();
+
+	HasSurvivedTime += 60.f;
+	GetWorldTimerManager().SetTimer(GameTimer, this, &ARunGameState::NotifyIntegerMinutes, 60.f, false);
 }

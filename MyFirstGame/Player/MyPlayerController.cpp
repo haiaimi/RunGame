@@ -22,6 +22,12 @@
 #include "GameFramework/PlayerStart.h"
 #include "RunGameSave.h"
 #include "Engine/LocalPlayer.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "IImageWrapperModule.h"
+#include "FileManager.h"
+#include "Paths.h"
+#include "FileHelper.h"
+#include "MyHUD.h"
 
 static const float ShootPlatformAngle = 30.f;
 static const FString RSaveGameSlot("RSaveGameSlot");
@@ -62,6 +68,7 @@ void AMyPlayerController::SetupInputComponent()
 	InputComponent->BindAction("TogglePause", IE_Pressed, this, &AMyPlayerController::TogglePauseStat);
 	InputComponent->BindAction("TestToAll", IE_Pressed, this, &AMyPlayerController::StartToAllTest);
 	InputComponent->BindAction("StopToAll", IE_Pressed, this, &AMyPlayerController::StopToAll);
+	InputComponent->BindAction("ScreenShot", IE_Pressed, this, &AMyPlayerController::ScreenShoot);
 }
 
 void AMyPlayerController::PostInitializeComponents()
@@ -77,9 +84,6 @@ void AMyPlayerController::PostInitializeComponents()
 void AMyPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	GetLocalPlayer()->ViewportClient->Viewport->ViewportResizedEvent.AddUObject(this, &AMyPlayerController::UpdateProjectionData);
-	//GetLocalPlayer()->GetProjectionData(GetLocalPlayer()->ViewportClient->Viewport, eSSP_FULL, ProjectionData);     //获取投影信息
 }
 
 void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
@@ -245,6 +249,7 @@ void AMyPlayerController::RestartGame()
 	GetWorldTimerManager().ValidateHandle(NoObstacleTime);  //重新激活计时器
 	IsToAll = false;
 	CurSpawnedShootPlats = 0; //重置已生成平台数目
+	MaxFlyObstacles = 0;
 	bIsGameEnd = false;    //游戏已重启
 }
 
@@ -295,13 +300,13 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 			if (PlatformArray.Last()->IsToAll || IsToAll)
 				NewSpawnedPlatformToAll(AddPlatform);
 
+			PlatformArray.Push(AddPlatform);
 			if (Random_Bonus_Score >= 0 && Random_Bonus_Score < 30)
 				SpawnBonus_Score(AddPlatform);   //30的几率生成Bonus Score
 
 			if (AddPlatform->IsA(SpawnPlatform_Shoot))
 				AddMaxSpawnObstacles();
 
-			PlatformArray.Push(AddPlatform);
 			AddPlatform->DeltaLocToPrePlat = DeltaLocToPrePlat;
 
 			if (!IsToAll)
@@ -316,6 +321,8 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 				}
 			}
 
+			if ((AddPlatform->MoveToAll || AddPlatform->MoveToOrigin) && AddPlatform->DeltaLoc.Size() > 1.f)
+				break;
 			int32 NoNullNum = 0;
 			for (int32 i = 0; i < 10; ++i)
 			{
@@ -544,7 +551,7 @@ void AMyPlayerController::SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform)
 			ARunPlatform* const PrePlatform = PlatformArray[PlatformArray.Num() - 2];
 			if (PrePlatform)
 			{
-				FVector PrePlatformDir_X = FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::X);
+				FVector PrePlatformDir_X = -FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::X);
 				FVector PrePlatformDir_Y = FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::Y);
 				FVector PrePlatformDir_Z = FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::Z);
 				float SpawnDistanceToPre = -700.f + (FMath::Rand() % 14) * 100.f;
@@ -616,7 +623,7 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 
 	if (((CurNoShootPlatNum >= 7 && FlyObstacleSpawnInterval > 10) || FlyObstacleSpawnInterval == -1) && FlyObstacleArray.Num() < MaxFlyObstacles && RandomFlyObstacle < 10)    //10%的几率生成飞行障碍
 	{
-		if (SpawnFlyObstacle != nullptr)
+		if (SpawnFlyObstacle)
 		{
 			if (CurNoShootPlatNum < PlatNum && PlatformArray[CurNoShootPlatNum]->CurBoundFlyObstacleNum < MaxFlyObstacles)    
 			{
@@ -693,6 +700,7 @@ void AMyPlayerController::TogglePauseStat()
 {
 	IsInPause = !IsInPause;
 	AMyPlayerCameraManager* MPCM = Cast<AMyPlayerCameraManager>(PlayerCameraManager);
+	AMyHUD* HUD = Cast<AMyHUD>(GetHUD());
 
 	if (IsInPause)
 	{
@@ -701,11 +709,17 @@ void AMyPlayerController::TogglePauseStat()
 
 		MPCM->StartGaussianUI();
 		this->SetPause(true);
+		
+		if (HUD)
+			HUD->bDrawCrosshair = false;        //游戏暂停状态不现实准心
 	}
 	else
 	{
 		MPCM->StopGaussianUI();
 		this->SetPause(false);
+
+		if (HUD)
+			HUD->bDrawCrosshair = true;
 	}
 }
 
@@ -897,7 +911,36 @@ void AMyPlayerController::SaveGame()
 	}
 }
 
-void AMyPlayerController::UpdateProjectionData(FViewport* NewViewPort, uint32 flags)
+void AMyPlayerController::ScreenShoot()
 {
+	FViewport* viewport = GetLocalPlayer()->ViewportClient->Viewport;
+	TArray<FColor> PixelBuffer;
+	viewport->ReadPixels(PixelBuffer);
 
+	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+	TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
+	ImageWrapper->SetRaw((void*)PixelBuffer.GetData(), PixelBuffer.GetAllocatedSize(), viewport->GetSizeXY().X, viewport->GetSizeXY().Y, ERGBFormat::BGRA, 8);      //设置JPEG格式图片数据
+
+	if (ImageWrapper.IsValid())       //
+	{
+		TArray<uint8> ImageData = ImageWrapper->GetCompressed();
+		FString ScreenShotDir = FPaths::ScreenShotDir() / TEXT("ScreenShot");
+		IFileManager::Get().MakeDirectory(*FPaths::ScreenShotDir(), true);
+		FString SavePath = ScreenShotDir + TEXT("000.jpg");
+		int32 PictureIndex = 1;      //截图文件夹中图片序号
+		while (IFileManager::Get().FileExists(*SavePath))
+		{
+			SavePath = ScreenShotDir;
+
+			if (PictureIndex <= 99)
+				SavePath.Append(TEXT("0"));
+			if (PictureIndex <= 9)
+				SavePath.Append(TEXT("0"));
+			SavePath.AppendInt(PictureIndex);
+			SavePath.Append(".jpg");
+
+			PictureIndex++;
+		}
+		FFileHelper::SaveArrayToFile(ImageData, *SavePath);            //保存图片数据
+	}
 }

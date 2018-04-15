@@ -9,6 +9,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpdateScore, float, NewScore);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FRemind);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEMphasizeScore);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FNotifyTime);
 
 UCLASS()
 class MYFIRSTGAME_API ARunGameState : public AGameStateBase
@@ -27,6 +28,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FEMphasizeScore EmphasizeScoreDelegate;
 
+	UPROPERTY(BlueprintAssignable)
+	FNotifyTime NotifyTimeDlegate;
+
 	/**玩家得分*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	float PlayerScore;
@@ -41,6 +45,16 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	int32 Bonus_Score_Num;
 
+	/**用于玩家存活时间计时*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	FTimerHandle GameTimer;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	float HasSurvivedTime;
+
+public:
+	virtual void BeginPlay()override;
+
 public:
 
 	void AddPlayerDistance(float AddDistance);
@@ -52,4 +66,7 @@ public:
 	void EndGame();
 
 	void RestartGame();
+
+	/**整数时间时进行通知*/
+	void NotifyIntegerMinutes();
 };

@@ -683,6 +683,7 @@ void AMyFirstGameCharacter::ApplyBonus(class ABonus* BonusActor)
 		{
 			AMyPlayerController* MPC = Cast<AMyPlayerController>(Controller); 
 			MPC->StartToAll(BonusActor->BonusData.NoObstacleTime);
+			AddScore(BonusActor);
 		}
 	}
 }
