@@ -18,14 +18,13 @@ public:
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
-		class UBoxComponent* DoorCollision;
+	class UBoxComponent* DoorCollision;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door", meta = (AllowPrivateAccess = "true"))
-		//TSubclassOf<class UStaticMeshComponent> DoorMesh;
-		class UStaticMeshComponent* DoorMesh;
+	class UStaticMeshComponent* DoorMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
-		class UArrowComponent* DoorRoot;
+	class UArrowComponent* DoorRoot;
 
 protected:
 	// Called when the game starts or when spawned

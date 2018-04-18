@@ -16,9 +16,21 @@ class MYFIRSTGAME_API AMyHUD : public AHUD
 public:
 		AMyHUD();
 	
-		virtual void DrawHUD();
+		virtual void DrawHUD()override;
+
+		virtual void BeginPlay()override;
+
+		virtual void Destroyed()override;
 	
+public:
 		UTexture2D* CrosshairTex;
 
 		uint32 bDrawCrosshair : 1;
+
+		class UUserWidget* GameWidget;
+
+		TSubclassOf<class UUserWidget> WidgetClass;
+
+public: 
+	void BuildHUD();
 };

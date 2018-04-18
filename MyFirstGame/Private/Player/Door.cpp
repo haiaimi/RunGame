@@ -17,12 +17,9 @@ ADoor::ADoor()
 	DoorRoot = CreateDefaultSubobject<UArrowComponent>(TEXT("DoorRoot"));
 	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DoorMesh"));
 
-	DoorCollision->SetRelativeScale3D(FVector(5.0f, 5.0f, 5.0f));
+	RootComponent = DoorCollision;
+	DoorCollision->SetWorldScale3D(FVector(5.0f, 5.0f, 5.0f));
 
-	if(DoorCollision)
-	{ 
-		DoorCollision->SetupAttachment(RootComponent);
-	}
 	const FVector CollisionExtent = DoorCollision->GetScaledBoxExtent();
 
 	DoorRoot->SetupAttachment(RootComponent);

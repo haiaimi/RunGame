@@ -914,6 +914,7 @@ void AMyPlayerController::SaveGame()
 void AMyPlayerController::ScreenShoot()
 {
 	FViewport* viewport = GetLocalPlayer()->ViewportClient->Viewport;
+	//FViewport* viewport = GetWorld()->GetGameViewport()->Viewport;
 	TArray<FColor> PixelBuffer;
 	viewport->ReadPixels(PixelBuffer);
 
