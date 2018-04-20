@@ -103,6 +103,7 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 
 				if (RGS)
 				{
+					RGS->SetCaptureDir(CurPlatform->PlatDir);
 					RGS->AddPlayerDistance((CurPlatform->GetActorLocation() - TempPlatform->GetActorLocation()).Size2D());
 
 					if (CurPlatform->IsA(SpawnPlatform_Shoot))

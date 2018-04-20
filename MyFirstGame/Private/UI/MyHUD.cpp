@@ -7,6 +7,11 @@
 #include "UObject/ConstructorHelpers.h"
 #include "../UMG/Public/Blueprint/UserWidget.h"
 #include "Player/MyPlayerController.h"
+#include "RunGameState.h"
+#include "RunMiniMapCapture.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "Engine/Texture.h"
 
 AMyHUD::AMyHUD()
 {
@@ -51,6 +56,7 @@ void AMyHUD::DrawHUD()
 
 		Canvas->DrawItem(TileItem);
 	}
+	DrawMiniMap();
 }
 
 void AMyHUD::BuildHUD()
@@ -58,7 +64,7 @@ void AMyHUD::BuildHUD()
 	//尝试UMG画面显示在截屏中
 	if (!GameWidget && WidgetClass)
 	{
-		AMyPlayerController* MPC = Cast<AMyPlayerController>(GetOwningPlayerController());
+		AMyPlayerController* const MPC = Cast<AMyPlayerController>(GetOwningPlayerController());
 		
 		GameWidget = CreateWidget<UUserWidget>(GetWorld(), WidgetClass);
 		if (MPC->GetLocalPlayer())
@@ -70,6 +76,28 @@ void AMyHUD::BuildHUD()
 		}
 		else
 			GameWidget->AddToViewport();
+	}
+}
+
+void AMyHUD::DrawMiniMap()
+{
+	AMyPlayerController* const MPC = Cast<AMyPlayerController>(PlayerOwner);
+	ARunGameState* const RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
+
+	if (RGS && RGS->MiniMapCapture != nullptr)
+	{
+		if (RGS->MiniMapCapture->GetCaptureComponent2D()->TextureTarget)
+		{
+			RGS->MiniMapCapture->GetCaptureComponent2D()->UpdateContent();
+			float MapWidth = RGS->MiniMapCapture->MiniMapWidth;
+			float MapHeight = RGS->MiniMapCapture->MiniMapHeight;
+
+			FCanvasTileItem MinimapTileItem(FVector2D::ZeroVector, FVector2D::ZeroVector, FLinearColor::White);
+			MinimapTileItem.Size = FVector2D(MapWidth, MapHeight);
+			MinimapTileItem.Texture = RGS->MiniMapCapture->GetCaptureComponent2D()->TextureTarget->Resource;
+			MinimapTileItem.BlendMode = ESimpleElementBlendMode::SE_BLEND_Opaque;       //非透明混合
+			Canvas->DrawItem(MinimapTileItem, Canvas->ClipX - MapWidth, Canvas->ClipY - MapHeight);    //在hud中绘制地图
+		}
 	}
 }
 

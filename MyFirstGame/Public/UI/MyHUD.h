@@ -33,4 +33,6 @@ public:
 
 public: 
 	void BuildHUD();
+
+	void DrawMiniMap();
 };

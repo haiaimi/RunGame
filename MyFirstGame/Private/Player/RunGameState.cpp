@@ -2,15 +2,23 @@
 
 #include "RunGameState.h"
 #include "TimerManager.h"
+#include "RunMiniMapCapture.h"
+#include "MyFirstGameCharacter.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Weapon/Weapon_Gun.h"
 
 
 ARunGameState::ARunGameState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+	PrimaryActorTick.bCanEverTick = true;    //允许每帧更新
+
 	PlayerDistance = 0.f;
 	PlayerScore = 0.f;
 	PlayerHeight = 0.f;
 	Bonus_Score_Num = 0;
 	HasSurvivedTime = -1.f;
+	MiniMapCapture = nullptr;
+	CharacterRef = nullptr;
 }
 
 void ARunGameState::BeginPlay()
@@ -19,6 +27,26 @@ void ARunGameState::BeginPlay()
 
 	NotifyIntegerMinutes();
 	HasSurvivedTime = 0.f;    //时间置零
+
+	CharacterRef = Cast<AMyFirstGameCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	if (!MiniMapCapture && CharacterRef)
+	{
+		FVector CaptureLocation = CharacterRef->GetActorLocation() + FVector(0.f, 0.f, 200.f);
+		MiniMapCapture = GetWorld()->SpawnActor<ARunMiniMapCapture>(ARunMiniMapCapture::StaticClass(), CaptureLocation, CharacterRef->GetActorRotation());
+		MiniMapCapture->GetCaptureComponent2D()->HiddenActors.Add(CharacterRef);
+		MiniMapCapture->GetCaptureComponent2D()->HiddenActors.Add(CharacterRef->InterInventory[0]);
+		MiniMapCapture->GetCaptureComponent2D()->HiddenActors.Add(CharacterRef->InterInventory[1]);
+	}
+}
+
+void ARunGameState::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
+{
+	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
+
+	if (MiniMapCapture && CharacterRef)
+	{
+		MiniMapCapture->SetSceneCaptureLocation(CharacterRef->GetActorLocation());
+	}
 }
 
 void ARunGameState::AddPlayerDistance(float AddDistance)
@@ -69,4 +97,13 @@ void ARunGameState::NotifyIntegerMinutes()
 
 	HasSurvivedTime += 60.f;
 	GetWorldTimerManager().SetTimer(GameTimer, this, &ARunGameState::NotifyIntegerMinutes, 60.f, false);
+}
+
+void ARunGameState::SetCaptureDir(EPlatformDirection::Type CurDir)
+{
+	if (MiniMapCapture)
+	{
+		if (MiniMapCapture->CachedDir != CurDir)
+			MiniMapCapture->SetSceneCaptureDir(CurDir);
+	}
 }

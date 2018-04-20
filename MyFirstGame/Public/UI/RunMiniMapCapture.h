@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Engine/SceneCapture2D.h"
+#include "MyFirstGame.h"
 #include "RunMiniMapCapture.generated.h"
 
 /**
  *  捕捉小地图画面
  */
 UCLASS()
-class MYFIRSTGAME_API ARunMiniMapCapture : public ASceneCapture2D
+class MYFIRSTGAME_API ARunMiniMapCapture : public ASceneCapture2D 
 {
 	GENERATED_UCLASS_BODY()
 
@@ -33,10 +34,17 @@ public:
 	FVector CameraLoc;
 
 	class UTextureRenderTarget2D* MiniMapRenderTarget;
+
+	TEnumAsByte<EPlatformDirection::Type> CachedDir;
+
+	/**镜头旋转的目标角度*/
+	FRotator DstRotator;
+
+	uint32 bUpdateRot : 1;
 	
 public:
 	/**设置捕获相机的位置*/
 	void SetSceneCaptureLocation(FVector Loc);
 
-	void SetSceneCaptureRotation(FRotator Rot);
+	void SetSceneCaptureDir(EPlatformDirection::Type CurDir);
 };

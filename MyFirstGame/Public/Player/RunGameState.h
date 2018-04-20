@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
+#include "MyFirstGame.h"
 #include "RunGameState.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpdateScore, float, NewScore);
@@ -52,8 +53,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	float HasSurvivedTime;
 
+	/**小地图捕捉*/
+	class ARunMiniMapCapture* MiniMapCapture;
+
+	class AMyFirstGameCharacter* CharacterRef;
+
 public:
 	virtual void BeginPlay()override;
+
+	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)override;
 
 public:
 
@@ -69,4 +77,6 @@ public:
 
 	/**整数时间时进行通知*/
 	void NotifyIntegerMinutes();
+
+	void SetCaptureDir(EPlatformDirection::Type CurDir);
 };
