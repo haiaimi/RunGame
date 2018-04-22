@@ -51,16 +51,20 @@ void ARunMiniMapCapture::Tick(float DeltaTime)
 		//	RootComponent->SetWorldRotation(NextRot);
 		//	bUpdateRot = false;      //停止更新角度
 		//}
+
+		//使用普通Rotator进行差值会出现异常，所以使用四元数
 		CurLerpAlpha += DeltaTime * 2.f;
 		FQuat quat(RootComponent->GetComponentRotation());
 		FQuat DstQuat(DstRotator);
-		FRotator newRotator = FQuat::Slerp(quat, DstQuat, CurLerpAlpha).Rotator();     //圆形差值
+		FRotator newRotator = FQuat::Slerp(quat, DstQuat, CurLerpAlpha).Rotator();     //这里使用球面平滑线性插值，使用FastLerp过渡会十分不自然
 		RootComponent->SetWorldRotation(newRotator);
+		RotatorYaw = CachedRotatorYaw + (DstRotator.Yaw - CachedRotatorYaw) * CurLerpAlpha;
 
 		if (CurLerpAlpha > 1)
 		{
 			bUpdateRot = false;
 			CurLerpAlpha = 0.f;
+			CachedRotatorYaw = DstRotator.Yaw;
 		}
 		UE_LOG(LogRunGame, Log, TEXT("X:%f, Y:%f, Z:%f"), RootComponent->GetComponentRotation().Pitch, RootComponent->GetComponentRotation().Yaw, RootComponent->GetComponentRotation().Roll)
 	}

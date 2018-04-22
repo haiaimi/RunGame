@@ -258,7 +258,6 @@ void ARunPlatform::StopToAllFun(const FVector DeltaDistance)
 void ARunPlatform::MoveTick(float DeltaTime)
 {
 	const FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
-	SetActorLocation(NewPos);
 
 	if (NextPlatform != nullptr)
 		if (!NextPlatform->MoveToNew)     //只有下一个平台没有移动时才执行下面操作
@@ -267,8 +266,9 @@ void ARunPlatform::MoveTick(float DeltaTime)
 
 	if ((NewPos - (SpawnLocation + DeltaLoc)).Size() < 1.f)
 	{
+		SetActorLocation(SpawnLocation + DeltaLoc);
 		MoveToNew = false;
-		SpawnLocation = NewPos;
+		SpawnLocation = SpawnLocation + DeltaLoc;
 
 		AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
 		if (MPC != nullptr)
@@ -282,6 +282,8 @@ void ARunPlatform::MoveTick(float DeltaTime)
 			}
 		}
 	}
+	else
+		SetActorLocation(NewPos);
 }
 
 void ARunPlatform::MoveToAllTick(float DeltaTime)
@@ -310,16 +312,18 @@ void ARunPlatform::MoveToAllTick(float DeltaTime)
 
 	if ((NewPos - (SpawnLocation + DeltaLoc)).Size() < 1.f)
 	{
-		SpawnLocation = NewPos;
+		SetActorLocation(SpawnLocation + DeltaLoc);
+		SpawnLocation = SpawnLocation + DeltaLoc;
 		MoveToAll = false;
 	}
+	else
+		SetActorLocation(NewPos);
 }
 
 void ARunPlatform::MoveToOriginTick(float DeltaTime)
 {
 	const FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
-	SetActorLocation(NewPos);
-
+	
 	if (NextPlatform)
 		if (!NextPlatform->MoveToOrigin)
 			if ((NewPos - SpawnLocation).Size() >= (DeltaLoc.Size() / 2))
@@ -338,7 +342,11 @@ void ARunPlatform::MoveToOriginTick(float DeltaTime)
 
 	if ((NewPos - (SpawnLocation + DeltaLoc)).Size() < 1.f)
 	{
-		SpawnLocation = NewPos;
+		SetActorLocation(SpawnLocation + DeltaLoc);
+		SpawnLocation = SpawnLocation + DeltaLoc;
 		MoveToOrigin = false;
+		IsToAll = false;
 	}
+	else
+		SetActorLocation(NewPos);
 }

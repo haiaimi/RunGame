@@ -40,6 +40,11 @@ public:
 	/**镜头旋转的目标角度*/
 	FRotator DstRotator;
 
+	/**该值会用于HUD中人物方向*/
+	float RotatorYaw;
+
+	float CachedRotatorYaw;
+
 	uint32 bUpdateRot : 1;
 	
 public:

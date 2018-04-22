@@ -131,8 +131,9 @@ void ARunPlatform_Beam::MoveTick(float DeltaTime)
 
 			if ((SpawnLocation - DstLoc).Size() < 1.f) //平台到达目标位置时    注意浮点数、注意浮点数、注意浮点数！！！重要的事说三遍
 			{
+				SpawnLocation = DstLoc;
 				MoveToNew = false;  //停止移动更新
-				TempSpawnLocation = SpawnLocation;
+				TempSpawnLocation = DstLoc;
 
 				AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
 				if (MPC != nullptr)

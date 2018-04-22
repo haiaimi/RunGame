@@ -265,6 +265,11 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 		int32 Random_Physic = FMath::Rand() % 100;   //生成随机数，用来决定是否生成物理平台
 		int32 Random_Bonus_Score = FMath::Rand() % 100;
 
+		//这是在处于所有平台恢复原位时的过渡，此时不生成Beam
+		if (PlatformArray.Last()->IsToAll && !IsToAll)
+			Random_Beam = -1;    //不生成Beam平台
+
+
 		//下面就是随机生成部分，优先级是Beam > Physic > Shoot > Normal(正常平台)
 		if (Random_Beam >= 0 && Random_Beam < 10 && PlatformArray.Last()->IsA(SpawnPlatform)/*!Cast<ARunPlatform_Shoot>(PlatformArray.Last()) && !Cast<ARunPlatform_Beam>(PlatformArray.Last())*/)  //5%的几率生成闪电平台，并且上一个平台不是射击触发型和闪电类型
 		{
@@ -324,6 +329,7 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 
 			if ((AddPlatform->MoveToAll || AddPlatform->MoveToOrigin) && AddPlatform->DeltaLoc.Size() > 1.f)
 				break;
+
 			int32 NoNullNum = 0;
 			for (int32 i = 0; i < 10; ++i)
 			{
@@ -483,7 +489,6 @@ FTransform AMyPlayerController::GetSpawnTransf_Physic(ARunPlatform* PrePlatform)
 		DeltaLocToPrePlat = DelLoc;
 	}
 	return TempTrans;
-	//GetLocalPlayer()->ViewportClient->Viewport->ViewportResizedEvent;
 }
 
 void AMyPlayerController::SpawnBonus_Score(ARunPlatform* const CurPlatform)
@@ -817,14 +822,17 @@ void AMyPlayerController::StopToAll()
 	IsToAll = false;
 	ARunPlatform* ToOriginStartPlat = nullptr;
 	
-	for (int32 i = 0; i < ArrayNum; ++i)
-	{
-		if (PlatformArray[i] != nullptr)
+	if (CurPlatform != nullptr)
+		ToOriginStartPlat = CurPlatform;
+	else
+		for (int32 i = 0; i < ArrayNum; ++i)
 		{
-			ToOriginStartPlat = PlatformArray[i];
-			break;
+			if (PlatformArray[i] != nullptr)
+			{
+				ToOriginStartPlat = PlatformArray[i];
+				break;
+			}
 		}
-	}
 
 	if (ToOriginStartPlat != nullptr)
 	{
