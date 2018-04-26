@@ -28,6 +28,7 @@
 #include "Paths.h"
 #include "FileHelper.h"
 #include "MyHUD.h"
+#include "Door.h"
 
 static const float ShootPlatformAngle = 30.f;
 static const FString RSaveGameSlot("RSaveGameSlot");
@@ -224,6 +225,16 @@ void AMyPlayerController::RestartGame()
 			break;
 		}
 	}
+	
+	for (TActorIterator<ADoor> It(GetWorld()); It; ++It)
+	{
+		if (*It && (*It)->ActorHasTag(FName("StartPoint")))
+		{
+			UE_LOG(LogRunGame, Log, TEXT("Reset Door"))
+			(*It)->bReset = true;      //÷ÿ÷√√≈µƒ◊¥Ã¨
+		}
+	}
+
 	if (Start && GetPawn())
 	{
 		AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
@@ -240,6 +251,11 @@ void AMyPlayerController::RestartGame()
 		if (MC->IsInCrounch)
 			MC->ToggleCrounchStat();
 		this->SetControlRotation(Start->GetActorRotation());
+
+		if (CurrentWeaponType == EWeaponType::Type::Weapon_Beam)
+		{
+			MC->NextWeapon();
+		}
 	}
 
 	InitPlatforms();
