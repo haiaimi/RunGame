@@ -82,12 +82,12 @@ void AMyHUD::BuildHUD()
 	}
 }
 
-void AMyHUD::DrawMiniMap()
+void AMyHUD::DrawMiniMap() 
 {
 	AMyPlayerController* const MPC = Cast<AMyPlayerController>(PlayerOwner);
 	ARunGameState* const RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
 
-	if (RGS && RGS->MiniMapCapture != nullptr)
+	if (RGS && RGS->MiniMapCapture != nullptr && !MPC->IsInPause)         
 	{
 		//绘制小地图
 		if (RGS->MiniMapCapture->GetCaptureComponent2D()->TextureTarget)
@@ -124,7 +124,7 @@ void AMyHUD::DrawMiniMap()
 			if (FVector2D::DotProduct(FVector2D(1.f, 0.f), PlayerOnScreenVec.GetSafeNormal()) > 0)
 				RelativeDegrees = -RelativeDegrees;
 
-			UE_LOG(LogRunGame, Log, TEXT("相对角度: %f"), RelativeDegrees)
+			//UE_LOG(LogRunGame, Log, TEXT("相对角度: %f"), RelativeDegrees)
 			
 			for (int i = 0; i <= PointNums; ++i)
 			{

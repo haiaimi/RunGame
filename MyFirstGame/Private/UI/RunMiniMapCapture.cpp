@@ -66,7 +66,7 @@ void ARunMiniMapCapture::Tick(float DeltaTime)
 			CurLerpAlpha = 0.f;
 			CachedRotatorYaw = DstRotator.Yaw;
 		}
-		UE_LOG(LogRunGame, Log, TEXT("X:%f, Y:%f, Z:%f"), RootComponent->GetComponentRotation().Pitch, RootComponent->GetComponentRotation().Yaw, RootComponent->GetComponentRotation().Roll)
+		//UE_LOG(LogRunGame, Log, TEXT("X:%f, Y:%f, Z:%f"), RootComponent->GetComponentRotation().Pitch, RootComponent->GetComponentRotation().Yaw, RootComponent->GetComponentRotation().Roll)
 	}
 }
 

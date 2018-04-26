@@ -32,6 +32,7 @@ ADoor::ADoor()
 
 	//门默认为关
 	IsInOpen = false;
+	bReset = false;
 }
 
 // Called when the game starts or when spawned
@@ -63,7 +64,6 @@ void ADoor::Tick(float DeltaTime)
 		{
 			IsInOpen = false;
 			IsInOpenRotate = false;
-			//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, "Close The Door", true);
 			YawRotation = FMath::FInterpTo(DoorRoot->RelativeRotation.Yaw, 0.f, DeltaTime, 4.f);
 			DoorRoot->SetRelativeRotation(FRotator(0.0f, YawRotation, 0.0f));
 
@@ -91,6 +91,22 @@ void ADoor::Tick(float DeltaTime)
 
 			if (YawRotation == 0.f)
 				IsInCloseRotate = false;
+		}
+	}
+
+	if (bReset)
+	{
+		IsInOpen = false;
+		IsInOpenRotate = false;
+		YawRotation = FMath::FInterpTo(DoorRoot->RelativeRotation.Yaw, 0.f, DeltaTime, 4.f);
+		DoorRoot->SetRelativeRotation(FRotator(0.0f, YawRotation, 0.0f));
+		UE_LOG(LogRunGame, Log, TEXT("Door Tick"))
+
+		if (FMath::Abs(YawRotation) < 1.f)
+		{
+			DoorRoot->SetRelativeRotation(FRotator(0.0f, 0.f, 0.0f));
+			bReset = false;   //门重置完成
+			IsInCloseRotate = false;
 		}
 	}
 }

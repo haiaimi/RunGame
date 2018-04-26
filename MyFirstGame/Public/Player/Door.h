@@ -26,6 +26,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
 	class UArrowComponent* DoorRoot;
 
+	/**把门恢复到关闭状态*/
+	uint32 bReset : 1;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
