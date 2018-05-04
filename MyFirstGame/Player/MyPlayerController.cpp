@@ -176,7 +176,7 @@ void AMyPlayerController::InitPlatforms()
 	{
 		if ((*It)->Tags.Num())
 		{
-			if ((*It)->Tags[0] == TEXT("StartPlatform") && !(*It)->IsInDestroyed)   //如果是指定的开始平台就开始
+			if ((*It)->ActorHasTag(FName("StartPlatform")) && !(*It)->IsInDestroyed)   //如果是指定的开始平台就开始
 			{
 				CurPlatform = *It;
 				TempPlatform = CurPlatform;

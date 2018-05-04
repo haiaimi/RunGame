@@ -142,5 +142,3 @@ void AMyHUD::DrawMiniMap()
 		}
 	}
 }
-
-
