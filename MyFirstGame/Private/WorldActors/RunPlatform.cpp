@@ -286,6 +286,7 @@ void ARunPlatform::MoveTick(float DeltaTime)
 		SetActorLocation(NewPos);
 }
 
+
 void ARunPlatform::MoveToAllTick(float DeltaTime)
 {
 	const FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);

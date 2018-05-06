@@ -32,4 +32,18 @@ public:
 public:
 	/**用于该平台下坠销毁*/
 	FTimerHandle ToFall;
+
+	/**该平台生成时的定向*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Platform")
+	FRotator SpawnRotation;
+
+	class UCurveFloat* MoveCurve;
+
+	/**该平台是否移动*/
+	uint32 bCanMove : 1;
+
+	float MoveCurveTime;
+
+	/**用于平台移动差异化*/
+	float MoveStartTime;
 };
