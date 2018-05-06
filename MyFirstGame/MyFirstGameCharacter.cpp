@@ -69,6 +69,7 @@ AMyFirstGameCharacter::AMyFirstGameCharacter(const FObjectInitializer& ObjectIni
 	CurrentWeaponType = EWeaponType::Type::Weapon_Instant;
 	ShootInternal = 0.f;
 	RunRate = 1.f; //默认加速动画播放速率
+	AddedSpeed = 0.f;
 
 	// Create a follow camera
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -271,15 +272,15 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 			IsInCrounchToStand = false;
 		}
 	}
-
+	//GetCharacterMovement()->Jump
 	if (IsInAccelerate && !IsInCrounch && !IsTargeting)
-		GetCharacterMovement()->MaxWalkSpeed = CurMaxAcclerateSpeed;       //把速度变为当前加速状态速度
+		GetCharacterMovement()->MaxWalkSpeed = CurMaxAcclerateSpeed + AddedSpeed;       //把速度变为当前加速状态速度
 
 	else if (IsInCrounch || IsTargeting)
 		GetCharacterMovement()->MaxWalkSpeed = 250.f;    //下蹲和瞄准时的速度
 
 	else
-		GetCharacterMovement()->MaxWalkSpeed = CurMaxRunSpeed;      //速度改为当前正常跑步速度
+		GetCharacterMovement()->MaxWalkSpeed = CurMaxRunSpeed + AddedSpeed;      //速度改为当前正常跑步速度
 
 	//下面是判断是否可以开枪（根据速度阈值判断，大于800就会播放加速动画，由于状态机的设置，后期可以添加一个加速阈值接口给状态机，也就不能开枪）
 	if (GetCharacterMovement()->MaxWalkSpeed >= 800.f)

@@ -150,6 +150,9 @@ public:
 	/**是否开始平滑恢复Controller的方向，这是在环顾后视角发生变化时的操作*/
 	uint8 IsSmoothController : 1;
 
+	/**速度增量，可能会用于速度提升奖励*/
+	float AddedSpeed;
+
 protected:
 
 	/** Resets HMD orientation in VR. */
