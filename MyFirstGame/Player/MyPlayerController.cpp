@@ -29,6 +29,7 @@
 #include "FileHelper.h"
 #include "MyHUD.h"
 #include "Door.h"
+#include "JumpPlatform.h"
 
 static const float ShootPlatformAngle = 30.f;
 static const FString RSaveGameSlot("RSaveGameSlot");
@@ -40,6 +41,7 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Shoot(TEXT("/Game/Blueprint/RunPlatform_Shoot_BP"));
 	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Beam(TEXT("/Game/Blueprint/RunPlatform_Beam_BP"));
 	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Physic(TEXT("/Game/Blueprint/RunPlatform_Physic_BP"));
+	static ConstructorHelpers::FClassFinder<ARunPlatform> FSpawnPlat_Jump(TEXT("/Game/Blueprint/JumpPlatform_BP"));
 	static ConstructorHelpers::FClassFinder<ABonus> FBonus_Score(TEXT("/Game/Blueprint/Bonus/Bonus_Score_BP"));
 	static ConstructorHelpers::FClassFinder<ABonus> FBonus_NoObstacle(TEXT("/Game/Blueprint/Bonus/Bonus_NoObstacle_BP"));
 	static ConstructorHelpers::FClassFinder<AFlyObstacle> FFlyObstacle(TEXT("/Game/Blueprint/FlyObstacle_BP"));
@@ -48,6 +50,7 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	SpawnPlatform_Shoot = FSpawnPlat_Shoot.Class;
 	SpawnPlatform_Beam = FSpawnPlat_Beam.Class;
 	SpawnPlatform_Physic = FSpawnPlat_Physic.Class;
+	SpawnPlatform_Jump = FSpawnPlat_Jump.Class;
 	Bonus_Score = FBonus_Score.Class;
 	Bonus_NoObstacle = FBonus_NoObstacle.Class;
 	SpawnFlyObstacle = FFlyObstacle.Class;
@@ -55,11 +58,13 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	CurrentWeaponType = EWeaponType::Weapon_Instant;
 	InConnectedToPlat = false;
 	CurConnectedPlat = nullptr;
+	bSpawnedJumpPlat = false;
 	FlyObstacleSpawnInterval = -1;
 	MaxFlyObstacles = 1;     //游戏开始时飞行障碍数为0
 	CurSpawnedShootPlats = 0;
 	IsInPause = 0;
 	SpawnNoObsBonusParam = 0;
+	PlatformState = (uint32)0x0000ffff;
 }
 
 
@@ -75,7 +80,7 @@ void AMyPlayerController::SetupInputComponent()
 void AMyPlayerController::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	PlatformArray.SetNum(20);       //平台数组的容量为10
+	PlatformArray.SetNum(15);       //设置平台数组的容量
 	FlyObstacleArray.SetNum(0);
 
 	InitPlatforms();
@@ -85,6 +90,11 @@ void AMyPlayerController::PostInitializeComponents()
 void AMyPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//测试左移右移的补位情况
+	/*uint32 a = 1;
+	a = a << 10;
+	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::FormatAsNumber(a));*/
 }
 
 void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
@@ -280,85 +290,107 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 		int32 Random_Beam = FMath::Rand() % 100;    //生成随机数，决定是否生成需要闪电枪触发的平台
 		int32 Random_Physic = FMath::Rand() % 100;   //生成随机数，用来决定是否生成物理平台
 		int32 Random_Bonus_Score = FMath::Rand() % 100;
+		int32 Random_Jump = FMath::Rand() % 100;    //生成跳跃平台的
 
 		//这是在处于所有平台恢复原位时的过渡，此时不生成Beam
 		if (PlatformArray.Last()->IsToAll && !IsToAll)
 			Random_Beam = -1;    //不生成Beam平台
 
 
-		//下面就是随机生成部分，优先级是Beam > Physic > Shoot > Normal(正常平台)
-		if (Random_Beam >= 0 && Random_Beam < 10 && PlatformArray.Last()->IsA(SpawnPlatform)/*!Cast<ARunPlatform_Shoot>(PlatformArray.Last()) && !Cast<ARunPlatform_Beam>(PlatformArray.Last())*/)  //5%的几率生成闪电平台，并且上一个平台不是射击触发型和闪电类型
+		//下面就是随机生成部分，优先级是Jump > Beam > Physic > Shoot > Normal(正常平台)
+		if (Random_Jump >= 0 && Random_Jump < 50 && PlatformState == 0 && !bSpawnedJumpPlat)
 		{
-			
-			AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Beam>(SpawnPlatform_Beam, GetSpawnTransf_Beam(PlatformArray.Last()));
-			PlatformArray.Last()->NoPlayerToSlope = true;   //该平台的上一个平台不进行旋转
-			PlatformArray.Last()->SlopeAngle = 0.f;
+			SpawnJumpPlatform(PlatformArray.Last());
 		}
 		else
 		{
-			if (Random_Physic >= 0 && Random_Physic < 10 && PlatformArray.Last()->IsA(SpawnPlatform))     //10%的几率生成物理平台
-				AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Physic>(SpawnPlatform_Physic, GetSpawnTransf_Physic(PlatformArray.Last()));
+			if (Random_Beam >= 0 && Random_Beam < 8 && PlatformArray.Last()->IsA(SpawnPlatform) && !bSpawnedJumpPlat/*!Cast<ARunPlatform_Shoot>(PlatformArray.Last()) && !Cast<ARunPlatform_Beam>(PlatformArray.Last())*/)  //5%的几率生成闪电平台，并且上一个平台不是射击触发型和闪电类型
+			{
+
+				AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Beam>(SpawnPlatform_Beam, GetSpawnTransf_Beam(PlatformArray.Last()));
+				PlatformArray.Last()->NoPlayerToSlope = true;   //该平台的上一个平台不进行旋转
+				PlatformArray.Last()->SlopeAngle = 0.f;
+			}
 			else
 			{
-				if (Random_Shoot >= 0 && Random_Shoot < 10 && PlatformArray.Last()->IsA(SpawnPlatform)/*!Cast <ARunPlatform_Shoot>(PlatformArray.Last()) && !Cast<ARunPlatform_Beam>(PlatformArray.Last())*/)   //25%的几率生成触发型平台,并且前一个平台不是射击型和闪电型
-					AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Shoot>(SpawnPlatform_Shoot, GetSpawnTransf_Shoot(PlatformArray.Last()));
+				if (Random_Physic >= 0 && Random_Physic < 10 && PlatformArray.Last()->IsA(SpawnPlatform) && !bSpawnedJumpPlat)     //10%的几率生成物理平台
+					AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Physic>(SpawnPlatform_Physic, GetSpawnTransf_Physic(PlatformArray.Last()));
 				else
-					AddPlatform = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray.Last()));
-			}
-		}
-
-		if (AddPlatform != nullptr)
-		{
-			AddPlatform->PlatDir = AbsoluteDir;
-			PlatformArray.Last()->NextPlatform = AddPlatform;  //指定下一个平台
-
-			if (PlatformArray[0] != nullptr)
-				if (!PlatformArray[0]->IsInDestroyed)
-					PlatformArray[0]->StartDestroy();  //开始删除第一个平台
-			
-			PlatformArray[0] = nullptr;
-			PlatformArray.RemoveAt(0);  //移除已经走过的平台
-			TempPlatform = CurPlatform;   //
-			if (PlatformArray.Last()->IsToAll || IsToAll)
-				NewSpawnedPlatformToAll(AddPlatform);
-
-			PlatformArray.Push(AddPlatform);
-			if (Random_Bonus_Score >= 0 && Random_Bonus_Score < 30)
-				SpawnBonus_Score(AddPlatform);   //30的几率生成Bonus Score
-
-			if (AddPlatform->IsA(SpawnPlatform_Shoot))
-				AddMaxSpawnObstacles();
-
-			AddPlatform->DeltaLocToPrePlat = DeltaLocToPrePlat;
-
-			if (!IsToAll)
-			{
-				RandomSpawnFlyObstacle();    //只有在非无障碍模式下才随机生成飞行障碍
-				SpawnNoObsBonusParam++;
-
-				if (SpawnNoObsBonusParam >= PlatformArray.Num() * 3)
 				{
-					SpawnBonus_NoObstacle(AddPlatform);
-					SpawnNoObsBonusParam = 0;
+					if (Random_Shoot >= 0 && Random_Shoot < 10 && PlatformArray.Last()->IsA(SpawnPlatform) && !bSpawnedJumpPlat/*!Cast <ARunPlatform_Shoot>(PlatformArray.Last()) && !Cast<ARunPlatform_Beam>(PlatformArray.Last())*/)   //25%的几率生成触发型平台,并且前一个平台不是射击型和闪电型
+						AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Shoot>(SpawnPlatform_Shoot, GetSpawnTransf_Shoot(PlatformArray.Last()));
+					else
+						AddPlatform = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray.Last()));
 				}
 			}
 
-			if ((AddPlatform->MoveToAll || AddPlatform->MoveToOrigin) && AddPlatform->DeltaLoc.Size() > 1.f)
-				break;
-
-			int32 NoNullNum = 0;
-			for (int32 i = 0; i < 10; ++i)
+			if (AddPlatform != nullptr)
 			{
-				if (PlatformArray[i] != nullptr)
-					NoNullNum++;
-			}
-			if (AddPlatform->IsA(SpawnPlatform_Beam))
-				HasSpawnedBeamPlatNum++;
+				AddPlatform->PlatDir = AbsoluteDir;
+				PlatformArray.Last()->NextPlatform = AddPlatform;  //指定下一个平台
 
-			HasSpawnedPlatNum++;
-			UE_LOG(LogRunGame, Log, TEXT("PlatformArray num:%d, CurGameTime:%f, HasSpwanedPlatNum: %d, HasSpawnedBeamPlatNum: %d"), NoNullNum, GetWorld()->TimeSeconds, HasSpawnedPlatNum, HasSpawnedBeamPlatNum)
+				if (PlatformArray[0] != nullptr)
+					if (!PlatformArray[0]->IsInDestroyed)
+						PlatformArray[0]->StartDestroy();  //开始删除第一个平台
+
+				PlatformArray[0] = nullptr;
+				PlatformArray.RemoveAt(0);  //移除已经走过的平台
+				PlatformState = PlatformState >> 1;    //1号位已经清除
+				TempPlatform = CurPlatform;   //
+				if (PlatformArray.Last()->IsToAll || IsToAll)
+					NewSpawnedPlatformToAll(AddPlatform);
+
+				PlatformArray.Push(AddPlatform);
+				if (Random_Bonus_Score >= 0 && Random_Bonus_Score < 30)
+					SpawnBonus_Score(AddPlatform);   //30的几率生成Bonus Score
+
+				if (AddPlatform->IsA(SpawnPlatform_Shoot))
+					AddMaxSpawnObstacles();
+
+				if (AddPlatform->IsA(SpawnPlatform_Beam))
+				{
+					//如果是闪电平台则第20位及平台数最后一个为1
+					uint32 PlatNum = PlatformArray.Num();
+					PlatformState |= (uint32)1 << (PlatNum - 1);
+				}
+
+				AddPlatform->DeltaLocToPrePlat = DeltaLocToPrePlat;
+
+				if (!IsToAll)
+				{
+					RandomSpawnFlyObstacle();    //只有在非无障碍模式下才随机生成飞行障碍
+					SpawnNoObsBonusParam++;
+
+					if (SpawnNoObsBonusParam >= PlatformArray.Num() * 3)
+					{
+						SpawnBonus_NoObstacle(AddPlatform);
+						if (!AddPlatform->IsA(SpawnPlatform_Beam))
+						{
+							uint32 PlatNum = PlatformArray.Num();
+							PlatformState |= (uint32)1 << (PlatNum - 1);
+						}
+						SpawnNoObsBonusParam = 0;
+					}
+				}
+				UE_LOG(LogRunGame, Log, TEXT("%d"), PlatformState)
+
+					if ((AddPlatform->MoveToAll || AddPlatform->MoveToOrigin) && AddPlatform->DeltaLoc.Size() > 1.f)
+						break;
+
+				int32 NoNullNum = 0;
+				for (int32 i = 0; i < 10; ++i)
+				{
+					if (PlatformArray[i] != nullptr)
+						NoNullNum++;
+				}
+				if (AddPlatform->IsA(SpawnPlatform_Beam))
+					HasSpawnedBeamPlatNum++;
+
+				HasSpawnedPlatNum++;
+				UE_LOG(LogRunGame, Log, TEXT("PlatformArray num:%d, CurGameTime:%f, HasSpwanedPlatNum: %d, HasSpawnedBeamPlatNum: %d"), NoNullNum, GetWorld()->TimeSeconds, HasSpawnedPlatNum, HasSpawnedBeamPlatNum)
+			}
+			UE_LOG(LogRunGame, Log, TEXT("InSpwanPlatTick"))
 		}
-		UE_LOG(LogRunGame, Log, TEXT("InSpwanPlatTick"))
 	}
 	UE_LOG(LogRunGame, Log, TEXT("OutSpwanPlatTick"))
 }
@@ -390,7 +422,15 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 	FTransform TempTrans;
 	if (PrePlatform)
 	{
-		FVector CurLocation = PrePlatform->SpawnLocation;
+		FVector CurLocation;
+		if (bSpawnedJumpPlat)
+		{
+			CurLocation = PrePlatform->SpawnLocation + DeltaLocToPrePlat;
+			bSpawnedJumpPlat = false;
+		}
+		else
+			CurLocation = PrePlatform->SpawnLocation;
+
 		FRotator CurRotation = PrePlatform->GetActorRotation();
 
 		FMatrix RotatMatrix = FRotationMatrix(CurRotation);
@@ -606,6 +646,66 @@ void AMyPlayerController::SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform)
 			AttachedPlatform->OnFall.AddUObject(SpawnedNoObsBonus, &ABonus::StartFall);
 		}
 	}
+}
+
+void AMyPlayerController::SpawnJumpPlatform(ARunPlatform* PrePlatform)
+{
+	//下面生成8个跳跃平台
+	TEnumAsByte<EPlatformDirection::Type> Dir = PrePlatform->PlatDir;
+	FVector PreLocation = PrePlatform->SpawnLocation;
+	FVector SpawnDir_X = -FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::X);
+	FVector SpawnDir_Y = FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::Y);
+	FRotator LeftRotation, RightRotation;
+	
+	switch (Dir)
+	{
+	case EPlatformDirection::Type::Absolute_Forward:
+		LeftRotation = FRotator(0.f, 180.f, -30.f);
+		RightRotation = FRotator(0.f, 0.f, -30.f);
+		break;
+
+	case EPlatformDirection::Type::Absolute_Left:
+		LeftRotation = FRotator(0.f, 90.f, -30.f);
+		RightRotation = FRotator(0.f, -90.f, -30.f);
+		break;
+
+	case EPlatformDirection::Type::Absolute_Right:
+		LeftRotation = FRotator(0.f, -90.f, -30.f);
+		RightRotation = FRotator(0.f, 90.f, -30.f);
+		break;
+
+	default:
+		break;
+	}
+
+	for (int32 i = 0; i < 4; i++)
+	{
+		//生成右边的跳跃平台
+		FTransform SpawnTransform = FTransform(FRotator::ZeroRotator, PreLocation + SpawnDir_X * (i*2000.f + 200.f));
+		ARunPlatform* SpawnedPlat = GetWorld()->SpawnActorDeferred<ARunPlatform>(SpawnPlatform_Jump, SpawnTransform);
+		if (SpawnedPlat)
+		{
+			AJumpPlatform* JumpPlat = Cast<AJumpPlatform>(SpawnedPlat);
+			JumpPlat->SpawnRotation = RightRotation;
+			JumpPlat->PlatDir = Dir;
+			JumpPlat->MoveStartTime = i * 0.25f;
+			UGameplayStatics::FinishSpawningActor(SpawnedPlat, SpawnTransform);
+		}
+		//生成左边的四个
+		SpawnTransform = FTransform(FRotator::ZeroRotator, PreLocation + SpawnDir_X * (i*2000.f + 1400.f) + 800.f * SpawnDir_Y);
+		SpawnedPlat = GetWorld()->SpawnActorDeferred<ARunPlatform>(SpawnPlatform_Jump, SpawnTransform);
+		if (SpawnedPlat)
+		{
+			AJumpPlatform* JumpPlat = Cast<AJumpPlatform>(SpawnedPlat);
+			JumpPlat->SpawnRotation = LeftRotation;
+			JumpPlat->PlatDir = Dir;
+			JumpPlat->MoveStartTime = i * 0.25f;
+			UGameplayStatics::FinishSpawningActor(SpawnedPlat, SpawnTransform);
+		}
+	}
+	PlatformState = MAX_uint32;
+	bSpawnedJumpPlat = true;
+	DeltaLocToPrePlat = 9200.f*SpawnDir_X;
 }
 
 void AMyPlayerController::ChangeWeaponType(EWeaponType::Type WeaponType)

@@ -43,6 +43,9 @@ public:
 
 	TSubclassOf<ARunPlatform> SpawnPlatform_Physic;
 
+	/**跳跃平台，会成群成群出现不会加入到平台数组中*/
+	TSubclassOf<ARunPlatform> SpawnPlatform_Jump;
+
 	TSubclassOf<AFlyObstacle> SpawnFlyObstacle;
 
 	/**分数奖励的蓝图对象*/
@@ -83,6 +86,12 @@ public:
 	/**游戏是否已结束*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	uint32 bIsGameEnd : 1;
+
+	/**已生成跳跃平台？*/
+	uint32 bSpawnedJumpPlat : 1;
+
+	/**该变量用来记录平台上有闪电平台或无障碍奖励的状态*/
+	uint32 PlatformState;
 
 	/**这是两个飞行障碍生成的最小间隔平台数*/
 	int32 FlyObstacleSpawnInterval;
@@ -152,6 +161,9 @@ public:
 	void SpawnBonus_Score(ARunPlatform* AttachedPlatform);
 
 	void SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform);
+
+	/**生成跳跃平台，不会放到平台数组中*/
+	void SpawnJumpPlatform(ARunPlatform* PrePlatform);
 
 	void ChangeWeaponType(EWeaponType::Type WeaponType);
 
