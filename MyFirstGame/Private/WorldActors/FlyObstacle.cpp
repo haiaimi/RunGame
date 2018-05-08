@@ -189,7 +189,7 @@ void AFlyObstacle::SelectSuitStopAccelerate(FVector MoveDir, float CurSpeed, flo
 										GetActorLocation() + MoveDir * MoveDistance + FVector(0.f, 0.f, 1.f)*400.f,
 										GetActorLocation() + MoveDir * MoveDistance + FVector(0.f, 0.f, -1.f)*400.f,
 										FQuat::Identity, ObjectQueryParams, 
-										FCollisionShape::MakeBox(HalfObstacleSize), 
+										FCollisionShape::MakeBox(HalfObstacleSize*2.f), 
 										QueryParams);
 
 	if (Cast<ARunPlatform>(Result.GetActor()))      //¼ì²âµ½Æ½Ì¨
