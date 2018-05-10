@@ -65,7 +65,7 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	CurSpawnedShootPlats = 0;
 	IsInPause = 0;
 	SpawnNoObsBonusParam = 0;
-	PlatformState = (uint32)0x0000ffff;
+	PlatformState = (uint32)0x000fffff;
 }
 
 
@@ -710,7 +710,8 @@ void AMyPlayerController::SpawnJumpPlatform(ARunPlatform* PrePlatform)
 										QueryParams);
 	if (!Cast<ARunPlatform>(resultLeft.GetActor()) && !Cast<ARunPlatform>(resultRight.GetActor()))
 	{
-		for (int32 i = 0; i < 4; i++)
+		int PlatPairs = FMath::Rand() % 4 + 1;       //生成的跳跃平台的对数为 1~4
+		for (int32 i = 0; i < PlatPairs; i++)
 		{
 			//生成右边的跳跃平台
 			FTransform SpawnTransform = FTransform(FRotator::ZeroRotator, PreLocation + SpawnDir_X * (i*2000.f + 200.f));
@@ -739,7 +740,7 @@ void AMyPlayerController::SpawnJumpPlatform(ARunPlatform* PrePlatform)
 		}
 		PlatformState = MAX_uint32;
 		bSpawnedJumpPlat = true;
-		DeltaLocToPrePlat = 9200.f*SpawnDir_X;
+		DeltaLocToPrePlat = (2000.f*PlatPairs + 1600.f)*SpawnDir_X;
 	}
 }
 
