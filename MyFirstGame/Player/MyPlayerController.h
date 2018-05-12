@@ -26,7 +26,6 @@ class MYFIRSTGAME_API AMyPlayerController : public APlayerController
 
 public:
 	ARunPlatform* CurPlatform;
-
 	/***/
 	ARunPlatform* TempPlatform;
 	
@@ -58,21 +57,37 @@ public:
 	UPROPERTY()
 	TArray<ARunPlatform*> PlatformArray;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FString SaveGameSlot;
+
+private:
 	/**存放当前层飞行障碍的数组，以Shoot平台分层*/
 	UPROPERTY()
 	TArray<AFlyObstacle*> FlyObstacleArray;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	FString SaveGameSlot;
 
 	/**生成的平台中的绝对方向信息*/
 	TEnumAsByte<EPlatformDirection::Type> AbsoluteDir;
 	
 	TEnumAsByte<EWeaponType::Type> CurrentWeaponType;
 
+public:
 	/**当前玩家是否连接着平台*/
 	uint8 InConnectedToPlat : 1;
 
+	/**游戏是否已结束*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	uint32 bIsGameEnd : 1;
+
+	/**记分板相对于右上角锚点的位置*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	FVector2D ScoreBorderRelativeToTopLeft;
+
+	uint32 IsInPause : 1;
+
+	UPROPERTY(BlueprintAssignable)
+	FStopGame StopGameDelegate;
+
+private:
 	/**平台是否在聚集状态*/
 	uint8 IsToAll : 1;
 
@@ -80,12 +95,6 @@ public:
 	uint8 IsInStopToAllAnim : 1;
 
 	int32 SpawnNoObsBonusParam;
-
-	uint32 IsInPause : 1;
-
-	/**游戏是否已结束*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	uint32 bIsGameEnd : 1;
 
 	/**已生成跳跃平台？*/
 	uint32 bSpawnedJumpPlat : 1;
@@ -102,25 +111,16 @@ public:
 	/**当前已经生成的Shoot平台，要根据这个控制生成的FlyObstacle得数量*/
 	int32 CurSpawnedShootPlats;
 
-	int32 CurFlyObstacles;
-
 	int32 HasSpawnedPlatNum = 0;
 
 	int32 HasSpawnedBeamPlatNum = 0;
 
 	FVector DeltaLocToPrePlat;
 
-	/**记分板相对于右上角锚点的位置*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	FVector2D ScoreBorderRelativeToTopLeft;
-
 	/**玩家移动距离*/
 	//float PlayerMoveDistance = 0.f;
 
 	FTimerHandle NoObstacleTime;
-
-	UPROPERTY(BlueprintAssignable)
-	FStopGame StopGameDelegate;
 
 public:
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)override;

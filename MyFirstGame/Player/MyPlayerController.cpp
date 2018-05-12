@@ -266,6 +266,7 @@ void AMyPlayerController::RestartGame()
 		MC->IsInAccelerate = false;
 		MC->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
 		MC->CurMaxRunSpeed = MaxRunSpeed;
+		MC->GetCharacterMovement()->ClearAccumulatedForces();
 
 		//如果玩家在下蹲状态就恢复站立状态
 		if (MC->IsInCrounch)
@@ -288,7 +289,7 @@ void AMyPlayerController::RestartGame()
 	CurSpawnedShootPlats = 0; //重置已生成平台数目
 	MaxFlyObstacles = 0;
 	bIsGameEnd = false;    //游戏已重启
-	PlatformState = (uint32)0x0000ffff;
+	PlatformState = (uint32)0x000fffff;
 }
 
 void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
@@ -302,6 +303,11 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 		int32 Random_Physic = FMath::Rand() % 100;   //生成随机数，用来决定是否生成物理平台
 		int32 Random_Bonus_Score = FMath::Rand() % 100;
 		int32 Random_Jump = FMath::Rand() % 100;    //生成跳跃平台的
+
+		//测试随机种子
+		/*FRandomStream Stream(1);
+		int32 RandTest = Stream.RandRange(0, 100);
+		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, FString::FormatAsNumber(RandTest));*/
 
 		//这是在处于所有平台恢复原位时的过渡，此时不生成Beam
 		if (PlatformArray.Last()->IsToAll && !IsToAll)
@@ -666,7 +672,7 @@ void AMyPlayerController::SpawnJumpPlatform(ARunPlatform* PrePlatform)
 	FVector SpawnDir_X = -FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::X);
 	FVector SpawnDir_Y = FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::Y);
 	FRotator LeftRotation, RightRotation;
-	PrePlatform->NoPlayerToSlope = true;    //前一个平台不倾斜，降低难度
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Black, TEXT("测试生成JumpPlatform"));
 
 	switch (Dir)
 	{
@@ -692,55 +698,70 @@ void AMyPlayerController::SpawnJumpPlatform(ARunPlatform* PrePlatform)
 	//下面是检测两边是否已生成平台形成障碍
 	FHitResult resultLeft, resultRight;
 	FCollisionObjectQueryParams ObjectQueryParams(ECollisionChannel::ECC_WorldDynamic);
-	FCollisionQueryParams QueryParams(TEXT("ObstacleQuery"));
+	FCollisionQueryParams QueryParams(TEXT("JumpQuery"));
 	GetWorld()->SweepSingleByObjectType(resultRight,
-									    PreLocation,
+									    PreLocation + 400.f * SpawnDir_X - 300.f * SpawnDir_Y,
 										PreLocation + 1000.f*SpawnDir_X,
 										FQuat(LeftRotation),
 										ObjectQueryParams,
-										FCollisionShape::MakeBox(FVector(400.f,400.f,400.f)),
+										FCollisionShape::MakeBox(FVector(200.f,200.f,200.f)),
 										QueryParams);
 
 	GetWorld()->SweepSingleByObjectType(resultLeft,
-										PreLocation + 400.f * SpawnDir_Y,
+										PreLocation + 400.f * SpawnDir_X + 700.f * SpawnDir_Y,
 										PreLocation + 1000.f*SpawnDir_X + 400.f * SpawnDir_Y,
 										FQuat(LeftRotation),
 										ObjectQueryParams,
-										FCollisionShape::MakeBox(FVector(400.f, 400.f, 400.f)),
+										FCollisionShape::MakeBox(FVector(200.f, 200.f, 200.f)),
 										QueryParams);
 	if (!Cast<ARunPlatform>(resultLeft.GetActor()) && !Cast<ARunPlatform>(resultRight.GetActor()))
 	{
 		int PlatPairs = FMath::Rand() % 4 + 1;       //生成的跳跃平台的对数为 1~4
+		
+		AJumpPlatform* LSpawnedPlat = nullptr;
+		AJumpPlatform* RSpawnedPlat = nullptr;
+
 		for (int32 i = 0; i < PlatPairs; i++)
 		{
 			//生成右边的跳跃平台
 			FTransform SpawnTransform = FTransform(FRotator::ZeroRotator, PreLocation + SpawnDir_X * (i*2000.f + 200.f));
-			ARunPlatform* SpawnedPlat = GetWorld()->SpawnActorDeferred<ARunPlatform>(SpawnPlatform_Jump, SpawnTransform);
-			if (SpawnedPlat)
+			RSpawnedPlat = GetWorld()->SpawnActorDeferred<AJumpPlatform>(SpawnPlatform_Jump, SpawnTransform);
+			if (RSpawnedPlat)
 			{
-				AJumpPlatform* JumpPlat = Cast<AJumpPlatform>(SpawnedPlat);
-				JumpPlat->SpawnRotation = RightRotation;
-				JumpPlat->PlatDir = Dir;
-				JumpPlat->MoveStartTime = i * 0.25f;
-				SpawnedPlat->Tags.Add(TEXT("JumpPlatform"));
-				UGameplayStatics::FinishSpawningActor(SpawnedPlat, SpawnTransform);
+				RSpawnedPlat->SpawnRotation = RightRotation;
+				RSpawnedPlat->PlatDir = Dir;
+				RSpawnedPlat->MoveStartTime = i * 0.25f;
+				RSpawnedPlat->Tags.Add(TEXT("JumpPlatform"));
+				UGameplayStatics::FinishSpawningActor(RSpawnedPlat, SpawnTransform);
+				if (LSpawnedPlat != nullptr)
+				{
+					LSpawnedPlat->NextPlatform = RSpawnedPlat;
+					RSpawnedPlat->PrePlatform = LSpawnedPlat;
+				}
 			}
-			//生成左边的四个
+			//生成左边的
 			SpawnTransform = FTransform(FRotator::ZeroRotator, PreLocation + SpawnDir_X * (i*2000.f + 1600.f) + 400.f * SpawnDir_Y);
-			SpawnedPlat = GetWorld()->SpawnActorDeferred<ARunPlatform>(SpawnPlatform_Jump, SpawnTransform);
-			if (SpawnedPlat)
+			LSpawnedPlat = GetWorld()->SpawnActorDeferred<AJumpPlatform>(SpawnPlatform_Jump, SpawnTransform);
+			if (LSpawnedPlat)
 			{
-				AJumpPlatform* JumpPlat = Cast<AJumpPlatform>(SpawnedPlat);
-				JumpPlat->SpawnRotation = LeftRotation;
-				JumpPlat->PlatDir = Dir;
-				JumpPlat->MoveStartTime = i * 0.25f;
-				SpawnedPlat->Tags.Add(TEXT("JumpPlatform"));
-				UGameplayStatics::FinishSpawningActor(SpawnedPlat, SpawnTransform);
+				LSpawnedPlat->SpawnRotation = LeftRotation;
+				LSpawnedPlat->PlatDir = Dir;
+				LSpawnedPlat->MoveStartTime = i * 0.25f;
+				LSpawnedPlat->Tags.Add(TEXT("JumpPlatform"));
+				UGameplayStatics::FinishSpawningActor(LSpawnedPlat, SpawnTransform);
+				if (RSpawnedPlat != nullptr)
+				{
+					RSpawnedPlat->NextPlatform = LSpawnedPlat;
+					LSpawnedPlat->PrePlatform = RSpawnedPlat;
+				}
 			}
 		}
+
+		LSpawnedPlat = RSpawnedPlat = nullptr;
 		PlatformState = MAX_uint32;
 		bSpawnedJumpPlat = true;
-		DeltaLocToPrePlat = (2000.f*PlatPairs + 1600.f)*SpawnDir_X;
+		DeltaLocToPrePlat = (2000.f*(PlatPairs - 1) + 1800.f)*SpawnDir_X;
+		PrePlatform->NoPlayerToSlope = true;    //前一个平台不倾斜，降低难度
 	}
 }
 
@@ -779,7 +800,7 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 		}
 	}
 
-	if (((CurNoShootPlatNum >= 7 && FlyObstacleSpawnInterval > 10) || FlyObstacleSpawnInterval == -1) && FlyObstacleArray.Num() < MaxFlyObstacles && RandomFlyObstacle < 10)    //10%的几率生成飞行障碍
+	if (((CurNoShootPlatNum >= 10 && FlyObstacleSpawnInterval > 10) || FlyObstacleSpawnInterval == -1) && FlyObstacleArray.Num() < MaxFlyObstacles && RandomFlyObstacle < 10)    //10%的几率生成飞行障碍
 	{
 		if (SpawnFlyObstacle)
 		{
