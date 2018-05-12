@@ -28,6 +28,8 @@ public:
 
 	UFUNCTION()
 	virtual void EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)override;
+
+	virtual void StartDestroy()override;
 	
 public:
 	/**用于该平台下坠销毁*/
@@ -46,4 +48,10 @@ public:
 
 	/**用于平台移动差异化*/
 	float MoveStartTime;
+
+	class AJumpPlatform* PrePlatform = nullptr;
+
+private:
+	/**摧毁临近的平台*/
+	//FTimerHandle AdjacentFall;
 };

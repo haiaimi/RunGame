@@ -68,7 +68,7 @@ void AJumpPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 		CurChar = MGC;     //设置当前平台上的玩家
 		CurChar->AddedSpeed = 199.f;
 		IsSlope = true;
-		GetWorldTimerManager().SetTimer(ToFall, this, &ARunPlatform::StartDestroy, 2.f);    //两秒后坠落
+		GetWorldTimerManager().SetTimer(ToFall, this, &AJumpPlatform::StartDestroy, 2.f);    //两秒后坠落
 	}
 }
 
@@ -80,5 +80,29 @@ void AJumpPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 		QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);  //这里要把该平台的碰撞体检测关闭
 		CurChar->AddedSpeed = 0.f;
 		CurChar = nullptr;
+	}
+}
+
+void AJumpPlatform::StartDestroy()
+{
+	Super::StartDestroy();
+
+	//逐渐删除周围的跳跃平台
+	if (PrePlatform != nullptr && !PrePlatform->IsInDestroyed)
+	{
+		PrePlatform->NextPlatform = nullptr;
+		PrePlatform->StartDestroy();
+	}
+
+	if (NextPlatform != nullptr && !NextPlatform->IsInDestroyed)
+	{
+		AJumpPlatform* JumpPlat = Cast<AJumpPlatform>(NextPlatform);
+		JumpPlat->PrePlatform = nullptr;
+
+		FTimerHandle NextFall;
+		FTimerDelegate Delegate;
+		
+		Delegate.BindLambda([=]() {JumpPlat->StartDestroy(); });   //绑定Lambda 匿名函数
+		GetWorldTimerManager().SetTimer(NextFall, Delegate, 2.f, false);
 	}
 }

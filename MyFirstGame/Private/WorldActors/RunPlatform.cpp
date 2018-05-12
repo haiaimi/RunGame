@@ -214,6 +214,7 @@ void ARunPlatform::DestroyActor()
 	{
 		OnDestory.Broadcast();   //开始执行代理（含有多个Actor)
 	}
+
 	Super::Destroy();
 }
 
