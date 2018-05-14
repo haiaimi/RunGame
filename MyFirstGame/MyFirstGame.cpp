@@ -3,7 +3,19 @@
 #include "MyFirstGame.h"
 #include "Engine/EngineTypes.h"
 #include "Modules/ModuleManager.h"
+#include "Common/RunGameHelper.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, MyFirstGame, "MyFirstGame" );
 
 DEFINE_LOG_CATEGORY(LogRunGame)
+
+void FRunGameModule::StartupModule()
+{
+	RunGameHelper::Initilize();
+}
+
+void FRunGameModule::ShutdownModule()
+{
+	RunGameHelper::Clear();
+}
+
+IMPLEMENT_PRIMARY_GAME_MODULE(FRunGameModule, MyFirstGame, "MyFirstGame");

@@ -9,6 +9,13 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogRunGame, Log, All);
 
+class FRunGameModule :public FDefaultGameModuleImpl
+{
+	virtual void StartupModule()override;
+
+	virtual void ShutdownModule()override;
+};
+
 UENUM(BlueprintType)
 namespace EWeaponType
 {
