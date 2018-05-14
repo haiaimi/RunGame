@@ -30,7 +30,7 @@ ARunPlatform_Beam::ARunPlatform_Beam(const FObjectInitializer& ObjectInitializer
 	UpdateBeam = false;
 	IsInMove = false;
 
-	static ConstructorHelpers::FObjectFinder<UCurveFloat> FindMoveCurve(TEXT("/Game/Blueprint/MoveCurve"));
+	static ConstructorHelpers::FObjectFinder<UCurveFloat> FindMoveCurve(TEXT("/Game/Blueprint/Curves/MoveCurve"));
 	MoveCurve = FindMoveCurve.Object;
 
 	SlopeAngle = 0.f;   //该平台不进行旋转

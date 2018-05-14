@@ -19,7 +19,7 @@ AJumpPlatform::AJumpPlatform(const FObjectInitializer& ObjectInitializer) :Super
 	MoveCurveTime = 0.f;
 	MoveStartTime = 0.f;
 
-	static ConstructorHelpers::FObjectFinder<UCurveFloat> FindMoveCurve(TEXT("/Game/Blueprint/JumpPlatMoveCurve"));
+	static ConstructorHelpers::FObjectFinder<UCurveFloat> FindMoveCurve(TEXT("/Game/Blueprint/Curves/JumpPlatMoveCurve"));
 	MoveCurve = FindMoveCurve.Object;
 }
 
