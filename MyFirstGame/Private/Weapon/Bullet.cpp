@@ -56,6 +56,7 @@ void ABullet::PostInitializeComponents()
 	if(Instigator)
 	{
 		BulletCollision->MoveIgnoreActors.Add(Instigator);    //忽略玩家自身
+		BulletCollision->MoveIgnoreActors.Add(GetOwner());   //同时忽略枪本身
 	}
 	
 	OwnerController = GetInstigatorController();

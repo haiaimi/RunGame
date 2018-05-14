@@ -60,7 +60,7 @@ void AWeapon_Gun::Fire(FVector ShootDir)
 	FTransform SpawnTrans(FRotator::ZeroRotator, GetFireLocation());
 	
 	//第一种方法
-	ABullet* SpawnBullet = GetWorld()->SpawnActorDeferred<ABullet>(ProjectileWeapon, SpawnTrans, this);
+	ABullet* SpawnBullet = GetWorld()->SpawnActorDeferred<ABullet>(ProjectileWeapon, SpawnTrans, this, this->Instigator);
 	if (SpawnBullet != nullptr)
 	{
 		SpawnBullet->InitBulletVelocity(ShootDir);
