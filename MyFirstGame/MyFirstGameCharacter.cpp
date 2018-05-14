@@ -140,6 +140,7 @@ void AMyFirstGameCharacter::PostInitializeComponents()
 			{
 				FActorSpawnParameters param;
 				param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;     //忽略碰撞体
+				param.Instigator = this;     //设置物体所有者
 				AWeapon_Gun* weapon = GetWorld()->SpawnActor<AWeapon_Gun>(Inventory[i], param);
 				InterInventory.Add(weapon);
 			}

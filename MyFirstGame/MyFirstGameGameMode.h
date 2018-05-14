@@ -14,6 +14,8 @@ class AMyFirstGameGameMode : public AGameModeBase
 
 public:
 	AMyFirstGameGameMode();
+
+	void Destroyed()override;
 };
 
 
