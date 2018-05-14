@@ -31,6 +31,7 @@
 #include "Door.h"
 #include "JumpPlatform.h"
 #include "WorldCollision.h"
+#include "Common/RunGameHelper.h"
 
 static const float ShootPlatformAngle = 30.f;
 static const FString RSaveGameSlot("RSaveGameSlot");
@@ -266,6 +267,7 @@ void AMyPlayerController::RestartGame()
 		MC->IsInAccelerate = false;
 		MC->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
 		MC->CurMaxRunSpeed = MaxRunSpeed;
+		MC->AddedSpeed = 0.f;
 		MC->GetCharacterMovement()->ClearAccumulatedForces();
 
 		//如果玩家在下蹲状态就恢复站立状态
@@ -565,48 +567,11 @@ FTransform AMyPlayerController::GetSpawnTransf_Physic(ARunPlatform* PrePlatform)
 
 void AMyPlayerController::SpawnBonus_Score(ARunPlatform* const CurPlatform)
 {
-	if (CurPlatform && Bonus_Score)
+	int32 CurPlatformIndex, BonusNum = 0;
+
+	if (PlatformArray.Find(CurPlatform, CurPlatformIndex))
 	{
-		FMatrix Orient = FRotationMatrix(CurPlatform->GetActorRotation());    //平台方向
-		FVector SpawnDirX = Orient.GetUnitAxis(EAxis::X);
-		FVector SpawnDirY = Orient.GetUnitAxis(EAxis::Y);
-		FVector SpawnDirZ = Orient.GetUnitAxis(EAxis::Z);
-
-		FVector FirstSpawnLoc;
-		int32 ScorePosOnPlat = FMath::Rand() % 3;     //0为左，1为中，2为右
-
-		//下面就是设置三个位置的Score
-		if (ScorePosOnPlat == 0)
-			FirstSpawnLoc = CurPlatform->GetActorLocation() + SpawnDirY * (CurPlatform->GetPlatformWidth() - 20) + 30 * SpawnDirX + SpawnDirZ * 70;
-		else if (ScorePosOnPlat == 1)
-			FirstSpawnLoc = CurPlatform->GetActorLocation() + SpawnDirY * CurPlatform->GetPlatformWidth() / 2 + 30 * SpawnDirX + SpawnDirZ * 70;
-		else if (ScorePosOnPlat == 2)
-			FirstSpawnLoc = CurPlatform->GetActorLocation() + SpawnDirY * 20 + 30 * SpawnDirX + SpawnDirZ * 70;
-
-		int32 CurPlatformIndex, BonusNum = 0;
-
-		if (PlatformArray.Find(CurPlatform, CurPlatformIndex))
-		{
-			if (CurPlatformIndex >= 0 && CurPlatformIndex < PlatformArray.Num())
-				if (CurPlatform->PlatDir == PlatformArray[CurPlatformIndex - 1]->PlatDir)
-					BonusNum = CurPlatform->GetPlatformLength() / 100.f;
-				else
-					BonusNum = CurPlatform->GetPlatformLength() / 100.f - 1;
-		}
-
-		for (int32 i = 0; i < BonusNum; i++)
-		{
-			ABonus* SpawnBonus = GetWorld()->SpawnActorDeferred<ABonus>(Bonus_Score, FTransform(CurPlatform->GetActorRotation(), FirstSpawnLoc + 100 * i * SpawnDirX), this);
-			if (SpawnBonus != nullptr)
-			{
-				SpawnBonus->RotateStartTime = 0.1f*i;
-				UGameplayStatics::FinishSpawningActor(SpawnBonus, FTransform(CurPlatform->GetActorRotation(), FirstSpawnLoc + 100 * i * SpawnDirX));
-			}
-			
-			SpawnBonus->AttachToActor(CurPlatform, FAttachmentTransformRules::KeepWorldTransform);
-			CurPlatform->OnDestory.AddUObject(SpawnBonus, &ABonus::DestroyActor);
-			CurPlatform->OnFall.AddUObject(SpawnBonus, &ABonus::StartFall);
-		}
+		RunGameHelper::ArrangeCoins(GetWorld(), Bonus_Score, CurPlatform, PlatformArray[CurPlatformIndex - 1]->PlatDir);
 	}
 }
 
@@ -802,44 +767,43 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 
 	if (((CurNoShootPlatNum >= 10 && FlyObstacleSpawnInterval > 10) || FlyObstacleSpawnInterval == -1) && FlyObstacleArray.Num() < MaxFlyObstacles && RandomFlyObstacle < 10)    //10%的几率生成飞行障碍
 	{
-		if (SpawnFlyObstacle)
+		if (!ensure(*SpawnFlyObstacle))return;     //判断是否查询到FlyObstacle类
+
+		if (CurNoShootPlatNum < PlatNum && PlatformArray[CurNoShootPlatNum] && PlatformArray[CurNoShootPlatNum]->CurBoundFlyObstacleNum < MaxFlyObstacles)
 		{
-			if (CurNoShootPlatNum < PlatNum && PlatformArray[CurNoShootPlatNum] && PlatformArray[CurNoShootPlatNum]->CurBoundFlyObstacleNum < MaxFlyObstacles)    
+			AFlyObstacle* Obstacle = GetWorld()->SpawnActorDeferred<AFlyObstacle>(SpawnFlyObstacle, FTransform(PlatformArray[CurNoShootPlatNum - 1]->GetActorRotation(), PlatformArray[CurNoShootPlatNum - 1]->SpawnLocation + FVector(0.f, 0.f, 80.f)));
+			if (Obstacle != nullptr)
 			{
-				AFlyObstacle* Obstacle = GetWorld()->SpawnActorDeferred<AFlyObstacle>(SpawnFlyObstacle, FTransform(PlatformArray[CurNoShootPlatNum - 1]->GetActorRotation(), PlatformArray[CurNoShootPlatNum - 1]->SpawnLocation + FVector(0.f, 0.f, 80.f)));
-				if (Obstacle != nullptr)
+				Obstacle->AimCharacter = Cast<AMyFirstGameCharacter>(GetPawn());
+				UGameplayStatics::FinishSpawningActor(Obstacle, FTransform(PlatformArray[CurNoShootPlatNum - 1]->GetActorRotation(), PlatformArray[CurNoShootPlatNum - 1]->SpawnLocation + FVector(0.f, 0.f, 80.f)));
+
+				FlyObstacleSpawnInterval = 0;   //开始累加间隔的平台
+				FlyObstacleArray.Add(Obstacle);
+
+				int32 CurObstacleNum = FlyObstacleArray.Num();
+				for (int32 i = 0; i < CurObstacleNum; ++i)
 				{
-					Obstacle->AimCharacter = Cast<AMyFirstGameCharacter>(GetPawn());
-					UGameplayStatics::FinishSpawningActor(Obstacle, FTransform(PlatformArray[CurNoShootPlatNum - 1]->GetActorRotation(), PlatformArray[CurNoShootPlatNum - 1]->SpawnLocation + FVector(0.f, 0.f, 80.f)));
-
-					FlyObstacleSpawnInterval = 0;   //开始累加间隔的平台
-					FlyObstacleArray.Add(Obstacle);
-
-					int32 CurObstacleNum = FlyObstacleArray.Num();
-					for (int32 i = 0; i < CurObstacleNum; ++i)
+					AFlyObstacle* const CurObstacle = FlyObstacleArray[i];
+					if (CurObstacle != nullptr)
 					{
-						AFlyObstacle* const CurObstacle = FlyObstacleArray[i];
-						if (CurObstacle != nullptr)
-						{
-							PlatformArray[CurNoShootPlatNum]->FlyObstacleDestory.AddUObject(CurObstacle, &AFlyObstacle::StartDestroy);      //开始绑定
-							PlatformArray[CurNoShootPlatNum]->CurBoundFlyObstacleNum++;
-						}
-						GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("已绑定"));
+						PlatformArray[CurNoShootPlatNum]->FlyObstacleDestory.AddUObject(CurObstacle, &AFlyObstacle::StartDestroy);      //开始绑定
+						PlatformArray[CurNoShootPlatNum]->CurBoundFlyObstacleNum++;
 					}
-					FlyObstacleArray.Reset();   //清空数组
+					GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("已绑定"));
 				}
+				FlyObstacleArray.Reset();   //清空数组
 			}
-			else if (CurNoShootPlatNum == PlatNum)    //如果还没有Shoot平台，就直接生成一个FlyObstacle
+		}
+		else if (CurNoShootPlatNum == PlatNum)    //如果还没有Shoot平台，就直接生成一个FlyObstacle
+		{
+			AFlyObstacle* Obstacle = GetWorld()->SpawnActorDeferred<AFlyObstacle>(SpawnFlyObstacle, FTransform(PlatformArray[CurNoShootPlatNum - 1]->GetActorRotation(), PlatformArray[CurNoShootPlatNum - 1]->SpawnLocation + FVector(0.f, 0.f, 80.f)));
+			if (Obstacle != nullptr)
 			{
-				AFlyObstacle* Obstacle = GetWorld()->SpawnActorDeferred<AFlyObstacle>(SpawnFlyObstacle, FTransform(PlatformArray[CurNoShootPlatNum - 1]->GetActorRotation(), PlatformArray[CurNoShootPlatNum - 1]->SpawnLocation + FVector(0.f, 0.f, 80.f)));
-				if (Obstacle != nullptr)
-				{
-					Obstacle->AimCharacter = Cast<AMyFirstGameCharacter>(GetPawn());
-					UGameplayStatics::FinishSpawningActor(Obstacle, FTransform(PlatformArray[CurNoShootPlatNum - 1]->GetActorRotation(), PlatformArray[CurNoShootPlatNum - 1]->SpawnLocation + FVector(0.f, 0.f, 80.f)));
+				Obstacle->AimCharacter = Cast<AMyFirstGameCharacter>(GetPawn());
+				UGameplayStatics::FinishSpawningActor(Obstacle, FTransform(PlatformArray[CurNoShootPlatNum - 1]->GetActorRotation(), PlatformArray[CurNoShootPlatNum - 1]->SpawnLocation + FVector(0.f, 0.f, 80.f)));
 
-					FlyObstacleSpawnInterval = 0;   //开始累加间隔的平台
-					FlyObstacleArray.Add(Obstacle);
-				}
+				FlyObstacleSpawnInterval = 0;   //开始累加间隔的平台
+				FlyObstacleArray.Add(Obstacle);
 			}
 		}
 	}
