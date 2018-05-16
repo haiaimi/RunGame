@@ -20,6 +20,8 @@ public:
 
 	static void Clear();
 
+	static void DrawMesh();
+
 private:
 	static class UCurveFloat* CoinsArrangement;
 

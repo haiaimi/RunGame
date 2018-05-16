@@ -10,6 +10,7 @@
 #include "Engine/World.h"
 #include "UObjectGlobals.h"
 #include "Engine/ObjectLibrary.h"
+#include "DynamicMeshBuilder.h"
 
 class UCurveFloat* RunGameHelper::CoinsArrangement = nullptr;
 class UObjectLibrary* RunGameHelper::Library = nullptr;
@@ -40,7 +41,7 @@ void RunGameHelper::Initilize()
 
 void RunGameHelper::ArrangeCoins(UWorld* ContextWorld, UClass* SpawnClass, ARunPlatform* const AttachedPlatform, TEnumAsByte<EPlatformDirection::Type> PreDir)
 {
-	if (!ensure(CoinsArrangement))return;   //为创建资源，之间返回
+	if (!ensure(CoinsArrangement))return;   //未创建资源，直接返回
 	int32 CurveCoins = FMath::RandRange(0, 99);
 
 	if (AttachedPlatform)
@@ -96,6 +97,35 @@ void RunGameHelper::ArrangeCoins(UWorld* ContextWorld, UClass* SpawnClass, ARunP
 			AttachedPlatform->OnFall.AddUObject(SpawnBonus, &ABonus::StartFall);
 		}
 	}
+	//FDynamicMeshBuilder
+	//SDPG_Foreground
+}
+
+void RunGameHelper::DrawMesh()
+{
+	//FDynamicMeshBuilder* MeshBuilder = new FDynamicMeshBuilder();
+
+	//// 顶点缓冲
+	//FDynamicMeshVertexBuffer* VertexBuffer = new FDynamicMeshVertexBuffer;
+	//VertexBuffer->Vertices.SetNum(3);
+	//VertexBuffer->Vertices[0] = FDynamicMeshVertex(FVector(0.f, 0.f, 0.f));
+	//VertexBuffer->Vertices[1] = FDynamicMeshVertex(FVector(20000.f, 0.f, 0.f));
+	//VertexBuffer->Vertices[2] = FDynamicMeshVertex(FVector(20000.f, 0.f, 11000.f));
+
+	//// 索引缓冲
+	//FDynamicMeshIndexBuffer* IndexBuffer = new FDynamicMeshIndexBuffer;
+	//IndexBuffer->Indices.SetNum(3);
+	//IndexBuffer->Indices[0] = 0;
+	//IndexBuffer->Indices[1] = 1;
+	//IndexBuffer->Indices[2] = 2;
+
+	//MeshBuilder->AddVertex(FDynamicMeshVertex(FVector(0.f, 0.f, 0.f)));
+	//MeshBuilder->AddVertex(FDynamicMeshVertex(FVector(20000.f, 0.f, 0.f)));
+	//MeshBuilder->AddVertex(FDynamicMeshVertex(FVector(20000.f, 0.f, 11000.f)));
+
+	//MeshBuilder->AddTriangle(0, 1, 2);
+
+	//MeshBuilder->Draw()
 }
 
 void RunGameHelper::Clear()
