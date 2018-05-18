@@ -11,9 +11,52 @@
 #include "UObjectGlobals.h"
 #include "Engine/ObjectLibrary.h"
 #include "DynamicMeshBuilder.h"
+//#include "Materials/MaterialInterface.h"
+#include "Materials/Material.h"
 
 class UCurveFloat* RunGameHelper::CoinsArrangement = nullptr;
 class UObjectLibrary* RunGameHelper::Library = nullptr;
+//class FDynamicMeshBuilder* RunGameHelper::DynamicMeshBuilder = nullptr;
+class UMaterial* RunGameHelper::DynamicMeshMaterial = nullptr;
+TArray<FDynamicMeshVertex> RunGameHelper::VertexBuffer = { FDynamicMeshVertex() };
+TArray<int32> RunGameHelper::IndexBuffer = { 0 };
+
+//RunGameHelper::RunGameHelper()
+//{
+//	//DynamicMeshMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/StarterContent/Materials/M_AssetPlatform"));
+//	//DynamicMeshBuilder = new class FDynamicMeshBuilder;
+//
+//	////TArray<FDynamicMeshVertex> VertexBuffer;
+//	//VertexBuffer.SetNum(4);
+//
+//	//VertexBuffer =
+//	//{
+//	//	FDynamicMeshVertex(FVector(0.f, 0.f, 0.f)),
+//	//	FDynamicMeshVertex(FVector(20000.f, 0.f, 0.f)),
+//	//	FDynamicMeshVertex(FVector(20000.f, 0.f, 11000.f)),
+//	//	FDynamicMeshVertex(FVector(20000.f, 20000.f, 0.f))
+//	//};
+//
+//	//DynamicMeshBuilder->AddVertices(VertexBuffer);
+//
+//	////TArray<int32> IndexBuffer;
+//	//IndexBuffer.SetNum(12);
+//
+//	//IndexBuffer =
+//	//{
+//	//	0,2,1,
+//	//	1,2,3,
+//	//	3,2,0,
+//	//	0,1,3
+//	//};
+//
+//	//DynamicMeshBuilder->AddTriangles(IndexBuffer);
+//}
+//
+//RunGameHelper::~RunGameHelper()
+//{
+//	
+//}
 
 void RunGameHelper::Initilize()
 {
@@ -34,9 +77,43 @@ void RunGameHelper::Initilize()
 	for (int32 i = 0; i < AssetNums; ++i)
 	{
 		UE_LOG(LogRunGame, Log, TEXT("%s"), *(Assets[i].AssetName.ToString()))
-		if (Assets[i].AssetName.IsEqual(TEXT("CoinsArrange")))
-			CoinsArrangement = Cast<UCurveFloat>(Assets[i].GetAsset());
+			if (Assets[i].AssetName.IsEqual(TEXT("CoinsArrange")))
+				CoinsArrangement = Cast<UCurveFloat>(Assets[i].GetAsset());
 	}
+
+
+	//DynamicMeshBuilder = new class FDynamicMeshBuilder;
+	//TArray<FDynamicMeshVertex> VertexBuffer;
+	VertexBuffer.SetNum(4);
+
+	VertexBuffer =
+	{
+		FDynamicMeshVertex(FVector(0.f, 0.f, 0.f)),
+		FDynamicMeshVertex(FVector(20000.f, 0.f, 0.f)),
+		FDynamicMeshVertex(FVector(20000.f, 0.f, 11000.f)),
+		FDynamicMeshVertex(FVector(20000.f, 20000.f, 0.f))
+	};
+
+	//TArray<int32> IndexBuffer;
+	IndexBuffer.SetNum(24);
+
+	IndexBuffer =
+	{
+		0,2,1,
+		1,2,0,
+		1,2,3,
+		3,2,1,
+		3,2,0,
+		0,2,3,
+		0,1,3,
+		3,1,0
+	};
+}
+
+void RunGameHelper::LoadAsset(UObject* Outer)
+{
+	if (!ensure(Outer))return;
+	DynamicMeshMaterial = LoadObject<UMaterial>(Outer, TEXT("/Game/StarterContent/Materials/M_AssetPlatform"));
 }
 
 void RunGameHelper::ArrangeCoins(UWorld* ContextWorld, UClass* SpawnClass, ARunPlatform* const AttachedPlatform, TEnumAsByte<EPlatformDirection::Type> PreDir)
@@ -101,7 +178,7 @@ void RunGameHelper::ArrangeCoins(UWorld* ContextWorld, UClass* SpawnClass, ARunP
 	//SDPG_Foreground
 }
 
-void RunGameHelper::DrawMesh()
+void RunGameHelper::DrawMesh(FPrimitiveDrawInterface* PDIRef)
 {
 	//FDynamicMeshBuilder* MeshBuilder = new FDynamicMeshBuilder();
 
@@ -119,17 +196,64 @@ void RunGameHelper::DrawMesh()
 	//IndexBuffer->Indices[1] = 1;
 	//IndexBuffer->Indices[2] = 2;
 
-	//MeshBuilder->AddVertex(FDynamicMeshVertex(FVector(0.f, 0.f, 0.f)));
-	//MeshBuilder->AddVertex(FDynamicMeshVertex(FVector(20000.f, 0.f, 0.f)));
-	//MeshBuilder->AddVertex(FDynamicMeshVertex(FVector(20000.f, 0.f, 11000.f)));
+	//VertexBuffer.SetNum(4);
 
-	//MeshBuilder->AddTriangle(0, 1, 2);
+	//VertexBuffer =
+	//{
+	//	FDynamicMeshVertex(FVector(0.f, 0.f, 0.f)),
+	//	FDynamicMeshVertex(FVector(2000.f, 0.f, 0.f)),
+	//	FDynamicMeshVertex(FVector(2000.f, 0.f, 1100.f)),
+	//	FDynamicMeshVertex(FVector(2000.f, 2000.f, 0.f))
+	//};
 
-	//MeshBuilder->Draw()
+	////TArray<int32> IndexBuffer;
+	//IndexBuffer.SetNum(24);
+
+	//IndexBuffer =
+	//{
+	//	0,2,1,
+	//	1,2,0,
+	//	1,2,3,
+	//	3,2,1,
+	//	3,2,0,
+	//	0,2,3,
+	//	0,1,3,
+	//	3,1,0
+	//};
+
+	FDynamicMeshBuilder DynamicMeshBuilder;
+
+	DynamicMeshBuilder.AddVertex(FVector(0.f, 0.f, 0.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
+	DynamicMeshBuilder.AddVertex(FVector(2000.f, 0.f, 0.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
+	DynamicMeshBuilder.AddVertex(FVector(2000.f, 0.f, 1100.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
+
+	DynamicMeshBuilder.AddTriangle(0, 1, 2);
+	DynamicMeshBuilder.AddTriangle(2, 1, 0);
+	//设置顶点缓冲
+	//DynamicMeshBuilder.AddVertices(VertexBuffer);
+	////设置索引缓冲
+	//DynamicMeshBuilder.AddTriangles(IndexBuffer);
+
+	if (DynamicMeshMaterial != nullptr)
+	{
+		UE_LOG(LogRunGame, Log, TEXT("找到材质资源"))
+		FMatrix TranslationMatrix = FTranslationMatrix(FVector(0.f, 0.f, 1000.f));
+		FMatrix ToLocalMatrix = TranslationMatrix * FScaleMatrix(FVector(1.f, 1.f, 1.f));
+		DynamicMeshBuilder.Draw(PDIRef, ToLocalMatrix, DynamicMeshMaterial->GetRenderProxy(false, false), 0);
+	}
+}
+
+void RunGameHelper::SetPDI(FPrimitiveDrawInterface* PDIRef)
+{
+
 }
 
 void RunGameHelper::Clear()
 {
 	//Library->ClearLoaded();
 	//CoinsArrangement = nullptr;
+	VertexBuffer.Empty();
+	IndexBuffer.Empty();
 }
+
+
