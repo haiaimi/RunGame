@@ -153,6 +153,9 @@ public:
 	/**速度增量，可能会用于速度提升奖励*/
 	float AddedSpeed;
 
+	/**测试PDI接口获取*/
+	class UDynamicMesh* Test;
+
 protected:
 
 	/** Resets HMD orientation in VR. */

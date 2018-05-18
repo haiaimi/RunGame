@@ -11,6 +11,7 @@ class ARunPlatform_Beam;
 class ARunPlatform;
 class ABonus;
 class AFlyObstacle;
+class UDynamicMesh;
 
 /**
  * 1、自动生成平台

@@ -22,6 +22,8 @@
 #include "EngineUtils.h"
 #include "RunPlatform.h"
 #include "RunGameState.h"
+#include "DynamicMesh.h"
+#include "RunGameHelper.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AMyFirstGameCharacter
@@ -78,6 +80,10 @@ AMyFirstGameCharacter::AMyFirstGameCharacter(const FObjectInitializer& ObjectIni
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+
+	Test = ObjectInitializer.CreateDefaultSubobject<UDynamicMesh>(this, TEXT("PDITest"));
+	//Test->SetupAttachment(RootComponent);
+	Test->SetVisibility(true);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -152,6 +158,10 @@ void AMyFirstGameCharacter::PostInitializeComponents()
 		if (InterInventory[1] != nullptr)
 			PackupWeapon(InterInventory[1]);   
 	}
+
+	if (Test)
+		Test->CreateSceneProxy();
+	Test->SetVisibility(true);
 }
 
 void AMyFirstGameCharacter::OnResetVR()
@@ -314,7 +324,6 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 			IsSmoothController = false;
 		}
 	}
-
 	//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Blue, FString::Printf(TEXT("Player Speed:%f"), GetCharacterMovement()->Velocity.Size()), true);
 }
 

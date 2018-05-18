@@ -32,6 +32,7 @@
 #include "JumpPlatform.h"
 #include "WorldCollision.h"
 #include "Common/RunGameHelper.h"
+#include "DynamicMesh.h"
 
 static const float ShootPlatformAngle = 30.f;
 static const FString RSaveGameSlot("RSaveGameSlot");
@@ -92,7 +93,8 @@ void AMyPlayerController::PostInitializeComponents()
 void AMyPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	RunGameHelper::LoadAsset(this);
 	//测试左移右移的补位情况
 	/*uint32 a = 1;
 	a = a << 10;
