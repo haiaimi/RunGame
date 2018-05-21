@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -19,59 +19,59 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Obstacle")
 	class USceneComponent* SceneRoot;
 	
-	/**·ÉĞĞÕÏ°­Ëù×·×ÙµÄÄ¿±êÈËÎï*/
+	/**é£è¡Œéšœç¢æ‰€è¿½è¸ªçš„ç›®æ ‡äººç‰©*/
 	class AMyFirstGameCharacter* AimCharacter;
 
-	/**µ±Ç°ÕÏ°­Îï·ÉĞĞµÄ·½Ïò£¬¿É±äµÄ*/
+	/**å½“å‰éšœç¢ç‰©é£è¡Œçš„æ–¹å‘ï¼Œå¯å˜çš„*/
 	FVector FlyDir;
 
-	/**·ÉĞĞµÄÄ¿±êÎ»ÖÃ*/
+	/**é£è¡Œçš„ç›®æ ‡ä½ç½®*/
 	FVector FlyDst;
 
 	FVector HalfObstacleSize;
 
-	/**Æ½Ì¨Î»ÖÃ*/
+	/**å¹³å°ä½ç½®*/
 	//TArray<FVector> PlatformsLocation;
 
-	/**¶¨Ê±¼ì²é½Ç¶ÈµÄ¶¨Ê±Æ÷*/
+	/**å®šæ—¶æ£€æŸ¥è§’åº¦çš„å®šæ—¶å™¨*/
 	FTimerHandle QueryAngler;
 
-	/**É¾³ı¶ÔÏóµÄ¶¨Ê±Æ÷*/
+	/**åˆ é™¤å¯¹è±¡çš„å®šæ—¶å™¨*/
 	FTimerHandle DestroyTimer;
 
-	/**·ÉĞĞÕÏ°­Îï¿ªÊ¼Ê±µÄËÙ¶È*/
+	/**é£è¡Œéšœç¢ç‰©å¼€å§‹æ—¶çš„é€Ÿåº¦*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Obstacle")
 	float StartSpeed;
 
-	/**·ÉĞĞÕÏ°­ÎïµÄ¼ÓËÙ¶È*/
+	/**é£è¡Œéšœç¢ç‰©çš„åŠ é€Ÿåº¦*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Obstacle")
 	float AccelerateSpeed;
 
-	/**¼õËÙµ½0µÄ¼ÓËÙ¶È£¬Îª¸º*/
+	/**å‡é€Ÿåˆ°0çš„åŠ é€Ÿåº¦ï¼Œä¸ºè´Ÿ*/
 	float ToStopAccelerate;
 
-	/**µ±Ç°ËÙ¶È*/
+	/**å½“å‰é€Ÿåº¦*/
 	float CurSpeed;
 
-	/**¼ÇÂ¼¸ÃÕÏ°­µ½ÈËÎïµÄ×î¸ßµÄËÙ¶È*/
+	/**è®°å½•è¯¥éšœç¢åˆ°äººç‰©çš„æœ€é«˜çš„é€Ÿåº¦*/
 	float ToCharMaxSpeed;
 
-	/**ÊÇ·ñÒÑ¾­³¬¹ıÄ¿±êµã£¬³¬¹ı¾Í×¼±¸¼õËÙ·µ»Ø*/
+	/**æ˜¯å¦å·²ç»è¶…è¿‡ç›®æ ‡ç‚¹ï¼Œè¶…è¿‡å°±å‡†å¤‡å‡é€Ÿè¿”å›*/
 	uint8 IsOver : 1;
 
-	/**ÕâÊÇÔÚ»¹Ã»ÓĞ¼¤»îÕÏ°­ÎïÒÆ¶¯Ìõ¼şÏÂ£¬Ç¿ÖÆÒÆ¶¯*/
+	/**è¿™æ˜¯åœ¨è¿˜æ²¡æœ‰æ¿€æ´»éšœç¢ç‰©ç§»åŠ¨æ¡ä»¶ä¸‹ï¼Œå¼ºåˆ¶ç§»åŠ¨*/
 	uint8 ForceActive : 1;
 	
-	/**ÊÇ·ñĞèÒªÏÔÊ¾·½Ïò*/
+	/**æ˜¯å¦éœ€è¦æ˜¾ç¤ºæ–¹å‘*/
 	uint8 ShouldShowDir : 1;
 
-	/**ÕÏ°­Îï¾²Ö¹µÄÊ±¼ä*/
+	/**éšœç¢ç‰©é™æ­¢çš„æ—¶é—´*/
 	float StopLengthTime;
 
-	/**µ±Ç°Ïà¶ÔÓÚÍæ¼ÒµÄ·½Ïò*/
+	/**å½“å‰ç›¸å¯¹äºç©å®¶çš„æ–¹å‘*/
 	TEnumAsByte<EFlyObstacleToCharDir::Type> CurDirToChar;
 	
-	/**ÓÃÓÚÏÔÊ¾ÕÏ°­ÎïÏà¶ÔÓÚÍæ¼ÒµÄ·½ÏòµÄ¶¨Ê±Æ÷*/
+	/**ç”¨äºæ˜¾ç¤ºéšœç¢ç‰©ç›¸å¯¹äºç©å®¶çš„æ–¹å‘çš„å®šæ—¶å™¨*/
 	FTimerHandle ShowDir;
 
 protected:
@@ -87,22 +87,22 @@ public:
 	virtual void Destroyed()override;
 
 public:
-	/**¸Ãº¯ÊıÊÇÅĞ¶Ï·ÉĞĞÕÏ°­ÎïºÍÍæ¼ÒµÄ½Ç¶È*/
+	/**è¯¥å‡½æ•°æ˜¯åˆ¤æ–­é£è¡Œéšœç¢ç‰©å’Œç©å®¶çš„è§’åº¦*/
 	void QueryIsOverSubAngle();
 
 	void StartDestroy();
 
 	void DestroyActor();
 
-	/**¸Ãº¯ÊıÊÇÎªÁËÔÚÕÏ°­ÎïÑ°ÕÒºÏÊÊµÄÍ£Ö¹Î»ÖÃ£¬ÒÔÃâÓ°ÏìÈËÎïÒÆ¶¯*/
+	/**è¯¥å‡½æ•°æ˜¯ä¸ºäº†åœ¨éšœç¢ç‰©å¯»æ‰¾åˆé€‚çš„åœæ­¢ä½ç½®ï¼Œä»¥å…å½±å“äººç‰©ç§»åŠ¨*/
 	void SelectSuitStopAccelerate(FVector MoveDir, float CurSpeed, float MoveDistance);
 
-	/**¸ù¾İ¸ø³öµÄËÙ¶È£¬ÒÔ¼°¼ÓËÙ¶ÈÇó³öµ¼Í£Ö¹µÄ¾àÀë*/
+	/**æ ¹æ®ç»™å‡ºçš„é€Ÿåº¦ï¼Œä»¥åŠåŠ é€Ÿåº¦æ±‚å‡ºå¯¼åœæ­¢çš„è·ç¦»*/
 	float ComputeDistanceToStop(float CurSpeed, float Accelerate);
 
-	/**¸ù¾İ¸ø³öµÄÒÆ¶¯¾àÀë£¬³õËÙ¶È£¬¼ÆËãÒÆ¶¯µ½ÁãÊ±µÄ¼ÓËÙ¶È*/
+	/**æ ¹æ®ç»™å‡ºçš„ç§»åŠ¨è·ç¦»ï¼Œåˆé€Ÿåº¦ï¼Œè®¡ç®—ç§»åŠ¨åˆ°é›¶æ—¶çš„åŠ é€Ÿåº¦*/
 	float ComputeAccelerateToStop(float CurSpeed, float MoveDistance);
 
-	/**¸Ãº¯ÊıÓÃÀ´ÏÔÊ¾Æ½Ì¨Ïà¶ÔÓÚÍæ¼ÒµÄÎ»ÖÃ£¬ÒÔ¹©ÌáĞÑÍæ¼Ò*/
+	/**è¯¥å‡½æ•°ç”¨æ¥æ˜¾ç¤ºå¹³å°ç›¸å¯¹äºç©å®¶çš„ä½ç½®ï¼Œä»¥ä¾›æé†’ç©å®¶*/
 	void ShowObstaclePosRelativeToChar();
 };

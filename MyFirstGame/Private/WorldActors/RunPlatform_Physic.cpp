@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+Ôªø// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "RunPlatform_Physic.h"
 #include "Components/StaticMeshComponent.h"
@@ -15,9 +15,9 @@ ARunPlatform_Physic::ARunPlatform_Physic(const FObjectInitializer& ObjectInitial
 	ConstraintComponent = ObjectInitializer.CreateDefaultSubobject<UPhysicsConstraintComponent>(this, TEXT("ConstraintComponent"));
 	LinkParticle = ObjectInitializer.CreateDefaultSubobject<UParticleSystem>(this, TEXT("LinkParticle"));
 
-	AttachedMesh->SetupAttachment(ArrowDst);  //“¿∏Ω”⁄º˝Õ∑◊Èº˛
+	AttachedMesh->SetupAttachment(ArrowDst);  //‰æùÈôÑ‰∫éÁÆ≠Â§¥ÁªÑ‰ª∂
 
-	//œ¬√Ê…Ë÷√‘º ¯◊Èº˛µƒ Ù–‘
+	//‰∏ãÈù¢ËÆæÁΩÆÁ∫¶ÊùüÁªÑ‰ª∂ÁöÑÂ±ûÊÄß
 	ConstraintComponent->ComponentName1.ComponentName = TEXT("AttachedMesh");
 	ConstraintComponent->ComponentName2.ComponentName = TEXT("Platform");
 	ConstraintComponent->SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, 45.f);
@@ -73,7 +73,7 @@ void ARunPlatform_Physic::EndOverlap(UPrimitiveComponent * OverlappedComponent, 
 		if (!AttachedMesh->IsSimulatingPhysics())
 			AttachedMesh->SetSimulatePhysics(true);
 
-		ConstraintComponent->BreakConstraint();    //»°œ˚‘º ¯
+		ConstraintComponent->BreakConstraint();    //ÂèñÊ∂àÁ∫¶Êùü
 	}
 }
 

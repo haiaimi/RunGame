@@ -15,7 +15,9 @@ public class MyFirstGame : ModuleRules
                                                             "HeadMountedDisplay" ,
                                                             "UnrealEd",
                                                             "ImageWrapper",
-                                                            "UMG"
+                                                            "UMG",
+                                                            "RenderCore",
+                                                            "Renderer"
         });
 	}
 }

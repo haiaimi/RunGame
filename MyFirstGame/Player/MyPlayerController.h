@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -14,8 +14,8 @@ class AFlyObstacle;
 class UDynamicMesh;
 
 /**
- * 1¡¢×Ô¶¯Éú³ÉÆ½Ì¨
- * 2¡¢Éú³É·ÉĞĞÕÏ°­
+ * 1ã€è‡ªåŠ¨ç”Ÿæˆå¹³å°
+ * 2ã€ç”Ÿæˆé£è¡Œéšœç¢
  */
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStopGame);
@@ -30,31 +30,31 @@ public:
 	/***/
 	ARunPlatform* TempPlatform;
 	
-	/**µ±Ç°Á¬½ÓµÄÉÁµçÆ½Ì¨*/
+	/**å½“å‰è¿æ¥çš„é—ªç”µå¹³å°*/
 	ARunPlatform_Beam* CurConnectedPlat;
 
-	/**ÒªÉú³ÉµÄÆ½Ì¨*/
+	/**è¦ç”Ÿæˆçš„å¹³å°*/
 	TSubclassOf<ARunPlatform> SpawnPlatform;
 
-	/**ĞèÒª´¥·¢µÄÆ½Ì¨*/
+	/**éœ€è¦è§¦å‘çš„å¹³å°*/
 	TSubclassOf<ARunPlatform> SpawnPlatform_Shoot;
 
 	TSubclassOf<ARunPlatform> SpawnPlatform_Beam;
 
 	TSubclassOf<ARunPlatform> SpawnPlatform_Physic;
 
-	/**ÌøÔ¾Æ½Ì¨£¬»á³ÉÈº³ÉÈº³öÏÖ²»»á¼ÓÈëµ½Æ½Ì¨Êı×éÖĞ*/
+	/**è·³è·ƒå¹³å°ï¼Œä¼šæˆç¾¤æˆç¾¤å‡ºç°ä¸ä¼šåŠ å…¥åˆ°å¹³å°æ•°ç»„ä¸­*/
 	TSubclassOf<ARunPlatform> SpawnPlatform_Jump;
 
 	TSubclassOf<AFlyObstacle> SpawnFlyObstacle;
 
-	/**·ÖÊı½±ÀøµÄÀ¶Í¼¶ÔÏó*/
+	/**åˆ†æ•°å¥–åŠ±çš„è“å›¾å¯¹è±¡*/
 	TSubclassOf<ABonus> Bonus_Score;
 
-	/**ÎŞÕÏ°­Ä£Ê½½±Àø¶ÔÏó*/
+	/**æ— éšœç¢æ¨¡å¼å¥–åŠ±å¯¹è±¡*/
 	TSubclassOf<ABonus> Bonus_NoObstacle;
 
-	/**´æ·Åµ±Ç°ËùÓĞÆ½Ì¨µÄÊı×é*/
+	/**å­˜æ”¾å½“å‰æ‰€æœ‰å¹³å°çš„æ•°ç»„*/
 	UPROPERTY()
 	TArray<ARunPlatform*> PlatformArray;
 
@@ -62,24 +62,24 @@ public:
 	FString SaveGameSlot;
 
 private:
-	/**´æ·Åµ±Ç°²ã·ÉĞĞÕÏ°­µÄÊı×é£¬ÒÔShootÆ½Ì¨·Ö²ã*/
+	/**å­˜æ”¾å½“å‰å±‚é£è¡Œéšœç¢çš„æ•°ç»„ï¼Œä»¥Shootå¹³å°åˆ†å±‚*/
 	UPROPERTY()
 	TArray<AFlyObstacle*> FlyObstacleArray;
 
-	/**Éú³ÉµÄÆ½Ì¨ÖĞµÄ¾ø¶Ô·½ÏòĞÅÏ¢*/
+	/**ç”Ÿæˆçš„å¹³å°ä¸­çš„ç»å¯¹æ–¹å‘ä¿¡æ¯*/
 	TEnumAsByte<EPlatformDirection::Type> AbsoluteDir;
 	
 	TEnumAsByte<EWeaponType::Type> CurrentWeaponType;
 
 public:
-	/**µ±Ç°Íæ¼ÒÊÇ·ñÁ¬½Ó×ÅÆ½Ì¨*/
+	/**å½“å‰ç©å®¶æ˜¯å¦è¿æ¥ç€å¹³å°*/
 	uint8 InConnectedToPlat : 1;
 
-	/**ÓÎÏ·ÊÇ·ñÒÑ½áÊø*/
+	/**æ¸¸æˆæ˜¯å¦å·²ç»“æŸ*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	uint32 bIsGameEnd : 1;
 
-	/**¼Ç·Ö°åÏà¶ÔÓÚÓÒÉÏ½ÇÃªµãµÄÎ»ÖÃ*/
+	/**è®°åˆ†æ¿ç›¸å¯¹äºå³ä¸Šè§’é”šç‚¹çš„ä½ç½®*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	FVector2D ScoreBorderRelativeToTopLeft;
 
@@ -89,27 +89,27 @@ public:
 	FStopGame StopGameDelegate;
 
 private:
-	/**Æ½Ì¨ÊÇ·ñÔÚ¾Û¼¯×´Ì¬*/
+	/**å¹³å°æ˜¯å¦åœ¨èšé›†çŠ¶æ€*/
 	uint8 IsToAll : 1;
 
-	/**ÊÇ·ñÔÚÍ£Ö¹¼¯ºÏµÄ¶¯»­ÖĞ*/
+	/**æ˜¯å¦åœ¨åœæ­¢é›†åˆçš„åŠ¨ç”»ä¸­*/
 	uint8 IsInStopToAllAnim : 1;
 
 	int32 SpawnNoObsBonusParam;
 
-	/**ÒÑÉú³ÉÌøÔ¾Æ½Ì¨£¿*/
+	/**å·²ç”Ÿæˆè·³è·ƒå¹³å°ï¼Ÿ*/
 	uint32 bSpawnedJumpPlat : 1;
 
-	/**¸Ã±äÁ¿ÓÃÀ´¼ÇÂ¼Æ½Ì¨ÉÏÓĞÉÁµçÆ½Ì¨»òÎŞÕÏ°­½±ÀøµÄ×´Ì¬*/
+	/**è¯¥å˜é‡ç”¨æ¥è®°å½•å¹³å°ä¸Šæœ‰é—ªç”µå¹³å°æˆ–æ— éšœç¢å¥–åŠ±çš„çŠ¶æ€*/
 	uint32 PlatformState;
 
-	/**ÕâÊÇÁ½¸ö·ÉĞĞÕÏ°­Éú³ÉµÄ×îĞ¡¼ä¸ôÆ½Ì¨Êı*/
+	/**è¿™æ˜¯ä¸¤ä¸ªé£è¡Œéšœç¢ç”Ÿæˆçš„æœ€å°é—´éš”å¹³å°æ•°*/
 	int32 FlyObstacleSpawnInterval;
 
-	/**Ã¿¸öÆ½ÃæÉÏ×î¶àµÄ·ÉĞĞÕÏ°­£¬Ëæ×Å²ãÊı±ä¸ß£¬Éú³ÉµÄ·ÉĞĞÕÏ°­Ò²±ä¶à*/
+	/**æ¯ä¸ªå¹³é¢ä¸Šæœ€å¤šçš„é£è¡Œéšœç¢ï¼Œéšç€å±‚æ•°å˜é«˜ï¼Œç”Ÿæˆçš„é£è¡Œéšœç¢ä¹Ÿå˜å¤š*/
 	int32 MaxFlyObstacles;
 
-	/**µ±Ç°ÒÑ¾­Éú³ÉµÄShootÆ½Ì¨£¬Òª¸ù¾İÕâ¸ö¿ØÖÆÉú³ÉµÄFlyObstacleµÃÊıÁ¿*/
+	/**å½“å‰å·²ç»ç”Ÿæˆçš„Shootå¹³å°ï¼Œè¦æ ¹æ®è¿™ä¸ªæ§åˆ¶ç”Ÿæˆçš„FlyObstacleå¾—æ•°é‡*/
 	int32 CurSpawnedShootPlats;
 
 	int32 HasSpawnedPlatNum = 0;
@@ -118,7 +118,7 @@ private:
 
 	FVector DeltaLocToPrePlat;
 
-	/**Íæ¼ÒÒÆ¶¯¾àÀë*/
+	/**ç©å®¶ç§»åŠ¨è·ç¦»*/
 	//float PlayerMoveDistance = 0.f;
 
 	FTimerHandle NoObstacleTime;
@@ -136,39 +136,39 @@ protected:
 	virtual void PostInitializeComponents()override;
 
 public:
-	/**ÓÃÓÚ³õÊ¼»¯Æ½Ì¨*/
+	/**ç”¨äºåˆå§‹åŒ–å¹³å°*/
 	void InitPlatforms();
 
-	/**ÖØĞÂ¿ªÊ¼ÓÎÏ·*/
+	/**é‡æ–°å¼€å§‹æ¸¸æˆ*/
 	UFUNCTION(BlueprintCallable)
 	void RestartGame();
 
-	/**Ëæ»úÉú³ÉÆ½Ì¨µÄº¯Êı£¬Ö¸¶¨Éú³ÉµÄ¸öÊı*/
+	/**éšæœºç”Ÿæˆå¹³å°çš„å‡½æ•°ï¼ŒæŒ‡å®šç”Ÿæˆçš„ä¸ªæ•°*/
 	void RandomSpawnPlatform(int32 SpawnNum);
 
-	/**ÓÃÓÚ×Ô¶¯Éú³ÉÆ½Ì¨,ÕâÊÇ¾­¹ı´¥·¢²ÅÄÜ´¥·¢µÄÆ½Ì¨*/
+	/**ç”¨äºè‡ªåŠ¨ç”Ÿæˆå¹³å°,è¿™æ˜¯ç»è¿‡è§¦å‘æ‰èƒ½è§¦å‘çš„å¹³å°*/
 	FTransform GetSpawnTransf_Shoot(ARunPlatform* PrePlatform);
 
-	/**¸ù¾İÉÏ¸öÒ»¸öÆ½Ì¨£¨Ïà¶ÔÓÚÊı×éÀïµÄ£©¼ÆËãÉú³ÉÆ½Ì¨µÄÎ»ÖÃ*/
+	/**æ ¹æ®ä¸Šä¸ªä¸€ä¸ªå¹³å°ï¼ˆç›¸å¯¹äºæ•°ç»„é‡Œçš„ï¼‰è®¡ç®—ç”Ÿæˆå¹³å°çš„ä½ç½®*/
 	FTransform GetRandomSpawnTransf(ARunPlatform* PrePlatform);
 
-	/**»ñÈ¡Éú³ÉÉÁµçÆ½Ì¨µÄÎ»ÖÃ*/
+	/**è·å–ç”Ÿæˆé—ªç”µå¹³å°çš„ä½ç½®*/
 	FTransform GetSpawnTransf_Beam(ARunPlatform* PrePlatform);
 
-	/**»ñÈ¡Éú³ÉÎïÀíÆ½Ì¨µÄÎ»ÖÃ*/
+	/**è·å–ç”Ÿæˆç‰©ç†å¹³å°çš„ä½ç½®*/
 	FTransform GetSpawnTransf_Physic(ARunPlatform* PrePlatform);
 
-	/**ÔÚµ±Ç°Æ½Ì¨ÉÏÉú³ÉBonus*/
+	/**åœ¨å½“å‰å¹³å°ä¸Šç”ŸæˆBonus*/
 	void SpawnBonus_Score(ARunPlatform* AttachedPlatform);
 
 	void SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform);
 
-	/**Éú³ÉÌøÔ¾Æ½Ì¨£¬²»»á·Åµ½Æ½Ì¨Êı×éÖĞ*/
+	/**ç”Ÿæˆè·³è·ƒå¹³å°ï¼Œä¸ä¼šæ”¾åˆ°å¹³å°æ•°ç»„ä¸­*/
 	void SpawnJumpPlatform(ARunPlatform* PrePlatform);
 
 	void ChangeWeaponType(EWeaponType::Type WeaponType);
 
-	/**Ëæ»úÉú³É·ÉĞĞÕÏ°­*/
+	/**éšæœºç”Ÿæˆé£è¡Œéšœç¢*/
 	void RandomSpawnFlyObstacle();
 
 	void AddMaxSpawnObstacles();
@@ -179,17 +179,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void QuitGame();
 
-	/**ËùÓĞÆ½Ì¨¼¯ºÏ
-	  *@Param LastTime ÎŞÕÏ°­Ä£Ê½³ÖĞøµÄÊ±¼ä	
+	/**æ‰€æœ‰å¹³å°é›†åˆ
+	  *@Param LastTime æ— éšœç¢æ¨¡å¼æŒç»­çš„æ—¶é—´	
 	  */
 	void StartToAll(int32 LastTime);
 
 	void StartToAllTest();
 
-	/**½øÈëÍ£Ö¹¼¯ºÏµÄ×´Ì¬£¬µ«ÊÇ²»»áÖ´ĞĞÊµ¼Ê²Ù×÷*/
+	/**è¿›å…¥åœæ­¢é›†åˆçš„çŠ¶æ€ï¼Œä½†æ˜¯ä¸ä¼šæ‰§è¡Œå®é™…æ“ä½œ*/
 	void ToStopToAllState();
 
-	/**Í£Ö¹¼¯ºÏ£¬Í£Ö¹ÎŞÕÏ°­Ä£Ê½*/
+	/**åœæ­¢é›†åˆï¼Œåœæ­¢æ— éšœç¢æ¨¡å¼*/
 	void StopToAll();
 
 	//void StopToAllAnimEnd();

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -15,7 +15,7 @@ class MYFIRSTGAME_API URunGameSave : public USaveGame
 	GENERATED_UCLASS_BODY()
 	
 public:
-	/**ÓÃÓÚ´æ´¢Íæ¼Ò·ÖÊý*/
+	/**ç”¨äºŽå­˜å‚¨çŽ©å®¶åˆ†æ•°*/
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	TArray<float> Scores;
 	

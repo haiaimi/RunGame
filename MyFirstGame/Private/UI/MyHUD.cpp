@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyHUD.h"
 #include "Engine/Canvas.h"
@@ -13,8 +13,8 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/Texture.h"
 
-const int PointNums = 50;  //ÓÃÓÚ»æÖÆÔ²»¡µÄ¶¥µã¸öÊı
-const float ArcAngle = 60.f;    //60¶ÈÔ²»¡
+const int PointNums = 50;  //ç”¨äºç»˜åˆ¶åœ†å¼§çš„é¡¶ç‚¹ä¸ªæ•°
+const float ArcAngle = 60.f;    //60åº¦åœ†å¼§
 
 AMyHUD::AMyHUD()
 {
@@ -64,7 +64,7 @@ void AMyHUD::DrawHUD()
 
 void AMyHUD::BuildHUD()
 {
-	//³¢ÊÔUMG»­ÃæÏÔÊ¾ÔÚ½ØÆÁÖĞ
+	//å°è¯•UMGç”»é¢æ˜¾ç¤ºåœ¨æˆªå±ä¸­
 	if (!GameWidget && WidgetClass)
 	{
 		AMyPlayerController* const MPC = Cast<AMyPlayerController>(GetOwningPlayerController());
@@ -75,7 +75,7 @@ void AMyHUD::BuildHUD()
 			GameWidget->SetOwningLocalPlayer(MPC->GetLocalPlayer());
 			GameWidget->AddToPlayerScreen(1);
 			 
-			//UE_LOG(LogRunGame, Log, TEXT("ÒÑÌí¼Óµ½Íæ¼ÒÆÁÄ»"))
+			//UE_LOG(LogRunGame, Log, TEXT("å·²æ·»åŠ åˆ°ç©å®¶å±å¹•"))
 		}
 		else
 			GameWidget->AddToViewport();
@@ -89,7 +89,7 @@ void AMyHUD::DrawMiniMap()
 
 	if (RGS && RGS->MiniMapCapture != nullptr && !MPC->IsInPause)         
 	{
-		//»æÖÆĞ¡µØÍ¼
+		//ç»˜åˆ¶å°åœ°å›¾
 		if (RGS->MiniMapCapture->GetCaptureComponent2D()->TextureTarget)
 		{
 			RGS->MiniMapCapture->GetCaptureComponent2D()->UpdateContent();
@@ -99,32 +99,32 @@ void AMyHUD::DrawMiniMap()
 			FCanvasTileItem MinimapTileItem(FVector2D::ZeroVector, FVector2D::ZeroVector, FLinearColor::White);
 			MinimapTileItem.Size = FVector2D(MapWidth, MapHeight);
 			MinimapTileItem.Texture = RGS->MiniMapCapture->GetCaptureComponent2D()->TextureTarget->Resource;
-			MinimapTileItem.BlendMode = ESimpleElementBlendMode::SE_BLEND_Opaque;       //·ÇÍ¸Ã÷»ìºÏ
-			Canvas->DrawItem(MinimapTileItem, Canvas->ClipX - MapWidth, Canvas->ClipY - MapHeight);    //ÔÚhudÖĞ»æÖÆµØÍ¼
+			MinimapTileItem.BlendMode = ESimpleElementBlendMode::SE_BLEND_Opaque;       //éé€æ˜æ··åˆ
+			Canvas->DrawItem(MinimapTileItem, Canvas->ClipX - MapWidth, Canvas->ClipY - MapHeight);    //åœ¨hudä¸­ç»˜åˆ¶åœ°å›¾
 
-		    //»æÖÆÍæ¼Òµã
+		    //ç»˜åˆ¶ç©å®¶ç‚¹
 			FCanvasTileItem PlayerPoint(FVector2D::ZeroVector, FVector2D::ZeroVector, FLinearColor::Red);
 			PlayerPoint.Size = FVector2D(4.f, 4.f);
 			Canvas->DrawItem(PlayerPoint, Canvas->ClipX - MapWidth / 2 - 2, Canvas->ClipY - MapHeight / 2 - 2);
 			
-			const FMatrix AdjustRotate = FRotationMatrix(FRotator(0.f, -90.f, 0.f));    //°ÑÈıÎ¬¿Õ¼äµÄÏòÁ¿×ª»»µ½¶şÎ¬ÆÁÄ»×ø±êµÄ¾ØÕó
-			const FMatrix MiniMapAdjust = FRotationMatrix(FRotator(0.f, -RGS->MiniMapCapture->RotatorYaw, 0.f));  //Ğ¡µØÍ¼·½ÏòÊÊÅä
-			const FVector CharacterDir = MPC->GetControlRotation().Vector().GetSafeNormal2D();      //»ñÈ¡Íæ¼ÒÊÓ½Ç·½Ïò
+			const FMatrix AdjustRotate = FRotationMatrix(FRotator(0.f, -90.f, 0.f));    //æŠŠä¸‰ç»´ç©ºé—´çš„å‘é‡è½¬æ¢åˆ°äºŒç»´å±å¹•åæ ‡çš„çŸ©é˜µ
+			const FMatrix MiniMapAdjust = FRotationMatrix(FRotator(0.f, -RGS->MiniMapCapture->RotatorYaw, 0.f));  //å°åœ°å›¾æ–¹å‘é€‚é…
+			const FVector CharacterDir = MPC->GetControlRotation().Vector().GetSafeNormal2D();      //è·å–ç©å®¶è§†è§’æ–¹å‘
 			const FVector ToScreenVec = MiniMapAdjust.TransformVector(AdjustRotate.TransformVector(CharacterDir));
 
-			//×ª»»µ½ÆÁÄ»¶şÎ¬¿Õ¼äµÄÎ»ÖÃ
+			//è½¬æ¢åˆ°å±å¹•äºŒç»´ç©ºé—´çš„ä½ç½®
 			const FVector2D PlayerOnScreenPos = FVector2D(Canvas->ClipX - MapWidth / 2, Canvas->ClipY - MapHeight / 2);
 			const FVector2D PlayerOnScreenVec = FVector2D(ToScreenVec.X, ToScreenVec.Y);
 
-			//ÏÂÃæ»­ÏßÀ´ÊµÏÖÍæ¼ÒÔ²»¡·½Ïò
-			const float RelativeRadians = FMath::Acos(FVector2D::DotProduct(FVector2D(0.f, 1.f), PlayerOnScreenVec.GetSafeNormal()));   //Íæ¼ÒÔÚĞ¡µØÍ¼ÉÏµÄÏà¶ÔÓÚÆÁÄ»Ô­µãµÄÎ»ÖÃ
+			//ä¸‹é¢ç”»çº¿æ¥å®ç°ç©å®¶åœ†å¼§æ–¹å‘
+			const float RelativeRadians = FMath::Acos(FVector2D::DotProduct(FVector2D(0.f, 1.f), PlayerOnScreenVec.GetSafeNormal()));   //ç©å®¶åœ¨å°åœ°å›¾ä¸Šçš„ç›¸å¯¹äºå±å¹•åŸç‚¹çš„ä½ç½®
 			float RelativeDegrees = FMath::RadiansToDegrees(RelativeRadians);
 			const float AngleStride = ArcAngle / PointNums;    
 
 			if (FVector2D::DotProduct(FVector2D(1.f, 0.f), PlayerOnScreenVec.GetSafeNormal()) > 0)
 				RelativeDegrees = -RelativeDegrees;
 
-			//UE_LOG(LogRunGame, Log, TEXT("Ïà¶Ô½Ç¶È: %f"), RelativeDegrees)
+			//UE_LOG(LogRunGame, Log, TEXT("ç›¸å¯¹è§’åº¦: %f"), RelativeDegrees)
 			
 			for (int i = 0; i <= PointNums; ++i)
 			{
@@ -135,8 +135,8 @@ void AMyHUD::DrawMiniMap()
 				FVector2D PointOnScreenToPlayer = FVector2D(x, y).GetRotated(RelativeDegrees);  
 				PointOnScreenToPlayer = FVector2D(PointOnScreenToPlayer.X + PlayerOnScreenPos.X, PointOnScreenToPlayer.Y + PlayerOnScreenPos.Y);   
 			
-				Canvas->K2_DrawLine(PlayerOnScreenPos,       //Æğµã
-									PointOnScreenToPlayer,	//Ä¿±êµã
+				Canvas->K2_DrawLine(PlayerOnScreenPos,       //èµ·ç‚¹
+									PointOnScreenToPlayer,	//ç›®æ ‡ç‚¹
 									1.f, FLinearColor::Blue);
 			}
 		}

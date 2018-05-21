@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyPlayerCameraManager.h"
 #include "MyFirstGameCharacter.h"
@@ -44,7 +44,7 @@ void AMyPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float
 		AMyFirstGameCharacter* MyCharacter = Cast<AMyFirstGameCharacter>(OutVT.Target);
 
 		UCharacterMovementComponent* MyMoveComponent = MyCharacter->GetCharacterMovement();
-		if (MyMoveComponent->Velocity.Size() > -0.1f && MyMoveComponent->Velocity.Size() < 0.1f)        //ÓÉÓÚÓÐÎó²îËùÒÔÉè¶¨0.2µÄÎó²îÇø¼ä
+		if (MyMoveComponent->Velocity.Size() > -0.1f && MyMoveComponent->Velocity.Size() < 0.1f)        //ç”±äºŽæœ‰è¯¯å·®æ‰€ä»¥è®¾å®š0.2çš„è¯¯å·®åŒºé—´
 		{
 			MyCharacter->bUseControllerRotationYaw = false;
 			MyCharacter->UpdateStandCharacter();
@@ -57,14 +57,14 @@ void AMyPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float
 		if (MyCharacter->IsCharacterViewAround())
 		{
 			MyCharacter->bUseControllerRotationYaw = false;
-			//ViewLoc = FMath::VInterpTo(OutVT.POV.Location, ViewLoc + ViewRotation.GetUnitAxis(EAxis::X)*-180.0f, DeltaTime, 30);       //¸Ã·½·¨ÊÇÉãÏñ»úÏòºóÒÆ
-			ViewLoc += ViewRotation.GetUnitAxis(EAxis::X) * -120.0f;      //¸Ã·½°¸ÊÇÉãÏñ»ú²»ºóÒÆ
+			//ViewLoc = FMath::VInterpTo(OutVT.POV.Location, ViewLoc + ViewRotation.GetUnitAxis(EAxis::X)*-180.0f, DeltaTime, 30);       //è¯¥æ–¹æ³•æ˜¯æ‘„åƒæœºå‘åŽç§»
+			ViewLoc += ViewRotation.GetUnitAxis(EAxis::X) * -120.0f;      //è¯¥æ–¹æ¡ˆæ˜¯æ‘„åƒæœºä¸åŽç§»
 			if (DefaultFOV != 90.f)
 				DefaultFOV = FMath::FInterpTo(DefaultFOV, 90.f, DeltaTime, 5.f);
 		}
 		else
 		{
-			//ViewLoc = FMath::VInterpTo(OutVT.POV.Location, ViewLoc + ViewRotation.GetUnitAxis(EAxis::X)*-120.0f, DeltaTime, 30);  //¸ÃÐ§¹û»áÔì³É»­Ãæ¶¶¶¯
+			//ViewLoc = FMath::VInterpTo(OutVT.POV.Location, ViewLoc + ViewRotation.GetUnitAxis(EAxis::X)*-120.0f, DeltaTime, 30);  //è¯¥æ•ˆæžœä¼šé€ æˆç”»é¢æŠ–åŠ¨
 			ViewLoc += ViewRotation.GetUnitAxis(EAxis::X) * -120.0f;
 			if (MyCharacter->PlayerIsTargeting() /*&& !MyCharacter->IsInAccelerate*/)
 			{

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "RunPlatform.h"
 #include "Components/StaticMeshComponent.h"
@@ -23,23 +23,23 @@ ARunPlatform::ARunPlatform(const FObjectInitializer& ObjectInitializer) :Super(O
 	QueryBox = ObjectInitializer.CreateDefaultSubobject<UBoxComponent>(this, TEXT("QueryBox"));
 	ArrowDst = ObjectInitializer.CreateDefaultSubobject<UArrowComponent>(this, TEXT("Arrow"));
 
-	//¸ÃÅö×²ÌåÖ»ÓÃÓÚ¼ì²â
+	//è¯¥ç¢°æ’ä½“åªç”¨äºæ£€æµ‹
 	QueryBox->SetCollisionObjectType(COLLISION_BOOMQUERY);  
 	QueryBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
-	QueryBox->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECollisionResponse::ECR_Ignore); //ºöÂÔ×Óµ¯
-	QueryBox->bGenerateOverlapEvents = true;       //Éú³ÉÅö×²ÊÂ¼ş
+	QueryBox->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECollisionResponse::ECR_Ignore); //å¿½ç•¥å­å¼¹
+	QueryBox->bGenerateOverlapEvents = true;       //ç”Ÿæˆç¢°æ’äº‹ä»¶
 
 	QueryBox->SetupAttachment(Platform);
 	Platform->SetupAttachment(ArrowDst);
 	RootComponent = ArrowDst;
 
-	IsSlope = false;    //Ä¬ÈÏÊÇ²»ÇãĞ±µÄ
+	IsSlope = false;    //é»˜è®¤æ˜¯ä¸å€¾æ–œçš„
 	SlopeAngle = 60.f;
-	NoPlayerToSlope = false; //Ä¬ÈÏÊÇÕı³£Æ½Ì¨Ä£Ê½
+	NoPlayerToSlope = false; //é»˜è®¤æ˜¯æ­£å¸¸å¹³å°æ¨¡å¼
 
-	SafeStayTime = 0.3f;  //Ä¬ÈÏ°²È«Ê±¼ä
-	PlatDir = EPlatformDirection::Absolute_Forward;  //Ä¬ÈÏÏòÇ°
+	SafeStayTime = 0.3f;  //é»˜è®¤å®‰å…¨æ—¶é—´
+	PlatDir = EPlatformDirection::Absolute_Forward;  //é»˜è®¤å‘å‰
 	MoveToNew = false;
 	IsInDestroyed = false;
 	MoveToOrigin = false;
@@ -50,21 +50,21 @@ void ARunPlatform::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	QueryBox->OnComponentBeginOverlap.AddDynamic(this, &ARunPlatform::BeginOverlap);  //ÎªÅö×²ÌåÌí¼ÓÅö×²ÏìÓ¦
-	QueryBox->OnComponentEndOverlap.AddDynamic(this, &ARunPlatform::EndOverlap);   //Åö×²½áÊøÊ±µÄÏìÓ¦
+	QueryBox->OnComponentBeginOverlap.AddDynamic(this, &ARunPlatform::BeginOverlap);  //ä¸ºç¢°æ’ä½“æ·»åŠ ç¢°æ’å“åº”
+	QueryBox->OnComponentEndOverlap.AddDynamic(this, &ARunPlatform::EndOverlap);   //ç¢°æ’ç»“æŸæ—¶çš„å“åº”
 
-	const FVector PlatformSize = Platform->Bounds.BoxExtent;   //»ñÈ¡PlatformµÄ´óĞ¡
-	const FVector QuerySize = QueryBox->Bounds.BoxExtent; //»ñÈ¡Åö×²ÌåµÄ´óĞ¡
+	const FVector PlatformSize = Platform->Bounds.BoxExtent;   //è·å–Platformçš„å¤§å°
+	const FVector QuerySize = QueryBox->Bounds.BoxExtent; //è·å–ç¢°æ’ä½“çš„å¤§å°
 	const FVector BoxScale = FVector(PlatformSize.X / QuerySize.X, PlatformSize.Y / QuerySize.Y, 15 * PlatformSize.Z / QuerySize.Z);
-	QueryBox->SetWorldScale3D(BoxScale);      //¸ù¾İPlatform´óĞ¡ÉèÖÃÅö×²Ìå³ß´ç
-	QueryBox->SetRelativeLocation(FVector(PlatformSize.X, PlatformSize.Y, QueryBox->Bounds.BoxExtent.Z));  //È»ºóÉèÖÃ¼ì²âÅö×²ÌåµÄÎ»ÖÃ
+	QueryBox->SetWorldScale3D(BoxScale);      //æ ¹æ®Platformå¤§å°è®¾ç½®ç¢°æ’ä½“å°ºå¯¸
+	QueryBox->SetRelativeLocation(FVector(PlatformSize.X, PlatformSize.Y, QueryBox->Bounds.BoxExtent.Z));  //ç„¶åè®¾ç½®æ£€æµ‹ç¢°æ’ä½“çš„ä½ç½®
 	Platform->SetWorldScale3D(FVector(XScale, YScale, 1.f));
 
 	//GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Blue, FString::Printf(TEXT("X:%2f,Y:%2f,Z:%2f,Platform.X:%2f"), PlatformSize.X, PlatformSize.Y, BoxScale.Z, PlatformSize.X));
 	
 	PlatformLength = 2 * XScale * PlatformSize.X;
 	PlatformWidth = 2 * YScale * PlatformSize.Y;
-	//»ñÈ¡ÇãĞ±Ê±Ä¿±ê½Ç¶È
+	//è·å–å€¾æ–œæ—¶ç›®æ ‡è§’åº¦
 	DstRotation = GetActorRotation() - FRotator(SlopeAngle, 0.f, 0.f);
 	SpawnLocation = GetActorLocation();
 }
@@ -76,17 +76,17 @@ void ARunPlatform::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 
 	if (IsSlope)
 	{
-		FRotator Temp = FMath::RInterpConstantTo(GetActorRotation(), DstRotation, DeltaTime, 20.f);  //ÒÔÃ¿Ãë20¶ÈµÄËÙ¶ÈÇãĞ±
+		FRotator Temp = FMath::RInterpConstantTo(GetActorRotation(), DstRotation, DeltaTime, 20.f);  //ä»¥æ¯ç§’20åº¦çš„é€Ÿåº¦å€¾æ–œ
 		SetActorRotation(Temp);
 
 		if (GetActorRotation().Pitch <= -SlopeAngle)
 			IsSlope = false;
 		
-		//ÏÂÃæÊÇ¸üĞÂÍæ¼ÒµÄ×î´óÒÆ¶¯ËÙ¶ÈºÍ¶¯»­±ÈÀı£¬Ö»ÓĞÔÚÊÇÆÕÍ¨Ä£Ê½ÏÂ²ÅÖ´ĞĞ
+		//ä¸‹é¢æ˜¯æ›´æ–°ç©å®¶çš„æœ€å¤§ç§»åŠ¨é€Ÿåº¦å’ŒåŠ¨ç”»æ¯”ä¾‹ï¼Œåªæœ‰åœ¨æ˜¯æ™®é€šæ¨¡å¼ä¸‹æ‰æ‰§è¡Œ
 		if (!NoPlayerToSlope)
 		{
 			if (SafeStayTime <= 0)
-				SafeStayTime = 0.f;  //°²È«Ê±¼äÒÑ¹ı
+				SafeStayTime = 0.f;  //å®‰å…¨æ—¶é—´å·²è¿‡
 			else
 				SafeStayTime -= DeltaTime;
 
@@ -94,10 +94,10 @@ void ARunPlatform::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 			InSlope(rate);
 		}
 	}
-	if (CurChar != nullptr && NoPlayerToSlope) //Íæ¼ÒÔÚÆ½Ì¨ÉÏ£¨Éä»÷´¥·¢Ä£Ê½£©
+	if (CurChar != nullptr && NoPlayerToSlope) //ç©å®¶åœ¨å¹³å°ä¸Šï¼ˆå°„å‡»è§¦å‘æ¨¡å¼ï¼‰
 	{
 		if (SafeStayTime <= 0)
-			SafeStayTime = 0.f;  //°²È«Ê±¼äÒÑ¹ı
+			SafeStayTime = 0.f;  //å®‰å…¨æ—¶é—´å·²è¿‡
 		else
 			SafeStayTime -= DeltaTime;
 	}
@@ -122,26 +122,26 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 {
 	if (Cast<AMyFirstGameCharacter>(OtherActor))
 	{
-		CurChar = Cast<AMyFirstGameCharacter>(OtherActor);   //µ±Ç°ÔÚÆ½Ì¨ÉÏµÄÍæ¼Ò
+		CurChar = Cast<AMyFirstGameCharacter>(OtherActor);   //å½“å‰åœ¨å¹³å°ä¸Šçš„ç©å®¶
 		/*MaxAcclerateSpeed = CurChar->MaxAcclerateSpeed;
 		MaxRunSpeed = CurChar->MaxRunSpeed;*/
 		CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
 		CurChar->CurMaxRunSpeed = MaxRunSpeed;
 
-		/*ÏÂÃæ½øĞĞ¿ØÖÆÈËÎïÒÆ¶¯ËÙ¶È£¬À´Ä£ÄâÈËÉÏÆÂµÄ¼õËÙ£¬×¢ÒâÅäºÏ¶¯»­*/
+		/*ä¸‹é¢è¿›è¡Œæ§åˆ¶äººç‰©ç§»åŠ¨é€Ÿåº¦ï¼Œæ¥æ¨¡æ‹Ÿäººä¸Šå¡çš„å‡é€Ÿï¼Œæ³¨æ„é…åˆåŠ¨ç”»*/
 		if (!NoPlayerToSlope)
 		{
-			IsSlope = true;      //Ëæ×ÅÆ½Ì¨ÇãĞ±Öğ½¥¼õµÍËÙ¶È
+			IsSlope = true;      //éšç€å¹³å°å€¾æ–œé€æ¸å‡ä½é€Ÿåº¦
 		}
-		else if (!NoPlayerToSlope && !IsToAll)                //ÔÚÎŞÕÏ°­Ä£Ê½ÏÂ²»¼õËÙ
+		else if (!NoPlayerToSlope && !IsToAll)                //åœ¨æ— éšœç¢æ¨¡å¼ä¸‹ä¸å‡é€Ÿ
 		{
-			InSlope(SlopeAngle / 60.f);   //Ğ±ÆÂÖ±½Ó½µµÍÈËÎïµÄËÙ¶È
+			InSlope(SlopeAngle / 60.f);   //æ–œå¡ç›´æ¥é™ä½äººç‰©çš„é€Ÿåº¦
 		}
 
 		if (Cast<AMyPlayerController>(CurChar->Controller))
 		{
 			AMyPlayerController* MPC = Cast<AMyPlayerController>(CurChar->Controller);
-			MPC->CurPlatform = this;     //Íæ¼Òµ±Ç°ËùÔÚÆ½Ì¨
+			MPC->CurPlatform = this;     //ç©å®¶å½“å‰æ‰€åœ¨å¹³å°
 		}
 	}
 }
@@ -149,21 +149,21 @@ void ARunPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	
-	if (SafeStayTime == 0)   //ÔÚ°²È«Ê±¼äÄÚ²»»á´¥·¢¸Ãº¯ÊıÄÚÈİ
+	if (SafeStayTime == 0)   //åœ¨å®‰å…¨æ—¶é—´å†…ä¸ä¼šè§¦å‘è¯¥å‡½æ•°å†…å®¹
 	{
 		if (Cast<AMyFirstGameCharacter>(OtherActor))
 		{
 			IsSlope = false;
 
-			if (CurChar && Cast<ARunPlatform_Shoot>(this->NextPlatform) == nullptr)  //Ö»ÓĞÏÂÒ»¸öÆ½Ì¨²»ÊÇShootÆ½Ì¨²Å»á»Ö¸´ÒÆËÙ
+			if (CurChar && Cast<ARunPlatform_Shoot>(this->NextPlatform) == nullptr)  //åªæœ‰ä¸‹ä¸€ä¸ªå¹³å°ä¸æ˜¯Shootå¹³å°æ‰ä¼šæ¢å¤ç§»é€Ÿ
 			{
-				//»Ö¸´Íæ¼ÒÔ­±¾µÄÒÆ¶¯ËÙ¶È,ºÍ¶¯»­²¥·ÅËÙÂÊ
+				//æ¢å¤ç©å®¶åŸæœ¬çš„ç§»åŠ¨é€Ÿåº¦,å’ŒåŠ¨ç”»æ’­æ”¾é€Ÿç‡
 				CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
 				CurChar->CurMaxRunSpeed = MaxRunSpeed;
 				CurChar->RunRate = 1.f;
 				//GEngine->AddOnScreenDebugMessage(1, 5, FColor::Blue, FString::Printf(TEXT("MaxAcclerateSpeed:%f,  MaxRunSpeed:%f,  RunRate:%f"), CurChar->MaxAcclerateSpeed, CurChar->MaxRunSpeed, CurChar->RunRate));
 			}
-			QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);  //ÕâÀïÒª°Ñ¸ÃÆ½Ì¨µÄÅö×²Ìå¼ì²â¹Ø±Õ
+			QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);  //è¿™é‡Œè¦æŠŠè¯¥å¹³å°çš„ç¢°æ’ä½“æ£€æµ‹å…³é—­
 
 			if (CurChar)
 			{
@@ -173,7 +173,7 @@ void ARunPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 					int32 FoundIndex;
 					if (MPC != nullptr)
 						if (!MPC->PlatformArray.Find(MPC->CurPlatform, FoundIndex))
-							MPC->CurPlatform = nullptr;     //Íæ¼Òµ±Ç°ËùÔÚÆ½Ì¨ÉèÎª¿Õ
+							MPC->CurPlatform = nullptr;     //ç©å®¶å½“å‰æ‰€åœ¨å¹³å°è®¾ä¸ºç©º
 				}
 				CurChar = nullptr;
 			}
@@ -188,11 +188,11 @@ void ARunPlatform::StartDestroy()
 	IsSlope = false;
 	IsInDestroyed = true;
 	if (!Platform->IsSimulatingPhysics())
-		Platform->SetSimulatePhysics(true);  //¿ªÆôÎïÀíÄ£Äâ
+		Platform->SetSimulatePhysics(true);  //å¼€å¯ç‰©ç†æ¨¡æ‹Ÿ
 
-	GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4ÃëºóÉ¾³ı¸ÃÆ½Ì¨£¬ÊÍ·ÅÄÚ´æ
+	GetWorldTimerManager().SetTimer(DestoryHandle, this, &ARunPlatform::DestroyActor, 4.f, false);   //4ç§’ååˆ é™¤è¯¥å¹³å°ï¼Œé‡Šæ”¾å†…å­˜
 
-	//½±ÀøÎïÌå¿ªÊ¼ÏÂÂä
+	//å¥–åŠ±ç‰©ä½“å¼€å§‹ä¸‹è½
 	if (OnFall.IsBound())
 		OnFall.Broadcast();
 
@@ -207,12 +207,12 @@ void ARunPlatform::DestroyActor()
 {
 	if (DestoryHandle.IsValid())
 	{
-		GetWorldTimerManager().ClearTimer(DestoryHandle);      //Çå³ı¶¨Ê±Æ÷
+		GetWorldTimerManager().ClearTimer(DestoryHandle);      //æ¸…é™¤å®šæ—¶å™¨
 	}
 
 	if (OnDestory.IsBound())
 	{
-		OnDestory.Broadcast();   //¿ªÊ¼Ö´ĞĞ´úÀí£¨º¬ÓĞ¶à¸öActor)
+		OnDestory.Broadcast();   //å¼€å§‹æ‰§è¡Œä»£ç†ï¼ˆå«æœ‰å¤šä¸ªActor)
 	}
 
 	Super::Destroy();
@@ -222,7 +222,7 @@ void ARunPlatform::InSlope(float rate)
 {
 	if (CurChar)
 	{
-		CurChar->RunRate = 1.f - 0.4*rate;   //¶¯×÷µÄ×îµÍËÙÂÊÎªÔ­À´µÄ0.6£¬Ì«µÍ»áµ¼ÖÂ²»Á¬¹á
+		CurChar->RunRate = 1.f - 0.4*rate;   //åŠ¨ä½œçš„æœ€ä½é€Ÿç‡ä¸ºåŸæ¥çš„0.6ï¼Œå¤ªä½ä¼šå¯¼è‡´ä¸è¿è´¯
 		CurChar->CurMaxAcclerateSpeed = MaxAcclerateSpeed - MaxAcclerateSpeed * 0.4f * rate;
 		CurChar->CurMaxRunSpeed = MaxRunSpeed - MaxRunSpeed * 0.4f * rate;
 	}
@@ -231,14 +231,14 @@ void ARunPlatform::InSlope(float rate)
 void ARunPlatform::MoveToNewPos(const FVector DeltaDistance)
 {
 	MoveToNew = true;
-	DeltaLoc = DeltaDistance;   //ÉèÖÃÒÆ¶¯µÄÏà¶Ô¾àÀë
+	DeltaLoc = DeltaDistance;   //è®¾ç½®ç§»åŠ¨çš„ç›¸å¯¹è·ç¦»
 }
 
 void ARunPlatform::MoveToAllFun(const FVector DeltaDistance)
 {
 	MoveToAll = true;
 	IsToAll = true;
-	NoPlayerToSlope = true;     //Í£Ö¹Æ½Ì¨Ğı×ª
+	NoPlayerToSlope = true;     //åœæ­¢å¹³å°æ—‹è½¬
 	DeltaLoc = DeltaDistance;
 
 	/*if (CurChar != nullptr)
@@ -261,8 +261,8 @@ void ARunPlatform::MoveTick(float DeltaTime)
 	const FVector NewPos = FMath::VInterpTo(GetActorLocation(), SpawnLocation + DeltaLoc, DeltaTime, 10.f);
 
 	if (NextPlatform != nullptr)
-		if (!NextPlatform->MoveToNew)     //Ö»ÓĞÏÂÒ»¸öÆ½Ì¨Ã»ÓĞÒÆ¶¯Ê±²ÅÖ´ĞĞÏÂÃæ²Ù×÷
-			if ((NewPos - SpawnLocation).Size() > DeltaLoc.Size() / 2)     //ÒÆ¶¯³¬¹ıÏà²î¾àÀëÒ»°ëÊ±£¬¾Í¿ªÊ¼ÒÆ¶¯ÏÂÒ»¸öÆ½Ì¨
+		if (!NextPlatform->MoveToNew)     //åªæœ‰ä¸‹ä¸€ä¸ªå¹³å°æ²¡æœ‰ç§»åŠ¨æ—¶æ‰æ‰§è¡Œä¸‹é¢æ“ä½œ
+			if ((NewPos - SpawnLocation).Size() > DeltaLoc.Size() / 2)     //ç§»åŠ¨è¶…è¿‡ç›¸å·®è·ç¦»ä¸€åŠæ—¶ï¼Œå°±å¼€å§‹ç§»åŠ¨ä¸‹ä¸€ä¸ªå¹³å°
 				NextPlatform->MoveToNewPos(DeltaLoc);
 
 	if ((NewPos - (SpawnLocation + DeltaLoc)).Size() < 1.f)
@@ -295,12 +295,12 @@ void ARunPlatform::MoveToAllTick(float DeltaTime)
 
 	if (NextPlatform)
 		if (!NextPlatform->MoveToAll)
-			if ((NewPos - SpawnLocation).Size() >= (DeltaLoc.Size() / 2))     //ÒÆ¶¯³¬¹ıÏà²î¾àÀëÒ»°ëÊ±£¬¾Í¿ªÊ¼ÒÆ¶¯ÏÂÒ»¸öÆ½Ì¨
+			if ((NewPos - SpawnLocation).Size() >= (DeltaLoc.Size() / 2))     //ç§»åŠ¨è¶…è¿‡ç›¸å·®è·ç¦»ä¸€åŠæ—¶ï¼Œå°±å¼€å§‹ç§»åŠ¨ä¸‹ä¸€ä¸ªå¹³å°
 			{
 				const AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
 				if (MPC != nullptr)
 				{
-					if (NextPlatform->IsA(MPC->SpawnPlatform) && (this->IsA(MPC->SpawnPlatform) || this->IsA(MPC->SpawnPlatform_Shoot)))      //µ±ÏÂÒ»¸öÆ½Ì¨ÊÇÆÕÍ¨Æ½Ì¨£¬²¢ÇÒµ±Ç°Æ½Ì¨ÊÇÆÕÍ¨Æ½Ì¨»òÉä»÷Æ½Ì¨
+					if (NextPlatform->IsA(MPC->SpawnPlatform) && (this->IsA(MPC->SpawnPlatform) || this->IsA(MPC->SpawnPlatform_Shoot)))      //å½“ä¸‹ä¸€ä¸ªå¹³å°æ˜¯æ™®é€šå¹³å°ï¼Œå¹¶ä¸”å½“å‰å¹³å°æ˜¯æ™®é€šå¹³å°æˆ–å°„å‡»å¹³å°
 					{
 						NextPlatform->MoveToAllFun(DeltaLoc);
 					}

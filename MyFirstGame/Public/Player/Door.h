@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -26,7 +26,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door")
 	class UArrowComponent* DoorRoot;
 
-	/**°ÑÃÅ»Ö¸´µ½¹Ø±Õ×´Ì¬*/
+	/**æŠŠé—¨æ¢å¤åˆ°å…³é—­çŠ¶æ€*/
 	uint32 bReset : 1;
 
 protected:
@@ -37,31 +37,31 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	//Íæ¼Ò½øÈëÃÅ¼ì²âÇøÓò
+	//ç©å®¶è¿›å…¥é—¨æ£€æµ‹åŒºåŸŸ
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor)override;
 
-	//Íæ¼Ò×ß³öÃÅ¼ì²âÇøÓò
+	//ç©å®¶èµ°å‡ºé—¨æ£€æµ‹åŒºåŸŸ
 	virtual void NotifyActorEndOverlap(AActor* OtherActor)override;
 
 private:
 	AMyFirstGameCharacter* CurChar;
 
-	//ÃÅÊÇ·ñ¿ÉÒÔ±»´ò¿ª
+	//é—¨æ˜¯å¦å¯ä»¥è¢«æ‰“å¼€
 	uint8 CanbOperate : 1;
 
-	//ÃÅÔÚ¿ªÃÅ×ª¶¯×´Ì¬
+	//é—¨åœ¨å¼€é—¨è½¬åŠ¨çŠ¶æ€
 	uint8 IsInOpenRotate : 1;
 
-	//ÃÅÔÚ¹Ø±Õ×ª¶¯×´Ì¬
+	//é—¨åœ¨å…³é—­è½¬åŠ¨çŠ¶æ€
 	uint8 IsInCloseRotate : 1;
 
-	//ÃÅÔÚ¿ªÆô×´Ì¬
+	//é—¨åœ¨å¼€å¯çŠ¶æ€
 	uint8 IsInOpen : 1;
 
 	//
 	uint8 IsInClose : 1;
 
-	//µ±Ç°ÃÅµÄ½Ç¶È
+	//å½“å‰é—¨çš„è§’åº¦
 	float YawRotation = 0.f;
 	
 };

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -17,60 +17,60 @@ class MYFIRSTGAME_API ARunPlatform : public AActor
 	GENERATED_UCLASS_BODY()
 	
 public:	
-	/**ÓÎÏ·ÖĞµÄÆ½Ì¨*/
+	/**æ¸¸æˆä¸­çš„å¹³å°*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform", meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* Platform;
 
-	/**ÓÃÓÚ¼ì²âÍæ¼Ò£¬²¢×ö³öÏàÓ¦±ä»¯µÄÅö×²Ìå£¬Ö»ÓÃÓÚ¼ì²â*/
+	/**ç”¨äºæ£€æµ‹ç©å®¶ï¼Œå¹¶åšå‡ºç›¸åº”å˜åŒ–çš„ç¢°æ’ä½“ï¼Œåªç”¨äºæ£€æµ‹*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Platform")
 	class UBoxComponent* QueryBox;
 
-	/**ÓÃ¼ıÍ·×é¼ş×ö¸ù×é¼ş£¬±ãÓÚĞı×ª*/
+	/**ç”¨ç®­å¤´ç»„ä»¶åšæ ¹ç»„ä»¶ï¼Œä¾¿äºæ—‹è½¬*/
 	UPROPERTY(EditAnywhere, Category = "Platform")
 	class UArrowComponent* ArrowDst;
 
-	/**Ö¸Ïòµ±Ç°Æ½Ì¨ÉÏµÄÍæ¼Ò*/
+	/**æŒ‡å‘å½“å‰å¹³å°ä¸Šçš„ç©å®¶*/
 	class AMyFirstGameCharacter* CurChar = nullptr;
 
-	/**Ö¸Ïò¸ÃÆ½Ì¨µÄÏÂÒ»¸öÆ½Ì¨µÄÖ¸Õë*/
+	/**æŒ‡å‘è¯¥å¹³å°çš„ä¸‹ä¸€ä¸ªå¹³å°çš„æŒ‡é’ˆ*/
 	ARunPlatform* NextPlatform = nullptr;
 
-	/**ÓÃÓÚÉ¾³ıÆ½Ì¨µÄÊ±¼ä¾ä±ú*/
+	/**ç”¨äºåˆ é™¤å¹³å°çš„æ—¶é—´å¥æŸ„*/
 	FTimerHandle DestoryHandle;
 
-	/**ÊÇ·ñ¿ªÊ¼ÇãĞ±*/
+	/**æ˜¯å¦å¼€å§‹å€¾æ–œ*/
 	uint8 IsSlope : 1;
 
-	/**ÊÇ·ñÔÚÉ¾³ıÖĞ*/
+	/**æ˜¯å¦åœ¨åˆ é™¤ä¸­*/
 	uint32 IsInDestroyed : 1;
 
-	/**ÇãĞ±µÄ½Ç¶È£¬»áÓĞ¶àÖÖÇé¿öµÄÇãĞ±*/
+	/**å€¾æ–œçš„è§’åº¦ï¼Œä¼šæœ‰å¤šç§æƒ…å†µçš„å€¾æ–œ*/
 	float SlopeAngle;
 
-	/**ÊÇ·ñ ²»ĞèÒªÍæ¼ÒĞı×ª*/
+	/**æ˜¯å¦ ä¸éœ€è¦ç©å®¶æ—‹è½¬*/
 	uint8 NoPlayerToSlope : 1;
 
-	/**ÇãĞ±µÄ×îÖÕ½Ç¶È*/
+	/**å€¾æ–œçš„æœ€ç»ˆè§’åº¦*/
 	FRotator DstRotation;
 
-	/*ÏÂÃæÁ½¸öÊÇÆ½Ì¨µÄËõ·Å±ÈÀı*/
-	float XScale = 2;  //Ä¬ÈÏºáÏòÊÇÁ½±¶
+	/*ä¸‹é¢ä¸¤ä¸ªæ˜¯å¹³å°çš„ç¼©æ”¾æ¯”ä¾‹*/
+	float XScale = 2;  //é»˜è®¤æ¨ªå‘æ˜¯ä¸¤å€
 
 	float YScale = 1;
 
-	/**Íæ¼ÒÕı³£Çé¿öÏÂµÄ×î´óËÙ¶È*/
+	/**ç©å®¶æ­£å¸¸æƒ…å†µä¸‹çš„æœ€å¤§é€Ÿåº¦*/
 	//float MaxAcclerateSpeed, MaxRunSpeed;
 
 	float PlatformLength, PlatformWidth;
 
-	/**Íæ¼ÒÔÚÆ½Ì¨ÉÏ»î¶¯µÄ°²È«Ê±¼ä£¬²»»áÎŞÒâÌø³öÅö×²ÌåºóÔì³ÉÆ½Ì¨×¹Âä*/
+	/**ç©å®¶åœ¨å¹³å°ä¸Šæ´»åŠ¨çš„å®‰å…¨æ—¶é—´ï¼Œä¸ä¼šæ— æ„è·³å‡ºç¢°æ’ä½“åé€ æˆå¹³å°å è½*/
 	float SafeStayTime;
 
-	/**Æ½Ì¨µÄ¾ø¶Ô·½Ïò£¬ÒÔÕıXÎªÇ°£¬¸ºYÎª×ó£¬ÕıYÎªÓÒ*/
+	/**å¹³å°çš„ç»å¯¹æ–¹å‘ï¼Œä»¥æ­£Xä¸ºå‰ï¼Œè´ŸYä¸ºå·¦ï¼Œæ­£Yä¸ºå³*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Platform")
 	TEnumAsByte<EPlatformDirection::Type> PlatDir;
 
-	/**´Ë¶à²¥´úÀíÓÃÓÚÔÚÆäÉÏÃæµÄ½±ÀøActorÏú»Ù*/
+	/**æ­¤å¤šæ’­ä»£ç†ç”¨äºåœ¨å…¶ä¸Šé¢çš„å¥–åŠ±Actoré”€æ¯*/
 	FPlatformDestory OnDestory;
 
 	/***/
@@ -78,29 +78,29 @@ public:
 
 	FFlyObstacleDestory FlyObstacleDestory;
 
-	/**µ±Ç°°ó¶¨µÄ·ÉĞĞÕÏ°­µÄÊıÄ¿*/
+	/**å½“å‰ç»‘å®šçš„é£è¡Œéšœç¢çš„æ•°ç›®*/
 	int32 CurBoundFlyObstacleNum = 0;
 
-	/**³õÊ¼Éú³ÉÆ½Ì¨µÄÎ»ÖÃ*/
+	/**åˆå§‹ç”Ÿæˆå¹³å°çš„ä½ç½®*/
 	FVector SpawnLocation;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")   //±ãÓÚµ÷ÊÔ
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")   //ä¾¿äºè°ƒè¯•
 	uint8 MoveToNew : 1;
 
-	/**ÒÆ¶¯µ½Í³Ò»Æ½Ì¨*/
+	/**ç§»åŠ¨åˆ°ç»Ÿä¸€å¹³å°*/
 	uint8 MoveToAll : 1;
 
-	/**ÒÆµ½Ô­±¾Ó¦ÔÚµÄÎ»ÖÃ*/
+	/**ç§»åˆ°åŸæœ¬åº”åœ¨çš„ä½ç½®*/
 	uint8 MoveToOrigin : 1;
 
-	/**ÊÇ·ñÔÚÆ½Ì¨¼¯ºÏ×´Ì¬*/
+	/**æ˜¯å¦åœ¨å¹³å°é›†åˆçŠ¶æ€*/
 	uint8 IsToAll : 1;
 
-	/**Î»ÒÆµÄÏà¶Ô¾àÀë*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")   //±ãÓÚµ÷ÊÔ
+	/**ä½ç§»çš„ç›¸å¯¹è·ç¦»*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform")   //ä¾¿äºè°ƒè¯•
 	FVector DeltaLoc;
 
-	/**Ïà¶ÔÓÚÇ°Ò»¸öÆ½Ì¨µÄÆ«ÒÆÎ»ÖÃ£¬ÓÃÓÚ»Ö¸´Æ½Ì¨¼¯ºÏÇ°µÄ×´Ì¬*/
+	/**ç›¸å¯¹äºå‰ä¸€ä¸ªå¹³å°çš„åç§»ä½ç½®ï¼Œç”¨äºæ¢å¤å¹³å°é›†åˆå‰çš„çŠ¶æ€*/
 	FVector DeltaLocToPrePlat;
 
 protected:
@@ -114,29 +114,29 @@ public:
 	virtual void BeginPlay()override;
 
 public:
-	/**Íæ¼Ò½øÈëµ±Ç°PlatformÖ´ĞĞµÄ²Ù×÷*/
+	/**ç©å®¶è¿›å…¥å½“å‰Platformæ‰§è¡Œçš„æ“ä½œ*/
 	UFUNCTION()
 	virtual void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 	
-	/**Íæ¼ÒÀë¿ªµ±Ç°Æ½Ì¨ËùÖ´ĞĞµÄ²Ù×÷£¬Èç¾ö¶¨½ÓÏÂÀ´Éú³ÉµÄPlatformÒÔ¼°É¾³ıµ±Ç°Platform*/
+	/**ç©å®¶ç¦»å¼€å½“å‰å¹³å°æ‰€æ‰§è¡Œçš„æ“ä½œï¼Œå¦‚å†³å®šæ¥ä¸‹æ¥ç”Ÿæˆçš„Platformä»¥åŠåˆ é™¤å½“å‰Platform*/
 	UFUNCTION()
 	virtual void EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	/**ÔÚÇãĞ±Ê±Ëù×öµÄ²Ù×÷*/
+	/**åœ¨å€¾æ–œæ—¶æ‰€åšçš„æ“ä½œ*/
 	void InSlope(float rate);
 
 	virtual void StartDestroy();
 
 	void DestroyActor();
 
-	/**»ñÈ¡Æ½Ì¨µÄ³¤¶È*/
+	/**è·å–å¹³å°çš„é•¿åº¦*/
 	FORCEINLINE float GetPlatformLength() { return PlatformLength; }
 
 	FORCEINLINE float GetPlatformWidth() { return PlatformWidth; }
 
 	FORCEINLINE UStaticMeshComponent* GetMesh() { return Platform; }
 
-	/**ÒÆÏòĞÂµÄÎ»ÖÃ*/
+	/**ç§»å‘æ–°çš„ä½ç½®*/
 	virtual void MoveToNewPos(const FVector DeltaDistance);
 
 	virtual void MoveToAllFun(const FVector DeltaDistance);
@@ -145,7 +145,7 @@ public:
 
 	virtual void MoveTick(float DeltaTime);
 
-	/**ÓÃÓÚÔÚ½±ÀøÍæ¼ÒËùÓĞÆ½Ì¨ºÏµ½Ò»Æğ*/
+	/**ç”¨äºåœ¨å¥–åŠ±ç©å®¶æ‰€æœ‰å¹³å°åˆåˆ°ä¸€èµ·*/
 	virtual void MoveToAllTick(float DeltaTime);
 
 	virtual void MoveToOriginTick(float DeltaTime);

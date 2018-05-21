@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -15,11 +15,11 @@ class MYFIRSTGAME_API ARunPlatform_Beam : public ARunPlatform
 	GENERATED_UCLASS_BODY()
 	
 public:
-	/**ÓÃÓÚºÍÉÁµçÇ¹Á¬½ÓµÄÁ£×ÓĞ§¹û*/
+	/**ç”¨äºå’Œé—ªç”µæªè¿æ¥çš„ç²’å­æ•ˆæœ*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Platform")
 	class UParticleSystem* AttachmentParticle;
 	
-	/*ÓÃÓÚ¼ì²âÁ¬½ÓµÄÅö×²Ìå*/
+	/*ç”¨äºæ£€æµ‹è¿æ¥çš„ç¢°æ’ä½“*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Platform")
 	class UBoxComponent* AttachmentTrigger;
 
@@ -28,32 +28,32 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Platform")
 	FName AttachSocket;
 
-	/**Ä¿±êÇ¹*/
+	/**ç›®æ ‡æª*/
 	class AWeapon_Gun* TargetGun;
 
-	/**Æ½Ì¨ÉÏÊÇ·ñĞèÒª¸üĞÂÉÁµç*/
+	/**å¹³å°ä¸Šæ˜¯å¦éœ€è¦æ›´æ–°é—ªç”µ*/
 	uint8 UpdateBeam : 1;
 
-	/**Ö¸ÏòÉú³ÉµÄÉÁµçÁ£×Ó*/
+	/**æŒ‡å‘ç”Ÿæˆçš„é—ªç”µç²’å­*/
 	class UParticleSystemComponent* BeamParticle;
 
 	class UCurveFloat* MoveCurve;
 
 	uint8 IsInMove : 1;
 
-	/**ÊÇ·ñÏòÉÏÒÆ¶¯*/
+	/**æ˜¯å¦å‘ä¸Šç§»åŠ¨*/
 	uint8 IsMoveUp : 1;
 	
-	/**ÒÆ¶¯µÄ·½Ïò*/
+	/**ç§»åŠ¨çš„æ–¹å‘*/
 	FVector MoveDir;
 
-	/**ÏÂÒ»¸öÆ½Ì¨µ½¸ÃÉÁµçÆ½Ì¨µÄÏà¶ÔÎ»ÖÃ*/
+	/**ä¸‹ä¸€ä¸ªå¹³å°åˆ°è¯¥é—ªç”µå¹³å°çš„ç›¸å¯¹ä½ç½®*/
 	FVector NextPlatToCur;
 
-	/**Æ½Ì¨ÔÚ±»µç´¥·¢Í£Ö¹ÒÆ¶¯Ê±µÄÎ»ÖÃ*/
+	/**å¹³å°åœ¨è¢«ç”µè§¦å‘åœæ­¢ç§»åŠ¨æ—¶çš„ä½ç½®*/
 	FVector StopLocation;
 
-	/**´æ´¢SpawnLocation*/
+	/**å­˜å‚¨SpawnLocation*/
 	FVector TempSpawnLocation;     
 
 	float MoveCycle = 0;
@@ -72,11 +72,11 @@ protected:
 	virtual void PostInitializeComponents()override;
 
 public:
-	/**ÉÁµç×Óµ¯½øÈëÅö×²¼ì²âÌå*/
+	/**é—ªç”µå­å¼¹è¿›å…¥ç¢°æ’æ£€æµ‹ä½“*/
 	UFUNCTION()
 	void AttachBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 	
-	/**ÒÆÏòÍæ¼ÒËùÔÚµÄÆ½Ì¨*/
+	/**ç§»å‘ç©å®¶æ‰€åœ¨çš„å¹³å°*/
 	void MoveToPlayerPlat();
 
 	void DeActiveBeam();

@@ -1,4 +1,4 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+ï»¿// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -10,7 +10,7 @@
 class ABonus;
 class AFlyObstacle;
 
-//Ä¬ÈÏÍæ¼ÒµÄÒÆ¶¯ËÙ¶È
+//é»˜è®¤ç©å®¶çš„ç§»åŠ¨é€Ÿåº¦
 const float MaxAcclerateSpeed = 850.f;
 const float MaxRunSpeed = 600.f;
 
@@ -42,11 +42,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TArray<TSubclassOf<class AWeapon_Gun>> Inventory;
 
-	//ÓÃÀ´´æ·Åµ±Ç°ÎäÆ÷¿âµÄÖ¸ÕëÊı×é
+	//ç”¨æ¥å­˜æ”¾å½“å‰æ­¦å™¨åº“çš„æŒ‡é’ˆæ•°ç»„
 	UPROPERTY()
 	TArray<class AWeapon_Gun*> InterInventory;
 
-	/**·ÅÎäÆ÷µÄ²å²Û*/
+	/**æ”¾æ­¦å™¨çš„æ’æ§½*/
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	FName WeaponSocket;
 
@@ -58,7 +58,7 @@ public:
 
 	class AWeapon_Gun* CurWeapon;
 
-	/**ÎäÆ÷ÊıÁ¿*/
+	/**æ­¦å™¨æ•°é‡*/
 	int32 WeaponNum;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Aim_Motage")
@@ -73,87 +73,87 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Aim_Motage")
 	UAnimMontage* CrounchToStandAim;
 
-	/**ÏÂÃæµÃÊÇÃé×¼Ê±µÃ¶¯×÷*/
+	/**ä¸‹é¢å¾—æ˜¯ç„å‡†æ—¶å¾—åŠ¨ä½œ*/
 	UPROPERTY(EditDefaultsOnly, Category = "Aim_Motage")
 	UAnimMontage* CrounchToStandAim_Ironsight;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Aim_Motage")
 	UAnimMontage* StandToCrounchAim_Ironsight;
 
-	/**ÕâÀïÖ÷ÒªÊÇĞŞ¸ÄÍæ¼Ò¼ÓËÙÊ±¶¯»­µÄ²¥·ÅËÙÂÊ*/
+	/**è¿™é‡Œä¸»è¦æ˜¯ä¿®æ”¹ç©å®¶åŠ é€Ÿæ—¶åŠ¨ç”»çš„æ’­æ”¾é€Ÿç‡*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aim_Motage")
 	float RunRate;
 
-	/**ÊÇ·ñÔÚÏò×ó×ª*/
+	/**æ˜¯å¦åœ¨å‘å·¦è½¬*/
 	uint8 IsToRight : 1;
 
-	/**ÊÇ·ñÔÚ»·¹Ë*/
+	/**æ˜¯å¦åœ¨ç¯é¡¾*/
 	uint8 IsViewAround : 1;
 
-	/**¿ªÃÅ*/
+	/**å¼€é—¨*/
 	uint8 OpenTheDoor : 1;
 
-	/**¹ØÃÅ*/
+	/**å…³é—¨*/
 	uint8 CloseTheDoor : 1;
 
-	/**ÊÇ·ñÔÚÏÂ¶××´Ì¬*/
+	/**æ˜¯å¦åœ¨ä¸‹è¹²çŠ¶æ€*/
 	uint8 IsInCrounch : 1;
 
-	/**ÊÇ·ñ´¦ÓÚÕ¾Á¢µ½ÏÂ¶×¶¯×÷Ö®ÖĞ*/
+	/**æ˜¯å¦å¤„äºç«™ç«‹åˆ°ä¸‹è¹²åŠ¨ä½œä¹‹ä¸­*/
 	uint8 IsInStandToCrounch : 1;
 
-	/**ÊÇ·ñ´¦ÓÚÏÂ¶×µ½Õ¾Á¢¶¯×÷Ö®ÖĞ*/
+	/**æ˜¯å¦å¤„äºä¸‹è¹²åˆ°ç«™ç«‹åŠ¨ä½œä¹‹ä¸­*/
 	uint8 IsInCrounchToStand : 1;
 
-	/**ÊÇ·ñÔÚ¼ÓËÙ*/
+	/**æ˜¯å¦åœ¨åŠ é€Ÿ*/
 	uint8 IsInAccelerate : 1;
 
-	/**Íæ¼ÒÒÆ¶¯ÖĞ±ä»¯ºóµÄËÙ¶È£¨ÔÚÆ½Ì¨ÉÏ£©*/
+	/**ç©å®¶ç§»åŠ¨ä¸­å˜åŒ–åçš„é€Ÿåº¦ï¼ˆåœ¨å¹³å°ä¸Šï¼‰*/
 	float CurMaxRunSpeed, CurMaxAcclerateSpeed;
 
-	/**Õ¾Á¢¡¢¶×ÏÂ¶¯»­Ê±¼ä*/
+	/**ç«™ç«‹ã€è¹²ä¸‹åŠ¨ç”»æ—¶é—´*/
 	float ActionAnimTime = 0.f;
 
 	float CurActionTime;
 	
-	/**ÊÇ·ñÔÚÃÅµÄ¼ì²âÇøÄÚ*/
+	/**æ˜¯å¦åœ¨é—¨çš„æ£€æµ‹åŒºå†…*/
 	uint8 IsInDoorCollision : 1;
 
-	/**¼ì²âÇøÓòÄÚµÄÃÅ´¦ÓÚ¿ªÆô×´Ì¬*/
+	/**æ£€æµ‹åŒºåŸŸå†…çš„é—¨å¤„äºå¼€å¯çŠ¶æ€*/
 	uint8 IsInOpen : 1;
 
-	/**¼ì²âÇøÓòÄÚµÄÃÅ´¦ÓÚ¹Ø±Õ×´Ì¬*/
+	/**æ£€æµ‹åŒºåŸŸå†…çš„é—¨å¤„äºå…³é—­çŠ¶æ€*/
 	uint8 IsInClose : 1;
 
 	/***/
 	float AddYaw = 0.f;
 
-	/**Íæ¼ÒÊÇ·ñÔÚÃé×¼×´Ì¬*/
+	/**ç©å®¶æ˜¯å¦åœ¨ç„å‡†çŠ¶æ€*/
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Anim_Space")
 	uint8 IsTargeting : 1;
 
-	/**Íæ¼Òµ±Ç°ÎäÆ÷*/
+	/**ç©å®¶å½“å‰æ­¦å™¨*/
 	TEnumAsByte<EWeaponType::Type> CurrentWeaponType;
 
-	/**Íæ¼Òµ±Ç°ÊÇ·ñÔÚÉä»÷*/
+	/**ç©å®¶å½“å‰æ˜¯å¦åœ¨å°„å‡»*/
 	uint8 IsShooting : 1;
 
-	/**µ±Ç°ÎäÆ÷ÉäËÙ*/
+	/**å½“å‰æ­¦å™¨å°„é€Ÿ*/
 	uint8 ShootSpeed;
 
-	/**ÎäÆ÷Éä»÷µÄ¼ä¸ô*/
+	/**æ­¦å™¨å°„å‡»çš„é—´éš”*/
 	float ShootInternal;
 
-	/**Íæ¼ÒÄÜ·ñ¿ªÇ¹*/
+	/**ç©å®¶èƒ½å¦å¼€æª*/
 	uint8 CanShoot : 1;
 
-	/**ÊÇ·ñ¿ªÊ¼Æ½»¬»Ö¸´ControllerµÄ·½Ïò£¬ÕâÊÇÔÚ»·¹ËºóÊÓ½Ç·¢Éú±ä»¯Ê±µÄ²Ù×÷*/
+	/**æ˜¯å¦å¼€å§‹å¹³æ»‘æ¢å¤Controllerçš„æ–¹å‘ï¼Œè¿™æ˜¯åœ¨ç¯é¡¾åè§†è§’å‘ç”Ÿå˜åŒ–æ—¶çš„æ“ä½œ*/
 	uint8 IsSmoothController : 1;
 
-	/**ËÙ¶ÈÔöÁ¿£¬¿ÉÄÜ»áÓÃÓÚËÙ¶ÈÌáÉı½±Àø*/
+	/**é€Ÿåº¦å¢é‡ï¼Œå¯èƒ½ä¼šç”¨äºé€Ÿåº¦æå‡å¥–åŠ±*/
 	float AddedSpeed;
 
-	/**²âÊÔPDI½Ó¿Ú»ñÈ¡*/
+	/**æµ‹è¯•PDIæ¥å£è·å–*/
 	class UDynamicMesh* Test;
 
 protected:
@@ -167,16 +167,16 @@ protected:
 	/** Called for side to side input */
 	void MoveRight(float Value);
 
-	/**½øÈë»·¹ËËÄÖÜ×´Ì¬*/
+	/**è¿›å…¥ç¯é¡¾å››å‘¨çŠ¶æ€*/
 	void ViewAround();
 
-	/**Í£Ö¹»·¹Ë*/
+	/**åœæ­¢ç¯é¡¾*/
 	void StopViewAround();
 
-	/**Íæ¼Ò½øÈë¼ÓËÙ×´Ì¬*/
+	/**ç©å®¶è¿›å…¥åŠ é€ŸçŠ¶æ€*/
 	void StartAccelerate();
 
-	/**Í£Ö¹¼ÓËÙ*/
+	/**åœæ­¢åŠ é€Ÿ*/
 	void StopAccelerate();
 
 	/** 
@@ -202,7 +202,7 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
 
-	/**Íæ¼ÒÉú³É/ÓÎÏ·Ö´ĞĞÊ±ËùÖ´ĞĞµÄ²Ù×÷*/
+	/**ç©å®¶ç”Ÿæˆ/æ¸¸æˆæ‰§è¡Œæ—¶æ‰€æ‰§è¡Œçš„æ“ä½œ*/
 	virtual void PostInitializeComponents()override;
 
 public:
@@ -220,73 +220,73 @@ public:
 
 	virtual void Destroyed()override;
 
-	///Íæ¼Ò¶¯×÷Ïà¹Ø£¬¿ªÃÅ¡¢¹Û²ìÊÓ½Ç
+	///ç©å®¶åŠ¨ä½œç›¸å…³ï¼Œå¼€é—¨ã€è§‚å¯Ÿè§†è§’
 	void UpdateStandCharacter();
 
 	bool IsCharacterViewAround()
 	{
 		return IsViewAround;
 	}
-	/**²Ù×÷ÃÅ*/
+	/**æ“ä½œé—¨*/
 	void OperateDoor();
 
-	/**Àë¿ªÃÅ¼ì²âÇøºó½ûÖ¹¿ªÃÅĞĞÎª*/
+	/**ç¦»å¼€é—¨æ£€æµ‹åŒºåç¦æ­¢å¼€é—¨è¡Œä¸º*/
 	void AvoidOpenDoor();
 
 	void ToggleCrounchStat();
 
 
-	//ÓÃÓÚ¶¯»­×´Ì¬»ú
+	//ç”¨äºåŠ¨ç”»çŠ¶æ€æœº
 	UFUNCTION(BlueprintPure, Category = "Pawn")
 	bool IsPlayerInCrounch() { return IsInCrounch; }
 
 	FORCEINLINE	float AdjustDegree(const float in)const;
 	
-	///ÏÂÃæÊÇÍæ¼ÒÉä»÷Ïà¹ØÄÚÈİ
+	///ä¸‹é¢æ˜¯ç©å®¶å°„å‡»ç›¸å…³å†…å®¹
 	void StartShoot() { IsShooting = true; }
 
 	void StopShoot() { IsShooting = false; }
 
 	/**
-	 *  ¼ì²âµ±Ç°×¼ĞÄÊÇ·ñ¶Ô×¼Ä¿±ê
-	 *  @Param Distance ¼ì²âµÄ¾àÀë
+	 *  æ£€æµ‹å½“å‰å‡†å¿ƒæ˜¯å¦å¯¹å‡†ç›®æ ‡
+	 *  @Param Distance æ£€æµ‹çš„è·ç¦»
 	 */
 	FHitResult QueryCrossHair(float Distance);
 
-	/**Éä»÷*/
+	/**å°„å‡»*/
 	void Shoot(float AimRate);
 
-	/**½øÈëÃé×¼×´Ì¬*/
+	/**è¿›å…¥ç„å‡†çŠ¶æ€*/
 	void Targeting();
 
-	/**Í£Ö¹Ãé×¼*/
+	/**åœæ­¢ç„å‡†*/
 	void StopTargeting();
 
 	bool PlayerIsTargeting() { return IsTargeting; }
 
-	/**·¢ÉäÅ×ÉäÎï×Óµ¯*/
+	/**å‘å°„æŠ›å°„ç‰©å­å¼¹*/
 	void Fire();
 
-	/**Ñ¡ÔòÎäÆ÷*/
+	/**é€‰åˆ™æ­¦å™¨*/
 	void NextWeapon();
 
 	void PreWeapon();
 
 	void EquipWeapon(AWeapon_Gun* const CurWeapon);
 
-	/*°ÑÎäÆ÷ÊÕÆğ·Åµ½±³ºó*/
+	/*æŠŠæ­¦å™¨æ”¶èµ·æ”¾åˆ°èƒŒå*/
 	void PackupWeapon(AWeapon_Gun* PickupWeapon);
 
-	///ÏÂÃæÊÇ¶¯»­Ïà¹Ø
-	/**²¥·ÅÃÉÌ«Ææ¶¯»­£¬·µ»Ø¶¯»­Ê±¼ä*/
+	///ä¸‹é¢æ˜¯åŠ¨ç”»ç›¸å…³
+	/**æ’­æ”¾è’™å¤ªå¥‡åŠ¨ç”»ï¼Œè¿”å›åŠ¨ç”»æ—¶é—´*/
 	float PlayAnim(float rate, UAnimMontage* Anim);
 
 	float ComputeSuitRate(int8 CurShootSpeed);
 
-	/**µÚÈıÈË³ÆÖĞµÄÉä»÷ÈİÒ×Æ«ÒÆ£¬ÕâÀï¾Í¼ÆËãÉä»÷µÄ½Ç¶È£¬×î´ó³Ì¶ÈµÄÓë×¼ĞÄÊÊÅä*/
+	/**ç¬¬ä¸‰äººç§°ä¸­çš„å°„å‡»å®¹æ˜“åç§»ï¼Œè¿™é‡Œå°±è®¡ç®—å°„å‡»çš„è§’åº¦ï¼Œæœ€å¤§ç¨‹åº¦çš„ä¸å‡†å¿ƒé€‚é…*/
 	FVector ComputeShootDir(float AdjustDistance);
 
-	///ÏÂÃæÊÇÍæ¼ÒµÄ½±ÀøÈç·ÖÊı¡¢ËÙ¶È
+	///ä¸‹é¢æ˜¯ç©å®¶çš„å¥–åŠ±å¦‚åˆ†æ•°ã€é€Ÿåº¦
 	void ApplyBonus(class ABonus* BonusActor);
 
 	void AddScore(class ABonus* BonusActor);

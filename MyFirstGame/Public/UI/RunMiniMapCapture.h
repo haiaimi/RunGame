@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -8,7 +8,7 @@
 #include "RunMiniMapCapture.generated.h"
 
 /**
- *  ²¶×½Ğ¡µØÍ¼»­Ãæ
+ *  æ•æ‰å°åœ°å›¾ç”»é¢
  */
 UCLASS()
 class MYFIRSTGAME_API ARunMiniMapCapture : public ASceneCapture2D 
@@ -27,20 +27,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MiniMap, meta = (ClampMin = "0", ClampMax = "1024"))
 	int32 MiniMapHeight;
 
-	/**²¶»ñÉãÏñ»úµÄFOV*/
+	/**æ•è·æ‘„åƒæœºçš„FOV*/
 	float CameraFOV;
 
-	/**ÉãÏñ»úÎ»ÖÃ*/
+	/**æ‘„åƒæœºä½ç½®*/
 	FVector CameraLoc;
 
 	class UTextureRenderTarget2D* MiniMapRenderTarget;
 
 	TEnumAsByte<EPlatformDirection::Type> CachedDir;
 
-	/**¾µÍ·Ğı×ªµÄÄ¿±ê½Ç¶È*/
+	/**é•œå¤´æ—‹è½¬çš„ç›®æ ‡è§’åº¦*/
 	FRotator DstRotator;
 
-	/**¸ÃÖµ»áÓÃÓÚHUDÖĞÈËÎï·½Ïò*/
+	/**è¯¥å€¼ä¼šç”¨äºHUDä¸­äººç‰©æ–¹å‘*/
 	float RotatorYaw;
 
 	float CachedRotatorYaw;
@@ -48,7 +48,7 @@ public:
 	uint32 bUpdateRot : 1;
 	
 public:
-	/**ÉèÖÃ²¶»ñÏà»úµÄÎ»ÖÃ*/
+	/**è®¾ç½®æ•è·ç›¸æœºçš„ä½ç½®*/
 	void SetSceneCaptureLocation(FVector Loc);
 
 	void SetSceneCaptureDir(EPlatformDirection::Type CurDir);

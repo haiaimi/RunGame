@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -8,7 +8,7 @@
 
 class ABoomActor;
 /**
- * ÕâÊÇÍ¨¹ıÉä»÷²Å»áĞı×ªµÄÆ½Ì¨
+ * è¿™æ˜¯é€šè¿‡å°„å‡»æ‰ä¼šæ—‹è½¬çš„å¹³å°
  */
 UCLASS()
 class MYFIRSTGAME_API ARunPlatform_Shoot : public ARunPlatform
@@ -19,10 +19,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Platform")
 	TSubclassOf<ABoomActor> Trigger;
 
-	/**Ö¸ÏòÒÑÉú³ÉµÄ±¬Õ¨Îï*/
+	/**æŒ‡å‘å·²ç”Ÿæˆçš„çˆ†ç‚¸ç‰©*/
 	ABoomActor* AimTrigger;
 
-	/**Éú³ÉµÄÖ÷¶¯±¬Õ¨Îï*/
+	/**ç”Ÿæˆçš„ä¸»åŠ¨çˆ†ç‚¸ç‰©*/
 	ABoomActor* InitiativeBoom;
 
 protected:

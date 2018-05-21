@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "RunPlatform_Shoot.h"
 #include "BoomActor.h"
@@ -17,7 +17,7 @@ void ARunPlatform_Shoot::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	/*±¬Õ¨´¥·¢Æ÷¾Í·ÅÔÚÁ½¸öÆ½Ì¨µÄÖÐ¼ä*/
+	/*çˆ†ç‚¸è§¦å‘å™¨å°±æ”¾åœ¨ä¸¤ä¸ªå¹³å°çš„ä¸­é—´*/
 	if (Trigger)
 	{
 		const FVector SpawnDirX = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::X);
@@ -27,7 +27,7 @@ void ARunPlatform_Shoot::PostInitializeComponents()
 
 		AimTrigger = GetWorld()->SpawnActor<ABoomActor>(Trigger, FTransform(FRotator::ZeroRotator, SpawnLocation));
 		AimTrigger->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
-		//ÏÂÃæ¾ÍÉú³É¾ßÓÐÎïÀíÄ£ÄâµÄ±¬Õ¨Îï
+		//ä¸‹é¢å°±ç”Ÿæˆå…·æœ‰ç‰©ç†æ¨¡æ‹Ÿçš„çˆ†ç‚¸ç‰©
 		InitiativeBoom = GetWorld()->SpawnActorDeferred<ABoomActor>(Trigger, FTransform(FRotator::ZeroRotator, GetActorLocation() + SpawnDirY * GetPlatformWidth() / 2));
 		if (InitiativeBoom)
 		{
@@ -40,9 +40,9 @@ void ARunPlatform_Shoot::PostInitializeComponents()
 
 void ARunPlatform_Shoot::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
 {
-	//Èç¹û±¬Õ¨¾Í¿ªÊ¼ÇãÐ±
+	//å¦‚æžœçˆ†ç‚¸å°±å¼€å§‹å€¾æ–œ
 	if (AimTrigger != nullptr)
-		if (AimTrigger->IsBoom && !AimTrigger->CanBoom && InitiativeBoom != NULL)   //CanBoomÊÇÓÃÀ´È·¶¨BoomActorÊÇ·ñÒÑ¾­Õ¨¹ý
+		if (AimTrigger->IsBoom && !AimTrigger->CanBoom && InitiativeBoom != NULL)   //CanBoomæ˜¯ç”¨æ¥ç¡®å®šBoomActoræ˜¯å¦å·²ç»ç‚¸è¿‡
 		{
 			IsSlope = true;
 			InitiativeBoom->StartSimulatePhysic();
@@ -59,7 +59,7 @@ void ARunPlatform_Shoot::MoveToAllTick(float DeltaTime)
 
 	//if (MoveToAll && !MoveToNew)
 	//{
-	//	if (GetActorRotation().Pitch < -1.f)   //Èç¹û¸ÃÆ½Ì¨ÒÑ¾­Ðý×ª¹ý
+	//	if (GetActorRotation().Pitch < -1.f)   //å¦‚æžœè¯¥å¹³å°å·²ç»æ—‹è½¬è¿‡
 	//	{
 	//		const float NewPitch = FMath::FInterpTo(GetActorRotation().Pitch, 0, DeltaTime, 10.f);
 	//		SetActorRotation(FRotator(NewPitch, GetActorRotation().Yaw, GetActorRotation().Roll));
@@ -71,7 +71,7 @@ void ARunPlatform_Shoot::StartDestroy()
 {
 	Super::StartDestroy();
 
-	//ÓÃÓÚÇå³ýÁ½¸öÕ¨µ¯
+	//ç”¨äºŽæ¸…é™¤ä¸¤ä¸ªç‚¸å¼¹
 	if (AimTrigger != nullptr)
 		AimTrigger->DestroyActor();
 

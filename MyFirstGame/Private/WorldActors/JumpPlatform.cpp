@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "JumpPlatform.h"
 #include "Components/StaticMeshComponent.h"
@@ -11,7 +11,7 @@
 
 AJumpPlatform::AJumpPlatform(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitializer)
 {
-	NoPlayerToSlope = true;     //ĞèÒªÍæ¼Ò´¥·¢Ğı×ª
+	NoPlayerToSlope = true;     //éœ€è¦ç©å®¶è§¦å‘æ—‹è½¬
 	XScale = 1.f;
 	YScale = 1.f;
 	SlopeAngle = 30.f;
@@ -65,10 +65,10 @@ void AJumpPlatform::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	if (Cast<AMyFirstGameCharacter>(OtherActor))
 	{
 		AMyFirstGameCharacter* MGC = Cast<AMyFirstGameCharacter>(OtherActor);
-		CurChar = MGC;     //ÉèÖÃµ±Ç°Æ½Ì¨ÉÏµÄÍæ¼Ò
+		CurChar = MGC;     //è®¾ç½®å½“å‰å¹³å°ä¸Šçš„ç©å®¶
 		CurChar->AddedSpeed = 199.f;
 		IsSlope = true;
-		GetWorldTimerManager().SetTimer(ToFall, this, &AJumpPlatform::StartDestroy, 2.f);    //Á½Ãëºó×¹Âä
+		GetWorldTimerManager().SetTimer(ToFall, this, &AJumpPlatform::StartDestroy, 2.f);    //ä¸¤ç§’åå è½
 	}
 }
 
@@ -77,7 +77,7 @@ void AJumpPlatform::EndOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 	if (Cast<AMyFirstGameCharacter>(OtherActor) && CurChar)
 	{
 		IsSlope = false;
-		QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);  //ÕâÀïÒª°Ñ¸ÃÆ½Ì¨µÄÅö×²Ìå¼ì²â¹Ø±Õ
+		QueryBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);  //è¿™é‡Œè¦æŠŠè¯¥å¹³å°çš„ç¢°æ’ä½“æ£€æµ‹å…³é—­
 		CurChar->AddedSpeed = 0.f;
 		CurChar = nullptr;
 	}
@@ -87,7 +87,7 @@ void AJumpPlatform::StartDestroy()
 {
 	Super::StartDestroy();
 
-	//Öğ½¥É¾³ıÖÜÎ§µÄÌøÔ¾Æ½Ì¨
+	//é€æ¸åˆ é™¤å‘¨å›´çš„è·³è·ƒå¹³å°
 	if (PrePlatform != nullptr && !PrePlatform->IsInDestroyed)
 	{
 		PrePlatform->NextPlatform = nullptr;
@@ -102,7 +102,7 @@ void AJumpPlatform::StartDestroy()
 		FTimerHandle NextFall;
 		FTimerDelegate Delegate;
 		
-		Delegate.BindLambda([=]() {JumpPlat->StartDestroy(); });   //°ó¶¨Lambda ÄäÃûº¯Êı
+		Delegate.BindLambda([=]() {JumpPlat->StartDestroy(); });   //ç»‘å®šLambda åŒ¿åå‡½æ•°
 		GetWorldTimerManager().SetTimer(NextFall, Delegate, 2.f, false);
 	}
 }

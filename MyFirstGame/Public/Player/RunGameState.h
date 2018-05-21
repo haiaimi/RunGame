@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -25,14 +25,14 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FRemind RemindDelegate;
 
-	/**ÓÃÓÚ×ÖÌå·Å´ó*/
+	/**ç”¨äºå­—ä½“æ”¾å¤§*/
 	UPROPERTY(BlueprintAssignable)
 	FEMphasizeScore EmphasizeScoreDelegate;
 
 	UPROPERTY(BlueprintAssignable)
 	FNotifyTime NotifyTimeDlegate;
 
-	/**Íæ¼ÒµÃ·Ö*/
+	/**ç©å®¶å¾—åˆ†*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	float PlayerScore;
 	
@@ -42,18 +42,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	float PlayerDistance;
 
-	/**»ñÈ¡½±ÀøÊıÄ¿*/
+	/**è·å–å¥–åŠ±æ•°ç›®*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	int32 Bonus_Score_Num;
 
-	/**ÓÃÓÚÍæ¼Ò´æ»îÊ±¼ä¼ÆÊ±*/
+	/**ç”¨äºç©å®¶å­˜æ´»æ—¶é—´è®¡æ—¶*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	FTimerHandle GameTimer;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	float HasSurvivedTime;
 
-	/**Ğ¡µØÍ¼²¶×½*/
+	/**å°åœ°å›¾æ•æ‰*/
 	class ARunMiniMapCapture* MiniMapCapture;
 
 	class AMyFirstGameCharacter* CharacterRef;
@@ -75,7 +75,7 @@ public:
 
 	void RestartGame();
 
-	/**ÕûÊıÊ±¼äÊ±½øĞĞÍ¨Öª*/
+	/**æ•´æ•°æ—¶é—´æ—¶è¿›è¡Œé€šçŸ¥*/
 	void NotifyIntegerMinutes();
 
 	void SetCaptureDir(EPlatformDirection::Type CurDir);

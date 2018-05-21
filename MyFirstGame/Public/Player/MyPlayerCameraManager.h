@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -28,7 +28,7 @@ protected:
 public:
 	virtual void BeginPlay()override;
 
-	/**ÓÃÓÚUI±³¾°Ä£ºý*/
+	/**ç”¨äºŽUIèƒŒæ™¯æ¨¡ç³Š*/
 	UFUNCTION(BlueprintCallable)
 	void StartGaussianUI();
 

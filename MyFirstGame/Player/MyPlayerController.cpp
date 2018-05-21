@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyPlayerController.h"
 #include "MyPlayerCameraManager.h"
@@ -33,6 +33,8 @@
 #include "WorldCollision.h"
 #include "Common/RunGameHelper.h"
 #include "DynamicMesh.h"
+#include "IImageWrapper.h"
+#include "Array.h"
 
 static const float ShootPlatformAngle = 30.f;
 static const FString RSaveGameSlot("RSaveGameSlot");
@@ -63,7 +65,7 @@ AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitial
 	CurConnectedPlat = nullptr;
 	bSpawnedJumpPlat = false;
 	FlyObstacleSpawnInterval = -1;
-	MaxFlyObstacles = 1;     //ÓÎÏ·¿ªÊ¼Ê±·ÉĞĞÕÏ°­ÊıÎª0
+	MaxFlyObstacles = 1;     //æ¸¸æˆå¼€å§‹æ—¶é£è¡Œéšœç¢æ•°ä¸º0
 	CurSpawnedShootPlats = 0;
 	IsInPause = 0;
 	SpawnNoObsBonusParam = 0;
@@ -83,7 +85,7 @@ void AMyPlayerController::SetupInputComponent()
 void AMyPlayerController::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	PlatformArray.SetNum(15);       //ÉèÖÃÆ½Ì¨Êı×éµÄÈİÁ¿
+	PlatformArray.SetNum(15);       //è®¾ç½®å¹³å°æ•°ç»„çš„å®¹é‡
 	FlyObstacleArray.SetNum(0);
 
 	InitPlatforms();
@@ -95,7 +97,7 @@ void AMyPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	RunGameHelper::LoadAsset(this);
-	//²âÊÔ×óÒÆÓÒÒÆµÄ²¹Î»Çé¿ö
+	//æµ‹è¯•å·¦ç§»å³ç§»çš„è¡¥ä½æƒ…å†µ
 	/*uint32 a = 1;
 	a = a << 10;
 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::FormatAsNumber(a));*/
@@ -111,10 +113,10 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 		if (LastPlatformRef != nullptr)
 		{
 			if (TempPlatform != CurPlatform && !PlatformArray.Last()->MoveToNew && CurPlatform != nullptr 
-				&& !PlatformArray.Last()->MoveToOrigin && !PlatformArray.Last()->MoveToAll  //Íæ¼ÒËùÔÚÆ½Ì¨·¢Éú±ä»¯£¬²¢ÇÒ×îºóÒ»¸öÆ½Ì¨²»ÔÚÒÆ¶¯Ê±
-				&& !(PlatformArray.Last()->IsToAll && !IsToAll))  //Æ½Ì¨´¦ÓÚ¹éÎ»¶¯»­ÏÂ£¬²»Éú³ÉÆ½Ì¨
+				&& !PlatformArray.Last()->MoveToOrigin && !PlatformArray.Last()->MoveToAll  //ç©å®¶æ‰€åœ¨å¹³å°å‘ç”Ÿå˜åŒ–ï¼Œå¹¶ä¸”æœ€åä¸€ä¸ªå¹³å°ä¸åœ¨ç§»åŠ¨æ—¶
+				&& !(PlatformArray.Last()->IsToAll && !IsToAll))  //å¹³å°å¤„äºå½’ä½åŠ¨ç”»ä¸‹ï¼Œä¸ç”Ÿæˆå¹³å°
 			{
-				int32 CurPlatIndex = PlatformArray.Find(CurPlatform);     //µ±Ç°ËùÔÚÆ½Ì¨ÔÚÊı×éÖĞµÄÎ»ÖÃ
+				int32 CurPlatIndex = PlatformArray.Find(CurPlatform);     //å½“å‰æ‰€åœ¨å¹³å°åœ¨æ•°ç»„ä¸­çš„ä½ç½®
 				
 				ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
 
@@ -148,14 +150,14 @@ void AMyPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, F
 							}
 							else
 							{
-								float FallDistance = PlatformArray[i]->GetActorLocation().Z - MC->GetActorLocation().Z;      //Íæ¼ÒÏÂÂä¾àÀë£¬³¬¹ıÒ»¶¨¾àÀëÔòÈÏÎªÓÎÏ·½áÊø
+								float FallDistance = PlatformArray[i]->GetActorLocation().Z - MC->GetActorLocation().Z;      //ç©å®¶ä¸‹è½è·ç¦»ï¼Œè¶…è¿‡ä¸€å®šè·ç¦»åˆ™è®¤ä¸ºæ¸¸æˆç»“æŸ
 								if (FallDistance > 2000.f)
 								{
 									bIsGameEnd = true;
 									TogglePauseStat();
-									SaveGame();      //ÓÎÏ·½áÊø£¬ÔİÍ£²¢±£´æÓÎÏ·Êı¾İ
+									SaveGame();      //æ¸¸æˆç»“æŸï¼Œæš‚åœå¹¶ä¿å­˜æ¸¸æˆæ•°æ®
 								}
-									break;   //½áÊøÑ­»·
+									break;   //ç»“æŸå¾ªç¯
 							}
 					}
 				}
@@ -173,38 +175,38 @@ void AMyPlayerController::Destroyed()
 void AMyPlayerController::InitPlatforms()
 {
 	CurPlatform = nullptr;
-	//Çå¿ÕÊı×éÖĞµÄÆ½Ì¨
+	//æ¸…ç©ºæ•°ç»„ä¸­çš„å¹³å°
 	for (auto iter : PlatformArray)
 	{
 		if (iter != nullptr)
 			iter->StartDestroy();
 	}
 
-	// Ïú»ÙËùÓĞÒÑ´æÔÚµÄ·ÉĞĞÕÏ°­
+	// é”€æ¯æ‰€æœ‰å·²å­˜åœ¨çš„é£è¡Œéšœç¢
 	for (TActorIterator<AFlyObstacle> It(GetWorld()); It; ++It)
 	{
 		if (*It)
 			(*It)->StartDestroy();
 	}
-	FlyObstacleArray.Reset(0); //Çå¿Õ·ÉĞĞÕÏ°­Êı×é
+	FlyObstacleArray.Reset(0); //æ¸…ç©ºé£è¡Œéšœç¢æ•°ç»„
 
-	//»ñÈ¡ÓÎÏ·ÊÀ½çÖĞÔ¤ÉèµÄÒ»¸öÆ½Ì¨£¬£¨Ä¬ÈÏµÄÒ»¸ö£©
+	//è·å–æ¸¸æˆä¸–ç•Œä¸­é¢„è®¾çš„ä¸€ä¸ªå¹³å°ï¼Œï¼ˆé»˜è®¤çš„ä¸€ä¸ªï¼‰
 	for (TActorIterator<ARunPlatform> It(GetWorld()); It; ++It)
 	{
 		if ((*It)->Tags.Num())
 		{
-			if ((*It)->ActorHasTag(FName("StartPlatform")) && !(*It)->IsInDestroyed)   //Èç¹ûÊÇÖ¸¶¨µÄ¿ªÊ¼Æ½Ì¨¾Í¿ªÊ¼
+			if ((*It)->ActorHasTag(FName("StartPlatform")) && !(*It)->IsInDestroyed)   //å¦‚æœæ˜¯æŒ‡å®šçš„å¼€å§‹å¹³å°å°±å¼€å§‹
 			{
 				CurPlatform = *It;
 				TempPlatform = CurPlatform;
-				PlatformArray[0] = *It;  //Êı×éµÄµÚÒ»¸ö¾ÍÊÇÄ¬ÈÏÆ½Ì¨
+				PlatformArray[0] = *It;  //æ•°ç»„çš„ç¬¬ä¸€ä¸ªå°±æ˜¯é»˜è®¤å¹³å°
 										
 				break;
 			}
 		}
 	}
 
-	if (!CurPlatform)   //Ã»ÓĞÕÒµ½ÊÊºÏµÄÆ½Ì¨¾ÍÖØĞÂÉú³ÉÒ»¸ö
+	if (!CurPlatform)   //æ²¡æœ‰æ‰¾åˆ°é€‚åˆçš„å¹³å°å°±é‡æ–°ç”Ÿæˆä¸€ä¸ª
 	{
 		ARunPlatform* Spawned = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, FVector(3310.f, 1330.f, 20.f), FRotator(0.f, 180.f, 0.f));
 		if (Spawned)
@@ -215,7 +217,7 @@ void AMyPlayerController::InitPlatforms()
 		}
 	}
 
-	//ÏÂÃæÊÇÖğ²½Éú³É10¸öÆ½Ì¨
+	//ä¸‹é¢æ˜¯é€æ­¥ç”Ÿæˆ10ä¸ªå¹³å°
 	int32 ArrayNum = PlatformArray.Num();
 	for (int32 i = 1; i < ArrayNum; i++)
 	{
@@ -232,10 +234,10 @@ void AMyPlayerController::InitPlatforms()
 
 void AMyPlayerController::RestartGame()
 {
-	//²éÕÒPlayerStart
+	//æŸ¥æ‰¾PlayerStart
 	APlayerStart* Start = nullptr;
 	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
-	{	//Ê¹ÓÃµÚÒ»¸öÕÒµ½µÄStart
+	{	//ä½¿ç”¨ç¬¬ä¸€ä¸ªæ‰¾åˆ°çš„Start
 		if (*It)
 		{
 			Start = *It;
@@ -248,7 +250,7 @@ void AMyPlayerController::RestartGame()
 		if (*It && (*It)->ActorHasTag(FName("StartPoint")))
 		{
 			UE_LOG(LogRunGame, Log, TEXT("Reset Door"))
-			(*It)->bReset = true;      //ÖØÖÃÃÅµÄ×´Ì¬
+			(*It)->bReset = true;      //é‡ç½®é—¨çš„çŠ¶æ€
 		}
 	}
 
@@ -261,18 +263,18 @@ void AMyPlayerController::RestartGame()
 	if (Start && GetPawn())
 	{
 		AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
-		MC->TeleportTo(Start->GetActorLocation(), Start->GetActorRotation());     //°ÑÍæ¼ÒÒÆµ½¿ªÊ¼µÄÎ»ÖÃ
+		MC->TeleportTo(Start->GetActorLocation(), Start->GetActorRotation());     //æŠŠç©å®¶ç§»åˆ°å¼€å§‹çš„ä½ç½®
 		MC->IsInAccelerate = false;
 		MC->IsTargeting = false;
 
-		//»Ö¸´Íæ¼ÒËÙ¶È
+		//æ¢å¤ç©å®¶é€Ÿåº¦
 		MC->IsInAccelerate = false;
 		MC->CurMaxAcclerateSpeed = MaxAcclerateSpeed;
 		MC->CurMaxRunSpeed = MaxRunSpeed;
 		MC->AddedSpeed = 0.f;
 		MC->GetCharacterMovement()->ClearAccumulatedForces();
 
-		//Èç¹ûÍæ¼ÒÔÚÏÂ¶××´Ì¬¾Í»Ö¸´Õ¾Á¢×´Ì¬
+		//å¦‚æœç©å®¶åœ¨ä¸‹è¹²çŠ¶æ€å°±æ¢å¤ç«™ç«‹çŠ¶æ€
 		if (MC->IsInCrounch)
 			MC->ToggleCrounchStat();
 		this->SetControlRotation(Start->GetActorRotation());
@@ -285,59 +287,59 @@ void AMyPlayerController::RestartGame()
 
 	InitPlatforms();
 	if (!bIsGameEnd)
-		SaveGame(); //±£´æ±¾´ÎÓÎÏ·µÃ·Ö
+		SaveGame(); //ä¿å­˜æœ¬æ¬¡æ¸¸æˆå¾—åˆ†
 
 	GetWorldTimerManager().ClearTimer(NoObstacleTime);
-	GetWorldTimerManager().ValidateHandle(NoObstacleTime);  //ÖØĞÂ¼¤»î¼ÆÊ±Æ÷
+	GetWorldTimerManager().ValidateHandle(NoObstacleTime);  //é‡æ–°æ¿€æ´»è®¡æ—¶å™¨
 	IsToAll = false;
-	CurSpawnedShootPlats = 0; //ÖØÖÃÒÑÉú³ÉÆ½Ì¨ÊıÄ¿
+	CurSpawnedShootPlats = 0; //é‡ç½®å·²ç”Ÿæˆå¹³å°æ•°ç›®
 	MaxFlyObstacles = 0;
-	bIsGameEnd = false;    //ÓÎÏ·ÒÑÖØÆô
+	bIsGameEnd = false;    //æ¸¸æˆå·²é‡å¯
 	PlatformState = (uint32)0x000fffff;
 }
 
 void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 {
-	ARunPlatform* AddPlatform = nullptr;   //Ö¸Ïò¼´½«Éú³ÉµÄÆ½Ì¨
+	ARunPlatform* AddPlatform = nullptr;   //æŒ‡å‘å³å°†ç”Ÿæˆçš„å¹³å°
 
 	for (int32 i = 0; i < SpawnNum; ++i)
 	{
-		int32 Random_Shoot = FMath::Rand() % 100;  //Éú³ÉËæ»úÊı£¬ÓÃÀ´¾ö¶¨ÊÇ·ñÉú³É´¥·¢Æ½Ì¨
-		int32 Random_Beam = FMath::Rand() % 100;    //Éú³ÉËæ»úÊı£¬¾ö¶¨ÊÇ·ñÉú³ÉĞèÒªÉÁµçÇ¹´¥·¢µÄÆ½Ì¨
-		int32 Random_Physic = FMath::Rand() % 100;   //Éú³ÉËæ»úÊı£¬ÓÃÀ´¾ö¶¨ÊÇ·ñÉú³ÉÎïÀíÆ½Ì¨
+		int32 Random_Shoot = FMath::Rand() % 100;  //ç”Ÿæˆéšæœºæ•°ï¼Œç”¨æ¥å†³å®šæ˜¯å¦ç”Ÿæˆè§¦å‘å¹³å°
+		int32 Random_Beam = FMath::Rand() % 100;    //ç”Ÿæˆéšæœºæ•°ï¼Œå†³å®šæ˜¯å¦ç”Ÿæˆéœ€è¦é—ªç”µæªè§¦å‘çš„å¹³å°
+		int32 Random_Physic = FMath::Rand() % 100;   //ç”Ÿæˆéšæœºæ•°ï¼Œç”¨æ¥å†³å®šæ˜¯å¦ç”Ÿæˆç‰©ç†å¹³å°
 		int32 Random_Bonus_Score = FMath::Rand() % 100;
-		int32 Random_Jump = FMath::Rand() % 100;    //Éú³ÉÌøÔ¾Æ½Ì¨µÄ
+		int32 Random_Jump = FMath::Rand() % 100;    //ç”Ÿæˆè·³è·ƒå¹³å°çš„
 
-		//²âÊÔËæ»úÖÖ×Ó
+		//æµ‹è¯•éšæœºç§å­
 		/*FRandomStream Stream(1);
 		int32 RandTest = Stream.RandRange(0, 100);
 		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, FString::FormatAsNumber(RandTest));*/
 
-		//ÕâÊÇÔÚ´¦ÓÚËùÓĞÆ½Ì¨»Ö¸´Ô­Î»Ê±µÄ¹ı¶É£¬´ËÊ±²»Éú³ÉBeam
+		//è¿™æ˜¯åœ¨å¤„äºæ‰€æœ‰å¹³å°æ¢å¤åŸä½æ—¶çš„è¿‡æ¸¡ï¼Œæ­¤æ—¶ä¸ç”ŸæˆBeam
 		if (PlatformArray.Last()->IsToAll && !IsToAll)
-			Random_Beam = -1;    //²»Éú³ÉBeamÆ½Ì¨
+			Random_Beam = -1;    //ä¸ç”ŸæˆBeamå¹³å°
 
-		//ÏÂÃæ¾ÍÊÇËæ»úÉú³É²¿·Ö£¬ÓÅÏÈ¼¶ÊÇJump > Beam > Physic > Shoot > Normal(Õı³£Æ½Ì¨)
+		//ä¸‹é¢å°±æ˜¯éšæœºç”Ÿæˆéƒ¨åˆ†ï¼Œä¼˜å…ˆçº§æ˜¯Jump > Beam > Physic > Shoot > Normal(æ­£å¸¸å¹³å°)
 		if (Random_Jump >= 0 && Random_Jump < 50 && PlatformState == 0 && !bSpawnedJumpPlat && !IsToAll)
 		{
 			SpawnJumpPlatform(PlatformArray.Last());
 		}
 		else
 		{
-			if (Random_Beam >= 0 && Random_Beam < 8 && PlatformArray.Last()->IsA(SpawnPlatform) && !bSpawnedJumpPlat/*!Cast<ARunPlatform_Shoot>(PlatformArray.Last()) && !Cast<ARunPlatform_Beam>(PlatformArray.Last())*/)  //5%µÄ¼¸ÂÊÉú³ÉÉÁµçÆ½Ì¨£¬²¢ÇÒÉÏÒ»¸öÆ½Ì¨²»ÊÇÉä»÷´¥·¢ĞÍºÍÉÁµçÀàĞÍ
+			if (Random_Beam >= 0 && Random_Beam < 8 && PlatformArray.Last()->IsA(SpawnPlatform) && !bSpawnedJumpPlat/*!Cast<ARunPlatform_Shoot>(PlatformArray.Last()) && !Cast<ARunPlatform_Beam>(PlatformArray.Last())*/)  //5%çš„å‡ ç‡ç”Ÿæˆé—ªç”µå¹³å°ï¼Œå¹¶ä¸”ä¸Šä¸€ä¸ªå¹³å°ä¸æ˜¯å°„å‡»è§¦å‘å‹å’Œé—ªç”µç±»å‹
 			{
 
 				AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Beam>(SpawnPlatform_Beam, GetSpawnTransf_Beam(PlatformArray.Last()));
-				PlatformArray.Last()->NoPlayerToSlope = true;   //¸ÃÆ½Ì¨µÄÉÏÒ»¸öÆ½Ì¨²»½øĞĞĞı×ª
+				PlatformArray.Last()->NoPlayerToSlope = true;   //è¯¥å¹³å°çš„ä¸Šä¸€ä¸ªå¹³å°ä¸è¿›è¡Œæ—‹è½¬
 				PlatformArray.Last()->SlopeAngle = 0.f;
 			}
 			else
 			{
-				if (Random_Physic >= 0 && Random_Physic < 10 && PlatformArray.Last()->IsA(SpawnPlatform) && !bSpawnedJumpPlat)     //10%µÄ¼¸ÂÊÉú³ÉÎïÀíÆ½Ì¨
+				if (Random_Physic >= 0 && Random_Physic < 10 && PlatformArray.Last()->IsA(SpawnPlatform) && !bSpawnedJumpPlat)     //10%çš„å‡ ç‡ç”Ÿæˆç‰©ç†å¹³å°
 					AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Physic>(SpawnPlatform_Physic, GetSpawnTransf_Physic(PlatformArray.Last()));
 				else
 				{
-					if (Random_Shoot >= 0 && Random_Shoot < 10 && PlatformArray.Last()->IsA(SpawnPlatform) && !bSpawnedJumpPlat/*!Cast <ARunPlatform_Shoot>(PlatformArray.Last()) && !Cast<ARunPlatform_Beam>(PlatformArray.Last())*/)   //25%µÄ¼¸ÂÊÉú³É´¥·¢ĞÍÆ½Ì¨,²¢ÇÒÇ°Ò»¸öÆ½Ì¨²»ÊÇÉä»÷ĞÍºÍÉÁµçĞÍ
+					if (Random_Shoot >= 0 && Random_Shoot < 10 && PlatformArray.Last()->IsA(SpawnPlatform) && !bSpawnedJumpPlat/*!Cast <ARunPlatform_Shoot>(PlatformArray.Last()) && !Cast<ARunPlatform_Beam>(PlatformArray.Last())*/)   //25%çš„å‡ ç‡ç”Ÿæˆè§¦å‘å‹å¹³å°,å¹¶ä¸”å‰ä¸€ä¸ªå¹³å°ä¸æ˜¯å°„å‡»å‹å’Œé—ªç”µå‹
 						AddPlatform = GetWorld()->SpawnActor<ARunPlatform_Shoot>(SpawnPlatform_Shoot, GetSpawnTransf_Shoot(PlatformArray.Last()));
 					else
 						AddPlatform = GetWorld()->SpawnActor<ARunPlatform>(SpawnPlatform, GetRandomSpawnTransf(PlatformArray.Last()));
@@ -347,29 +349,29 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 			if (AddPlatform != nullptr)
 			{
 				AddPlatform->PlatDir = AbsoluteDir;
-				PlatformArray.Last()->NextPlatform = AddPlatform;  //Ö¸¶¨ÏÂÒ»¸öÆ½Ì¨
+				PlatformArray.Last()->NextPlatform = AddPlatform;  //æŒ‡å®šä¸‹ä¸€ä¸ªå¹³å°
 
 				if (PlatformArray[0] != nullptr)
 					if (!PlatformArray[0]->IsInDestroyed)
-						PlatformArray[0]->StartDestroy();  //¿ªÊ¼É¾³ıµÚÒ»¸öÆ½Ì¨
+						PlatformArray[0]->StartDestroy();  //å¼€å§‹åˆ é™¤ç¬¬ä¸€ä¸ªå¹³å°
 
 				PlatformArray[0] = nullptr;
-				PlatformArray.RemoveAt(0);  //ÒÆ³ıÒÑ¾­×ß¹ıµÄÆ½Ì¨
-				PlatformState = PlatformState >> 1;    //1ºÅÎ»ÒÑ¾­Çå³ı
+				PlatformArray.RemoveAt(0);  //ç§»é™¤å·²ç»èµ°è¿‡çš„å¹³å°
+				PlatformState = PlatformState >> 1;    //1å·ä½å·²ç»æ¸…é™¤
 				TempPlatform = CurPlatform;   //
 				if (PlatformArray.Last()->IsToAll || IsToAll)
 					NewSpawnedPlatformToAll(AddPlatform);
 
 				PlatformArray.Push(AddPlatform);
 				if (Random_Bonus_Score >= 0 && Random_Bonus_Score < 30)
-					SpawnBonus_Score(AddPlatform);   //30µÄ¼¸ÂÊÉú³ÉBonus Score
+					SpawnBonus_Score(AddPlatform);   //30çš„å‡ ç‡ç”ŸæˆBonus Score
 
 				if (AddPlatform->IsA(SpawnPlatform_Shoot))
 					AddMaxSpawnObstacles();
 
 				if (AddPlatform->IsA(SpawnPlatform_Beam))
 				{
-					//Èç¹ûÊÇÉÁµçÆ½Ì¨ÔòµÚ20Î»¼°Æ½Ì¨Êı×îºóÒ»¸öÎª1
+					//å¦‚æœæ˜¯é—ªç”µå¹³å°åˆ™ç¬¬20ä½åŠå¹³å°æ•°æœ€åä¸€ä¸ªä¸º1
 					uint32 PlatNum = PlatformArray.Num();
 					PlatformState |= (uint32)1 << (PlatNum - 1);
 				}
@@ -378,7 +380,7 @@ void AMyPlayerController::RandomSpawnPlatform(int32 SpawnNum)
 
 				if (!IsToAll)
 				{
-					RandomSpawnFlyObstacle();    //Ö»ÓĞÔÚ·ÇÎŞÕÏ°­Ä£Ê½ÏÂ²ÅËæ»úÉú³É·ÉĞĞÕÏ°­
+					RandomSpawnFlyObstacle();    //åªæœ‰åœ¨éæ— éšœç¢æ¨¡å¼ä¸‹æ‰éšæœºç”Ÿæˆé£è¡Œéšœç¢
 					SpawnNoObsBonusParam++;
 
 					if (SpawnNoObsBonusParam >= PlatformArray.Num() * 3)
@@ -420,7 +422,7 @@ FTransform AMyPlayerController::GetSpawnTransf_Shoot(ARunPlatform* PrePlatform)
 	FTransform TempTrans;
 	if (PrePlatform)
 	{
-		AbsoluteDir = PrePlatform->PlatDir;    //¸ÃÆ½Ì¨Ö»Éú³ÉÔÚÏà¶ÔÇ°ÃæµÄÆ½Ì¨µÄÇ°·½
+		AbsoluteDir = PrePlatform->PlatDir;    //è¯¥å¹³å°åªç”Ÿæˆåœ¨ç›¸å¯¹å‰é¢çš„å¹³å°çš„å‰æ–¹
 		FVector CurLocation = PrePlatform->SpawnLocation;
 		FRotator CurRotation = PrePlatform->GetActorRotation();
 
@@ -461,10 +463,10 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 		FRotator SpawnRotation;
 		uint8 PreDir = PrePlatform->PlatDir;
 
-		uint8 Dir = 0;    //ÕâÊÇÏà¶Ô·½Ïò
+		uint8 Dir = 0;    //è¿™æ˜¯ç›¸å¯¹æ–¹å‘
 		
 		if(PreDir == EPlatformDirection::Absolute_Forward)
-			Dir = FMath::Rand() % 3;  //Ëæ»úÈı¸ö·½Ïò
+			Dir = FMath::Rand() % 3;  //éšæœºä¸‰ä¸ªæ–¹å‘
 
 		if (PreDir == EPlatformDirection::Absolute_Left)
 		{
@@ -478,10 +480,10 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 			Dir = (Dir == false) ? 0 : 1;
 		}
 			
-		int32 LengthScale = 1;    //¿ØÖÆÉú³ÉµÄÎ»ÖÃ
-		if (PrePlatform->IsA(SpawnPlatform_Beam) || PrePlatform->IsA(SpawnPlatform_Physic))   //Èç¹ûÇ°Ò»¸öÆ½Ì¨ÊÇÉÁµçÆ½Ì¨
+		int32 LengthScale = 1;    //æ§åˆ¶ç”Ÿæˆçš„ä½ç½®
+		if (PrePlatform->IsA(SpawnPlatform_Beam) || PrePlatform->IsA(SpawnPlatform_Physic))   //å¦‚æœå‰ä¸€ä¸ªå¹³å°æ˜¯é—ªç”µå¹³å°
 		{
-			Dir = 1;  //Ö»Éú³ÉÔÚÇ°Ò»¸ö·½¿éµÄÇ°·½
+			Dir = 1;  //åªç”Ÿæˆåœ¨å‰ä¸€ä¸ªæ–¹å—çš„å‰æ–¹
 			if (PrePlatform->IsA(SpawnPlatform_Physic))
 				LengthScale = FMath::Rand() % 3 + 4;
 		}
@@ -507,7 +509,7 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 				break;
 		}
 
-		/**ÏÂÃæ¾ÍÊÇµÃ³öÏÂÒ»¸öÉú³ÉÆ½Ì¨µÄ¾ø¶ÔÊÀ½ç·½Ïò*/
+		/**ä¸‹é¢å°±æ˜¯å¾—å‡ºä¸‹ä¸€ä¸ªç”Ÿæˆå¹³å°çš„ç»å¯¹ä¸–ç•Œæ–¹å‘*/
 		if (PrePlatform->PlatDir == EPlatformDirection::Absolute_Forward)
 			AbsoluteDir = (EPlatformDirection::Type)Dir;
 
@@ -517,7 +519,7 @@ FTransform AMyPlayerController::GetRandomSpawnTransf(ARunPlatform* PrePlatform)
 		else if (PrePlatform->PlatDir == EPlatformDirection::Absolute_Right)
 			AbsoluteDir = (Dir == 0) ? EPlatformDirection::Absolute_Forward : EPlatformDirection::Absolute_Right;
 
-		if (PrePlatform->IsA(SpawnPlatform_Physic))      //Ö»ÓĞÇ°Ò»¸öÆ½Ì¨ÊÇÎïÀíÆ½Ì¨²Å»áÓĞ¸½¼ÓÆ«ÒÆ
+		if (PrePlatform->IsA(SpawnPlatform_Physic))      //åªæœ‰å‰ä¸€ä¸ªå¹³å°æ˜¯ç‰©ç†å¹³å°æ‰ä¼šæœ‰é™„åŠ åç§»
 			DeltaLocToPrePlat = ForwardDir * PrePlatform->GetPlatformLength() * LengthScale;
 
 		else DeltaLocToPrePlat = FVector::ZeroVector;
@@ -530,7 +532,7 @@ FTransform AMyPlayerController::GetSpawnTransf_Beam(ARunPlatform* PrePlatform)
 	FTransform TempTrans;
 	if (PrePlatform != nullptr)
 	{
-		AbsoluteDir = PrePlatform->PlatDir;    //¸ÃÆ½Ì¨Ö»Éú³ÉÔÚÏà¶ÔÇ°ÃæµÄÆ½Ì¨µÄÇ°·½
+		AbsoluteDir = PrePlatform->PlatDir;    //è¯¥å¹³å°åªç”Ÿæˆåœ¨ç›¸å¯¹å‰é¢çš„å¹³å°çš„å‰æ–¹
 		FVector CurLocation = PrePlatform->SpawnLocation;
 		FRotator CurRotation = PrePlatform->GetActorRotation();
 
@@ -551,7 +553,7 @@ FTransform AMyPlayerController::GetSpawnTransf_Physic(ARunPlatform* PrePlatform)
 	FTransform TempTrans;
 	if (PrePlatform != nullptr)
 	{
-		AbsoluteDir = PrePlatform->PlatDir;    //¸ÃÆ½Ì¨Ö»Éú³ÉÔÚÏà¶ÔÇ°ÃæµÄÆ½Ì¨µÄÇ°·½
+		AbsoluteDir = PrePlatform->PlatDir;    //è¯¥å¹³å°åªç”Ÿæˆåœ¨ç›¸å¯¹å‰é¢çš„å¹³å°çš„å‰æ–¹
 		FVector CurLocation = PrePlatform->SpawnLocation;
 		FRotator CurRotation = PrePlatform->GetActorRotation();
 
@@ -633,13 +635,13 @@ void AMyPlayerController::SpawnBonus_NoObstacle(ARunPlatform* AttachedPlatform)
 
 void AMyPlayerController::SpawnJumpPlatform(ARunPlatform* PrePlatform)
 {
-	//ÏÂÃæÉú³É8¸öÌøÔ¾Æ½Ì¨
+	//ä¸‹é¢ç”Ÿæˆ8ä¸ªè·³è·ƒå¹³å°
 	TEnumAsByte<EPlatformDirection::Type> Dir = PrePlatform->PlatDir;
 	FVector PreLocation = PrePlatform->SpawnLocation;
 	FVector SpawnDir_X = -FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::X);
 	FVector SpawnDir_Y = FRotationMatrix(PrePlatform->GetActorRotation()).GetUnitAxis(EAxis::Y);
 	FRotator LeftRotation, RightRotation;
-	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Black, TEXT("²âÊÔÉú³ÉJumpPlatform"));
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Black, TEXT("æµ‹è¯•ç”ŸæˆJumpPlatform"));
 
 	switch (Dir)
 	{
@@ -662,7 +664,7 @@ void AMyPlayerController::SpawnJumpPlatform(ARunPlatform* PrePlatform)
 		break;
 	}
 
-	//ÏÂÃæÊÇ¼ì²âÁ½±ßÊÇ·ñÒÑÉú³ÉÆ½Ì¨ĞÎ³ÉÕÏ°­
+	//ä¸‹é¢æ˜¯æ£€æµ‹ä¸¤è¾¹æ˜¯å¦å·²ç”Ÿæˆå¹³å°å½¢æˆéšœç¢
 	FHitResult resultLeft, resultRight;
 	FCollisionObjectQueryParams ObjectQueryParams(ECollisionChannel::ECC_WorldDynamic);
 	FCollisionQueryParams QueryParams(TEXT("JumpQuery"));
@@ -683,14 +685,14 @@ void AMyPlayerController::SpawnJumpPlatform(ARunPlatform* PrePlatform)
 										QueryParams);
 	if (!Cast<ARunPlatform>(resultLeft.GetActor()) && !Cast<ARunPlatform>(resultRight.GetActor()))
 	{
-		int PlatPairs = FMath::Rand() % 4 + 1;       //Éú³ÉµÄÌøÔ¾Æ½Ì¨µÄ¶ÔÊıÎª 1~4
+		int PlatPairs = FMath::Rand() % 4 + 1;       //ç”Ÿæˆçš„è·³è·ƒå¹³å°çš„å¯¹æ•°ä¸º 1~4
 		
 		AJumpPlatform* LSpawnedPlat = nullptr;
 		AJumpPlatform* RSpawnedPlat = nullptr;
 
 		for (int32 i = 0; i < PlatPairs; i++)
 		{
-			//Éú³ÉÓÒ±ßµÄÌøÔ¾Æ½Ì¨
+			//ç”Ÿæˆå³è¾¹çš„è·³è·ƒå¹³å°
 			FTransform SpawnTransform = FTransform(FRotator::ZeroRotator, PreLocation + SpawnDir_X * (i*2000.f + 200.f));
 			RSpawnedPlat = GetWorld()->SpawnActorDeferred<AJumpPlatform>(SpawnPlatform_Jump, SpawnTransform);
 			if (RSpawnedPlat)
@@ -706,7 +708,7 @@ void AMyPlayerController::SpawnJumpPlatform(ARunPlatform* PrePlatform)
 					RSpawnedPlat->PrePlatform = LSpawnedPlat;
 				}
 			}
-			//Éú³É×ó±ßµÄ
+			//ç”Ÿæˆå·¦è¾¹çš„
 			SpawnTransform = FTransform(FRotator::ZeroRotator, PreLocation + SpawnDir_X * (i*2000.f + 1600.f) + 400.f * SpawnDir_Y);
 			LSpawnedPlat = GetWorld()->SpawnActorDeferred<AJumpPlatform>(SpawnPlatform_Jump, SpawnTransform);
 			if (LSpawnedPlat)
@@ -728,7 +730,7 @@ void AMyPlayerController::SpawnJumpPlatform(ARunPlatform* PrePlatform)
 		PlatformState = MAX_uint32;
 		bSpawnedJumpPlat = true;
 		DeltaLocToPrePlat = (2000.f*(PlatPairs - 1) + 1800.f)*SpawnDir_X;
-		PrePlatform->NoPlayerToSlope = true;    //Ç°Ò»¸öÆ½Ì¨²»ÇãĞ±£¬½µµÍÄÑ¶È
+		PrePlatform->NoPlayerToSlope = true;    //å‰ä¸€ä¸ªå¹³å°ä¸å€¾æ–œï¼Œé™ä½éš¾åº¦
 	}
 }
 
@@ -740,7 +742,7 @@ void AMyPlayerController::ChangeWeaponType(EWeaponType::Type WeaponType)
 		CurConnectedPlat = nullptr;
 	}
 
-	//Ïú»ÙËùÓĞBeam×Óµ¯
+	//é”€æ¯æ‰€æœ‰Beamå­å¼¹
 	for (TActorIterator<ABullet> It(GetWorld()); It; ++It)
 	{
 		if ((*It)->CurWeaponType == EWeaponType::Weapon_Beam)
@@ -752,7 +754,7 @@ void AMyPlayerController::ChangeWeaponType(EWeaponType::Type WeaponType)
 
 void AMyPlayerController::RandomSpawnFlyObstacle()
 {
-	int32 CurNoShootPlatNum = 0;         //µ±Ç°·ÇShootÆ½Ì¨µÄÊıÄ¿
+	int32 CurNoShootPlatNum = 0;         //å½“å‰éShootå¹³å°çš„æ•°ç›®
 	int32 PlatNum = PlatformArray.Num();
 	int32 RandomFlyObstacle = FMath::Rand() % 100;
 
@@ -761,15 +763,15 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 		if (PlatformArray[i] != nullptr)
 		{
 			if (!PlatformArray[i]->IsA(SpawnPlatform_Shoot))
-				CurNoShootPlatNum++;    //´Ó0¿ªÊ¼·ÇShootÆ½Ì¨µÄÊıÄ¿
+				CurNoShootPlatNum++;    //ä»0å¼€å§‹éShootå¹³å°çš„æ•°ç›®
 			else
 				break;
 		}
 	}
 
-	if (((CurNoShootPlatNum >= 10 && FlyObstacleSpawnInterval > 10) || FlyObstacleSpawnInterval == -1) && FlyObstacleArray.Num() < MaxFlyObstacles && RandomFlyObstacle < 10)    //10%µÄ¼¸ÂÊÉú³É·ÉĞĞÕÏ°­
+	if (((CurNoShootPlatNum >= 10 && FlyObstacleSpawnInterval > 10) || FlyObstacleSpawnInterval == -1) && FlyObstacleArray.Num() < MaxFlyObstacles && RandomFlyObstacle < 10)    //10%çš„å‡ ç‡ç”Ÿæˆé£è¡Œéšœç¢
 	{
-		if (!ensure(*SpawnFlyObstacle))return;     //ÅĞ¶ÏÊÇ·ñ²éÑ¯µ½FlyObstacleÀà
+		if (!ensure(*SpawnFlyObstacle))return;     //åˆ¤æ–­æ˜¯å¦æŸ¥è¯¢åˆ°FlyObstacleç±»
 
 		if (CurNoShootPlatNum < PlatNum && PlatformArray[CurNoShootPlatNum] && PlatformArray[CurNoShootPlatNum]->CurBoundFlyObstacleNum < MaxFlyObstacles)
 		{
@@ -779,7 +781,7 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 				Obstacle->AimCharacter = Cast<AMyFirstGameCharacter>(GetPawn());
 				UGameplayStatics::FinishSpawningActor(Obstacle, FTransform(PlatformArray[CurNoShootPlatNum - 1]->GetActorRotation(), PlatformArray[CurNoShootPlatNum - 1]->SpawnLocation + FVector(0.f, 0.f, 80.f)));
 
-				FlyObstacleSpawnInterval = 0;   //¿ªÊ¼ÀÛ¼Ó¼ä¸ôµÄÆ½Ì¨
+				FlyObstacleSpawnInterval = 0;   //å¼€å§‹ç´¯åŠ é—´éš”çš„å¹³å°
 				FlyObstacleArray.Add(Obstacle);
 
 				int32 CurObstacleNum = FlyObstacleArray.Num();
@@ -788,15 +790,15 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 					AFlyObstacle* const CurObstacle = FlyObstacleArray[i];
 					if (CurObstacle != nullptr)
 					{
-						PlatformArray[CurNoShootPlatNum]->FlyObstacleDestory.AddUObject(CurObstacle, &AFlyObstacle::StartDestroy);      //¿ªÊ¼°ó¶¨
+						PlatformArray[CurNoShootPlatNum]->FlyObstacleDestory.AddUObject(CurObstacle, &AFlyObstacle::StartDestroy);      //å¼€å§‹ç»‘å®š
 						PlatformArray[CurNoShootPlatNum]->CurBoundFlyObstacleNum++;
 					}
-					GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("ÒÑ°ó¶¨"));
+					GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("å·²ç»‘å®š"));
 				}
-				FlyObstacleArray.Reset();   //Çå¿ÕÊı×é
+				FlyObstacleArray.Reset();   //æ¸…ç©ºæ•°ç»„
 			}
 		}
-		else if (CurNoShootPlatNum == PlatNum)    //Èç¹û»¹Ã»ÓĞShootÆ½Ì¨£¬¾ÍÖ±½ÓÉú³ÉÒ»¸öFlyObstacle
+		else if (CurNoShootPlatNum == PlatNum)    //å¦‚æœè¿˜æ²¡æœ‰Shootå¹³å°ï¼Œå°±ç›´æ¥ç”Ÿæˆä¸€ä¸ªFlyObstacle
 		{
 			AFlyObstacle* Obstacle = GetWorld()->SpawnActorDeferred<AFlyObstacle>(SpawnFlyObstacle, FTransform(PlatformArray[CurNoShootPlatNum - 1]->GetActorRotation(), PlatformArray[CurNoShootPlatNum - 1]->SpawnLocation + FVector(0.f, 0.f, 80.f)));
 			if (Obstacle != nullptr)
@@ -804,7 +806,7 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 				Obstacle->AimCharacter = Cast<AMyFirstGameCharacter>(GetPawn());
 				UGameplayStatics::FinishSpawningActor(Obstacle, FTransform(PlatformArray[CurNoShootPlatNum - 1]->GetActorRotation(), PlatformArray[CurNoShootPlatNum - 1]->SpawnLocation + FVector(0.f, 0.f, 80.f)));
 
-				FlyObstacleSpawnInterval = 0;   //¿ªÊ¼ÀÛ¼Ó¼ä¸ôµÄÆ½Ì¨
+				FlyObstacleSpawnInterval = 0;   //å¼€å§‹ç´¯åŠ é—´éš”çš„å¹³å°
 				FlyObstacleArray.Add(Obstacle);
 			}
 		}
@@ -822,19 +824,19 @@ void AMyPlayerController::RandomSpawnFlyObstacle()
 			AFlyObstacle* const CurObstacle = FlyObstacleArray[i];
 			if (CurObstacle != nullptr)
 			{
-				PlatformArray[CurNoShootPlatNum]->FlyObstacleDestory.AddUObject(CurObstacle, &AFlyObstacle::StartDestroy);       //¿ªÊ¼°ó¶¨
+				PlatformArray[CurNoShootPlatNum]->FlyObstacleDestory.AddUObject(CurObstacle, &AFlyObstacle::StartDestroy);       //å¼€å§‹ç»‘å®š
 				PlatformArray[CurNoShootPlatNum]->CurBoundFlyObstacleNum++;
-				//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("ÒÑ°ó¶¨"));
+				//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("å·²ç»‘å®š"));
 			}
 		}
-		FlyObstacleArray.Reset();   //Çå¿ÕÊı×é
+		FlyObstacleArray.Reset();   //æ¸…ç©ºæ•°ç»„
 	}
 }
 
 void AMyPlayerController::AddMaxSpawnObstacles()
 {
 	CurSpawnedShootPlats++;
-	if (CurSpawnedShootPlats >= (MaxFlyObstacles * 10) && MaxFlyObstacles <= 4)      //×î¶à¿ÉÒÔÓĞ4¸ö·ÉĞĞÕÏ°­£¬Ì«¸ß»áµ¼ÖÂÓÎÏ·ÄÑ¶È¸ß
+	if (CurSpawnedShootPlats >= (MaxFlyObstacles * 10) && MaxFlyObstacles <= 4)      //æœ€å¤šå¯ä»¥æœ‰4ä¸ªé£è¡Œéšœç¢ï¼Œå¤ªé«˜ä¼šå¯¼è‡´æ¸¸æˆéš¾åº¦é«˜
 	{
 		MaxFlyObstacles++;
 	}
@@ -856,7 +858,7 @@ void AMyPlayerController::TogglePauseStat()
 		this->SetPause(true);
 		
 		if (HUD)
-			HUD->bDrawCrosshair = false;        //ÓÎÏ·ÔİÍ£×´Ì¬²»ÏÖÊµ×¼ĞÄ
+			HUD->bDrawCrosshair = false;        //æ¸¸æˆæš‚åœçŠ¶æ€ä¸ç°å®å‡†å¿ƒ
 	}
 	else
 	{
@@ -898,7 +900,7 @@ void AMyPlayerController::StartToAll(int32 LastTime)
 		}
 	}
 
-	//Ïú»ÙËùÓĞÒÑ´æÔÚµÄ·ÉĞĞÕÏ°­
+	//é”€æ¯æ‰€æœ‰å·²å­˜åœ¨çš„é£è¡Œéšœç¢
 	for (TActorIterator<AFlyObstacle> It(GetWorld()); It; ++It)
 	{
 		if (*It)
@@ -935,11 +937,11 @@ void AMyPlayerController::StartToAllTest()
 
 void AMyPlayerController::ToStopToAllState()
 {
-	//Ò»Ãëºó²ÅÖ´ĞĞÊµ¼Ê²Ù×÷£¬µ«ÊÇÒÑ¾­¿ªÊ¼½øÈë×´Ì¬
+	//ä¸€ç§’åæ‰æ‰§è¡Œå®é™…æ“ä½œï¼Œä½†æ˜¯å·²ç»å¼€å§‹è¿›å…¥çŠ¶æ€
 	GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::StopToAll, 2, false);
 	IsInStopToAllAnim = true;
 
-	//´ËÊ±ÒªÏŞÖÆÍæ¼ÒÌøÔ¾
+	//æ­¤æ—¶è¦é™åˆ¶ç©å®¶è·³è·ƒ
 	/*AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
 	if (MC)
 	{
@@ -991,7 +993,7 @@ void AMyPlayerController::StopToAll()
 			ToOriginStartPlat->StopToAllFun(FVector::ZeroVector);
 	}
 
-	//Ô¤¹À¶¯»­ÔÚÁ½Ãëºó½áÊø
+	//é¢„ä¼°åŠ¨ç”»åœ¨ä¸¤ç§’åç»“æŸ
 	//GetWorldTimerManager().SetTimer(NoObstacleTime, this, &AMyPlayerController::StopToAllAnimEnd, 1.5f, false);
 }
 
@@ -999,7 +1001,7 @@ void AMyPlayerController::StopToAll()
 //{
 //	IsInStopToAllAnim = false;
 //
-//	//ÏÂÃæ¾ÍÒª»Ö¸´Íæ¼ÒÌøÔ¾
+//	//ä¸‹é¢å°±è¦æ¢å¤ç©å®¶è·³è·ƒ
 //	AMyFirstGameCharacter* MC = Cast<AMyFirstGameCharacter>(GetPawn());
 //	if (MC)
 //	{
@@ -1011,13 +1013,13 @@ void AMyPlayerController::NewSpawnedPlatformToAll(ARunPlatform* NewPlatformRef)
 {
 	ARunPlatform* const FrontLastPlat = PlatformArray.Last();
 	
-	if (NewPlatformRef->IsA(SpawnPlatform) && (FrontLastPlat->IsA(SpawnPlatform) || FrontLastPlat->IsA(SpawnPlatform_Shoot)))      //µ±ÏÂÒ»¸öÆ½Ì¨ÊÇÆÕÍ¨Æ½Ì¨£¬²¢ÇÒµ±Ç°Æ½Ì¨ÊÇÆÕÍ¨Æ½Ì¨»òÉä»÷Æ½Ì¨
+	if (NewPlatformRef->IsA(SpawnPlatform) && (FrontLastPlat->IsA(SpawnPlatform) || FrontLastPlat->IsA(SpawnPlatform_Shoot)))      //å½“ä¸‹ä¸€ä¸ªå¹³å°æ˜¯æ™®é€šå¹³å°ï¼Œå¹¶ä¸”å½“å‰å¹³å°æ˜¯æ™®é€šå¹³å°æˆ–å°„å‡»å¹³å°
 	{
 		NewPlatformRef->MoveToAllFun(FVector::ZeroVector);
 	}
 	else
 	{
-		const FVector NextDeltaPos = FrontLastPlat->SpawnLocation - (NewPlatformRef->GetActorLocation() + NewPlatformRef->GetPlatformLength() * FrontLastPlat->GetActorRotation().Vector());  //Ã¿¸öÆ½Ì¨ÒÆ¶¯µ½¹Ì¶¨Î»ÖÃ²»¶¯Ê±£¬²Å»áÉú³ÉÏÂÒ»¸öÆ½Ì¨
+		const FVector NextDeltaPos = FrontLastPlat->SpawnLocation - (NewPlatformRef->GetActorLocation() + NewPlatformRef->GetPlatformLength() * FrontLastPlat->GetActorRotation().Vector());  //æ¯ä¸ªå¹³å°ç§»åŠ¨åˆ°å›ºå®šä½ç½®ä¸åŠ¨æ—¶ï¼Œæ‰ä¼šç”Ÿæˆä¸‹ä¸€ä¸ªå¹³å°
 		NewPlatformRef->MoveToAllFun(NextDeltaPos);
 	}
 }
@@ -1028,15 +1030,15 @@ void AMyPlayerController::SaveGame()
 
 	URunGameSave* RunSaveGame = Cast<URunGameSave>(UGameplayStatics::LoadGameFromSlot(RSaveGameSlot, 0));
 	
-	if (RunSaveGame)   //¼ÓÔØ³É¹¦
+	if (RunSaveGame)   //åŠ è½½æˆåŠŸ
 	{
 		if (RGS)
 		{
 			float NewScore = RGS->PlayerScore;
 			RunSaveGame->Scores.Add(NewScore);
-			RunSaveGame->Scores.Sort();   //Êı×é½øĞĞÅÅĞò,×¢ÒâÊÇÉıĞò
-			RunSaveGame->Scores.RemoveAt(0);     //ÒÆ³ı
-			UGameplayStatics::SaveGameToSlot(RunSaveGame, RSaveGameSlot, 0);  //±£´æÍæ¼Ò·ÖÊı
+			RunSaveGame->Scores.Sort();   //æ•°ç»„è¿›è¡Œæ’åº,æ³¨æ„æ˜¯å‡åº
+			RunSaveGame->Scores.RemoveAt(0);     //ç§»é™¤
+			UGameplayStatics::SaveGameToSlot(RunSaveGame, RSaveGameSlot, 0);  //ä¿å­˜ç©å®¶åˆ†æ•°
 		}
 	}
 	else  
@@ -1048,9 +1050,9 @@ void AMyPlayerController::SaveGame()
 			if (RGS)
 				_RunSaveGame->Scores[_RunSaveGame->Scores.Num() - 1] = RGS->PlayerScore;
 		}
-		UGameplayStatics::SaveGameToSlot(_RunSaveGame, RSaveGameSlot, 0);  //±£´æÍæ¼Ò·ÖÊı
+		UGameplayStatics::SaveGameToSlot(_RunSaveGame, RSaveGameSlot, 0);  //ä¿å­˜ç©å®¶åˆ†æ•°
 	}
-	//Çå¿Õµ±Ç°·ÖÊı
+	//æ¸…ç©ºå½“å‰åˆ†æ•°
 	if (RGS)
 	{
 		RGS->RestartGame();
@@ -1068,7 +1070,7 @@ void AMyPlayerController::ScreenShoot()
 
 	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
 	TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
-	ImageWrapper->SetRaw((void*)PixelBuffer.GetData(), PixelBuffer.GetAllocatedSize(), viewport->GetSizeXY().X, viewport->GetSizeXY().Y, ERGBFormat::BGRA, 8);      //ÉèÖÃJPEG¸ñÊ½Í¼Æ¬Êı¾İ
+	ImageWrapper->SetRaw((void*)PixelBuffer.GetData(), PixelBuffer.GetAllocatedSize(), viewport->GetSizeXY().X, viewport->GetSizeXY().Y, ERGBFormat::BGRA, 8);      //è®¾ç½®JPEGæ ¼å¼å›¾ç‰‡æ•°æ®
 
 	if (ImageWrapper.IsValid())       //
 	{
@@ -1076,7 +1078,7 @@ void AMyPlayerController::ScreenShoot()
 		FString ScreenShotDir = FPaths::ScreenShotDir() / TEXT("ScreenShot");
 		IFileManager::Get().MakeDirectory(*FPaths::ScreenShotDir(), true);
 		FString SavePath = ScreenShotDir + TEXT("000.jpg");
-		int32 PictureIndex = 1;      //½ØÍ¼ÎÄ¼ş¼ĞÖĞÍ¼Æ¬ĞòºÅ
+		int32 PictureIndex = 1;      //æˆªå›¾æ–‡ä»¶å¤¹ä¸­å›¾ç‰‡åºå·
 		while (IFileManager::Get().FileExists(*SavePath))
 		{
 			SavePath = ScreenShotDir;
@@ -1090,6 +1092,6 @@ void AMyPlayerController::ScreenShoot()
 
 			PictureIndex++;
 		}
-		FFileHelper::SaveArrayToFile(ImageData, *SavePath);            //±£´æÍ¼Æ¬Êı¾İ
+		FFileHelper::SaveArrayToFile(ImageData, *SavePath);            //ä¿å­˜å›¾ç‰‡æ•°æ®
 	}
 }

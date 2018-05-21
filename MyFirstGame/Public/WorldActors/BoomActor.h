@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -29,16 +29,16 @@ public:
 
 	FTimerHandle SpawnParticle;
 
-	//¸Ã¶¨Ê±Æ÷ÓÃÀ´¶¨Ê±±¬Õ¨Á¦×÷ÓÃÊ±¼ä
+	//è¯¥å®šæ—¶å™¨ç”¨æ¥å®šæ—¶çˆ†ç‚¸åŠ›ä½œç”¨æ—¶é—´
 	FTimerHandle ForceTime;
 
-	//¸Ã±¬Õ¨ÎïÊÇ·ñ¿ÉÒÔ±¬Õ¨
+	//è¯¥çˆ†ç‚¸ç‰©æ˜¯å¦å¯ä»¥çˆ†ç‚¸
 	uint8 CanBoom : 1;
 
-	//ÊÇ·ñÒÑ¾­±¬Õ¨
+	//æ˜¯å¦å·²ç»çˆ†ç‚¸
 	uint8 IsBoom : 1;
 
-	//ÊÇ·ñÊÇÖ÷¶¯´¥·¢±¬Õ¨
+	//æ˜¯å¦æ˜¯ä¸»åŠ¨è§¦å‘çˆ†ç‚¸
 	bool InitiativeToBoom = false;
 
 
@@ -56,7 +56,7 @@ public:
 
 	void StopForce();
 
-	/**¿ªÊ¼ÎïÀíÄ£Äâ*/
+	/**å¼€å§‹ç‰©ç†æ¨¡æ‹Ÿ*/
 	void StartSimulatePhysic();
 
 	UFUNCTION()

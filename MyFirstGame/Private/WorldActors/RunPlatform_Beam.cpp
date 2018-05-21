@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+Ôªø// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "RunPlatform_Beam.h"
 #include "Particles/ParticleSystem.h"
@@ -22,10 +22,10 @@ ARunPlatform_Beam::ARunPlatform_Beam(const FObjectInitializer& ObjectInitializer
 	AttachmentTrigger = ObjectInitializer.CreateDefaultSubobject<UBoxComponent>(this, TEXT("AttachmentTrigger"));
 	AttachmentTrigger->SetupAttachment(Platform);
 
-	//…Ë÷√ºÏ≤‚ÃÂµƒ≈ˆ◊≤œÏ”¶
-	AttachmentTrigger->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);    //Ωˆ”√”⁄ºÏ≤‚
+	//ËÆæÁΩÆÊ£ÄÊµã‰ΩìÁöÑÁ¢∞ÊíûÂìçÂ∫î
+	AttachmentTrigger->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);    //‰ªÖÁî®‰∫éÊ£ÄÊµã
 	AttachmentTrigger->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	AttachmentTrigger->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECR_Overlap);      //ΩˆºÏ≤‚◊”µØ
+	AttachmentTrigger->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECR_Overlap);      //‰ªÖÊ£ÄÊµãÂ≠êÂºπ
 
 	UpdateBeam = false;
 	IsInMove = false;
@@ -33,9 +33,9 @@ ARunPlatform_Beam::ARunPlatform_Beam(const FObjectInitializer& ObjectInitializer
 	static ConstructorHelpers::FObjectFinder<UCurveFloat> FindMoveCurve(TEXT("/Game/Blueprint/Curves/MoveCurve"));
 	MoveCurve = FindMoveCurve.Object;
 
-	SlopeAngle = 0.f;   //∏√∆ΩÃ®≤ªΩ¯–––˝◊™
-	NoPlayerToSlope = true;  //∏√∆ΩÃ®≤ª–Ë“™–˝◊™
-	IsMoveUp = false;  //ƒ¨»œ∑ΩœÚ «◊Û”““∆∂Ø
+	SlopeAngle = 0.f;   //ËØ•Âπ≥Âè∞‰∏çËøõË°åÊóãËΩ¨
+	NoPlayerToSlope = true;  //ËØ•Âπ≥Âè∞‰∏çÈúÄË¶ÅÊóãËΩ¨
+	IsMoveUp = false;  //ÈªòËÆ§ÊñπÂêëÊòØÂ∑¶Âè≥ÁßªÂä®
 
 }
 
@@ -50,7 +50,7 @@ void ARunPlatform_Beam::PostInitializeComponents()
 	float Width = GetPlatformWidth();
 	AttachmentTrigger->SetWorldScale3D(FVector(2.5f, 2.5f, 2.5f));
 	AttachmentTrigger->SetRelativeLocation(FVector(GetPlatformLength() / XScale, Width / 2, 0.f));
-	AttachmentTrigger->OnComponentBeginOverlap.AddDynamic(this, &ARunPlatform_Beam::AttachBeginOverlap);    //ÃÌº”≈ˆ◊≤
+	AttachmentTrigger->OnComponentBeginOverlap.AddDynamic(this, &ARunPlatform_Beam::AttachBeginOverlap);    //Ê∑ªÂä†Á¢∞Êíû
 
 }
 
@@ -75,7 +75,7 @@ void ARunPlatform_Beam::TickActor(float DeltaTime, enum ELevelTick TickType, FAc
 	{
 		const FVector BeamSourcePoint = Platform->GetSocketLocation(AttachSocket);
 		const FVector BeamTargetPoint = TargetGun->GetFireLocation();
-		BeamParticle->SetBeamTargetPoint(0, BeamTargetPoint, 0);    //∏¸–¬…¡µÁƒø±Í
+		BeamParticle->SetBeamTargetPoint(0, BeamTargetPoint, 0);    //Êõ¥Êñ∞Èó™ÁîµÁõÆÊ†á
 
 		if ((BeamSourcePoint - BeamTargetPoint).Size() >= 2000.f)
 			DeActiveBeam();
@@ -95,12 +95,12 @@ void ARunPlatform_Beam::AttachBeginOverlap(UPrimitiveComponent* OverlappedCompon
 {
 	ABullet* Temp = Cast<ABullet>(OtherActor);
 
-	if (FVector::DotProduct(SweepResult.ImpactNormal, FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::X)) < 0)     //≈–∂œ◊”µØ «∑Ò¥”¡£◊”±≥√Ê…‰π˝¿¥
+	if (FVector::DotProduct(SweepResult.ImpactNormal, FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::X)) < 0)     //Âà§Êñ≠Â≠êÂºπÊòØÂê¶‰ªéÁ≤íÂ≠êËÉåÈù¢Â∞ÑËøáÊù•
 		if (Temp != nullptr)
 		{
 			if (Temp->CurWeaponType == EWeaponType::Weapon_Beam)
 			{
-				BeamParticle = UGameplayStatics::SpawnEmitterAttached(Temp->OwnerWeapon->BeamEmitter, Platform, AttachSocket);    //‘Ÿ…˙≥…“ª∏ˆ…¡µÁ¡£◊”
+				BeamParticle = UGameplayStatics::SpawnEmitterAttached(Temp->OwnerWeapon->BeamEmitter, Platform, AttachSocket);    //ÂÜçÁîüÊàê‰∏Ä‰∏™Èó™ÁîµÁ≤íÂ≠ê
 				BeamParticle->SetWorldScale3D(FVector(5.f, 5.f, 5.f));
 				BeamParticle->SetRelativeRotation(FRotator(0.f, 0.f, 90.f));
 				TargetGun = Temp->OwnerWeapon;
@@ -125,14 +125,14 @@ void ARunPlatform_Beam::MoveTick(float DeltaTime)
 			SpawnLocation = FMath::VInterpTo(SpawnLocation, DstLoc, DeltaTime, 10.f);
 
 				if (NextPlatform != nullptr)
-					if (!NextPlatform->MoveToNew)     //÷ª”–œ¬“ª∏ˆ∆ΩÃ®√ª”–“∆∂Ø ±≤≈÷¥––œ¬√Ê≤Ÿ◊˜
-						if ((SpawnLocation - TempSpawnLocation).Size() > DeltaLoc.Size() / 2)  //“∆∂Ø≥¨π˝œ‡≤Óæ‡¿Î“ª∞Î ±£¨æÕø™ º“∆∂Øœ¬“ª∏ˆ∆ΩÃ®
+					if (!NextPlatform->MoveToNew)     //Âè™Êúâ‰∏ã‰∏Ä‰∏™Âπ≥Âè∞Ê≤°ÊúâÁßªÂä®Êó∂ÊâçÊâßË°å‰∏ãÈù¢Êìç‰Ωú
+						if ((SpawnLocation - TempSpawnLocation).Size() > DeltaLoc.Size() / 2)  //ÁßªÂä®Ë∂ÖËøáÁõ∏Â∑ÆË∑ùÁ¶ª‰∏ÄÂçäÊó∂ÔºåÂ∞±ÂºÄÂßãÁßªÂä®‰∏ã‰∏Ä‰∏™Âπ≥Âè∞
 							NextPlatform->MoveToNewPos(DeltaLoc);
 
-			if ((SpawnLocation - DstLoc).Size() < 1.f) //∆ΩÃ®µΩ¥Ôƒø±ÍŒª÷√ ±    ◊¢“‚∏°µ„ ˝°¢◊¢“‚∏°µ„ ˝°¢◊¢“‚∏°µ„ ˝£°£°£°÷ÿ“™µƒ ¬Àµ»˝±È
+			if ((SpawnLocation - DstLoc).Size() < 1.f) //Âπ≥Âè∞Âà∞ËææÁõÆÊ†á‰ΩçÁΩÆÊó∂    Ê≥®ÊÑèÊµÆÁÇπÊï∞„ÄÅÊ≥®ÊÑèÊµÆÁÇπÊï∞„ÄÅÊ≥®ÊÑèÊµÆÁÇπÊï∞ÔºÅÔºÅÔºÅÈáçË¶ÅÁöÑ‰∫ãËØ¥‰∏âÈÅç
 			{
 				SpawnLocation = DstLoc;
-				MoveToNew = false;  //Õ£÷π“∆∂Ø∏¸–¬
+				MoveToNew = false;  //ÂÅúÊ≠¢ÁßªÂä®Êõ¥Êñ∞
 				TempSpawnLocation = DstLoc;
 
 				AMyPlayerController* MPC = Cast<AMyPlayerController>(GetWorld()->GetFirstPlayerController());
@@ -154,12 +154,12 @@ void ARunPlatform_Beam::MoveTick(float DeltaTime)
 			SetActorLocation(NewPos);
 
 			if (NextPlatform != nullptr)
-				if (!NextPlatform->MoveToNew)   //÷ª”–œ¬“ª∏ˆ∆ΩÃ®√ª”–“∆∂Ø ±≤≈÷¥––œ¬√Ê≤Ÿ◊˜
-					if ((NewPos - StopLocation).Size() > DeltaLoc.Size() / 2)   //“∆∂Ø≥¨π˝œ‡≤Óæ‡¿Î“ª∞Î ±£¨æÕø™ º“∆∂Øœ¬“ª∏ˆ∆ΩÃ®
+				if (!NextPlatform->MoveToNew)   //Âè™Êúâ‰∏ã‰∏Ä‰∏™Âπ≥Âè∞Ê≤°ÊúâÁßªÂä®Êó∂ÊâçÊâßË°å‰∏ãÈù¢Êìç‰Ωú
+					if ((NewPos - StopLocation).Size() > DeltaLoc.Size() / 2)   //ÁßªÂä®Ë∂ÖËøáÁõ∏Â∑ÆË∑ùÁ¶ª‰∏ÄÂçäÊó∂ÔºåÂ∞±ÂºÄÂßãÁßªÂä®‰∏ã‰∏Ä‰∏™Âπ≥Âè∞
 						NextPlatform->MoveToNewPos(NextPlatToCur);
 
 			if ((NewPos - (StopLocation + DeltaLoc)).Size() < 1.f)
-				MoveToNew = false;  //Õ£÷π∏¸–¬
+				MoveToNew = false;  //ÂÅúÊ≠¢Êõ¥Êñ∞
 		}
 	}
 }
@@ -168,7 +168,7 @@ void ARunPlatform_Beam::BeginOverlap(UPrimitiveComponent* OverlappedComponent, A
 {
 	Super::BeginOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 
-	//ÕÊº“Ω¯»Î∏√∆ΩÃ® ±£¨…æµÙ…¡µÁ¡£◊”
+	//Áé©ÂÆ∂ËøõÂÖ•ËØ•Âπ≥Âè∞Êó∂ÔºåÂà†ÊéâÈó™ÁîµÁ≤íÂ≠ê
 	if (CurChar != nullptr && BeamParticle != nullptr)
 	{
 		BeamParticle->SetVisibility(false);
@@ -178,24 +178,24 @@ void ARunPlatform_Beam::BeginOverlap(UPrimitiveComponent* OverlappedComponent, A
 	ARunPlatform* TouchedPlatform = Cast<ARunPlatform>(OtherActor);
 	if (TouchedPlatform)
 	{
-		FVector CurDirY = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Y);    //ªÒµ√Y∑ΩœÚµƒœÚ¡ø
-		FVector TouchDirY = FRotationMatrix(TouchedPlatform->GetActorRotation()).GetUnitAxis(EAxis::Y);   //ªÒ»°≈ˆ◊≤µƒ∆ΩÃ®µƒY∑ΩœÚ
-		//œ¬√Ê «ªÒ»°¡Ω∏ˆ∆ΩÃ®Œª÷√µƒX∑÷¡ø
+		FVector CurDirY = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Y);    //Ëé∑ÂæóYÊñπÂêëÁöÑÂêëÈáè
+		FVector TouchDirY = FRotationMatrix(TouchedPlatform->GetActorRotation()).GetUnitAxis(EAxis::Y);   //Ëé∑ÂèñÁ¢∞ÊíûÁöÑÂπ≥Âè∞ÁöÑYÊñπÂêë
+		//‰∏ãÈù¢ÊòØËé∑Âèñ‰∏§‰∏™Âπ≥Âè∞‰ΩçÁΩÆÁöÑXÂàÜÈáè
 		float CurLocationX = SpawnLocation.X;
 		float TouchLocationX = TouchedPlatform->SpawnLocation.X;
 
 		if ((CurDirY + TouchDirY).IsNearlyZero() && !TouchedPlatform->MoveToNew)
 		{
-			if (this->PlatDir == EPlatformDirection::Absolute_Left && (CurLocationX - TouchLocationX) > 0)    //’‚ «µ±«∞∆ΩÃ®œÚ◊Û£®æ¯∂‘∑ΩœÚ£©£¨≤¢«“±ª≈ˆ◊≤µƒ∆ΩÃ®‘⁄∆‰”“±ﬂ£®œ‡∂‘∑ΩœÚ£©
+			if (this->PlatDir == EPlatformDirection::Absolute_Left && (CurLocationX - TouchLocationX) > 0)    //ËøôÊòØÂΩìÂâçÂπ≥Âè∞ÂêëÂ∑¶ÔºàÁªùÂØπÊñπÂêëÔºâÔºåÂπ∂‰∏îË¢´Á¢∞ÊíûÁöÑÂπ≥Âè∞Âú®ÂÖ∂Âè≥ËæπÔºàÁõ∏ÂØπÊñπÂêëÔºâ
 				SpawnLocation += -50 * CurDirY;
 
-			if (this->PlatDir == EPlatformDirection::Absolute_Right && (CurLocationX - TouchLocationX) > 0)    //’‚ «µ±«∞∆ΩÃ®œÚ”“£®æ¯∂‘∑ΩœÚ£©£¨≤¢«“±ª≈ˆ◊≤µƒ∆ΩÃ®‘⁄∆‰”“±ﬂ£®œ‡∂‘∑ΩœÚ)
+			if (this->PlatDir == EPlatformDirection::Absolute_Right && (CurLocationX - TouchLocationX) > 0)    //ËøôÊòØÂΩìÂâçÂπ≥Âè∞ÂêëÂè≥ÔºàÁªùÂØπÊñπÂêëÔºâÔºåÂπ∂‰∏îË¢´Á¢∞ÊíûÁöÑÂπ≥Âè∞Âú®ÂÖ∂Âè≥ËæπÔºàÁõ∏ÂØπÊñπÂêë)
 				SpawnLocation += 50 * CurDirY;
 
-			if (this->PlatDir == EPlatformDirection::Absolute_Right && (CurLocationX - TouchLocationX) < 0)    //’‚ «µ±«∞∆ΩÃ®œÚ”“£®æ¯∂‘∑ΩœÚ£©£¨≤¢«“±ª≈ˆ◊≤µƒ∆ΩÃ®‘⁄∆‰◊Û±ﬂ£®œ‡∂‘∑ΩœÚ£©
+			if (this->PlatDir == EPlatformDirection::Absolute_Right && (CurLocationX - TouchLocationX) < 0)    //ËøôÊòØÂΩìÂâçÂπ≥Âè∞ÂêëÂè≥ÔºàÁªùÂØπÊñπÂêëÔºâÔºåÂπ∂‰∏îË¢´Á¢∞ÊíûÁöÑÂπ≥Âè∞Âú®ÂÖ∂Â∑¶ËæπÔºàÁõ∏ÂØπÊñπÂêëÔºâ
 				SpawnLocation += -50 * CurDirY;
 
-			if (this->PlatDir == EPlatformDirection::Absolute_Left && (CurLocationX - TouchLocationX) < 0)    //’‚ «µ±«∞∆ΩÃ®œÚ◊Û£®æ¯∂‘∑ΩœÚ£©£¨≤¢«“±ª≈ˆ◊≤µƒ∆ΩÃ®‘⁄∆‰◊Û±ﬂ£®œ‡∂‘∑ΩœÚ£©
+			if (this->PlatDir == EPlatformDirection::Absolute_Left && (CurLocationX - TouchLocationX) < 0)    //ËøôÊòØÂΩìÂâçÂπ≥Âè∞ÂêëÂ∑¶ÔºàÁªùÂØπÊñπÂêëÔºâÔºåÂπ∂‰∏îË¢´Á¢∞ÊíûÁöÑÂπ≥Âè∞Âú®ÂÖ∂Â∑¶ËæπÔºàÁõ∏ÂØπÊñπÂêëÔºâ
 				SpawnLocation += 50 * CurDirY;
 		}
 	}
@@ -226,7 +226,7 @@ void ARunPlatform_Beam::MoveToPlayerPlat()
 		//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Black, FString::Printf(TEXT("Platform Num: %d"), MC->PlatformArray.Num()));
 		if (MC->CurPlatform != nullptr)
 		{
-			FVector ToPlayerPos = MC->CurPlatform->GetActorLocation() - GetActorLocation();      //–Ë“™“∆∂Øµƒæ‡¿Î
+			FVector ToPlayerPos = MC->CurPlatform->GetActorLocation() - GetActorLocation();      //ÈúÄË¶ÅÁßªÂä®ÁöÑË∑ùÁ¶ª
 
 			FVector DeltaPos;
 			int32 PlatformLength = GetPlatformLength();
@@ -250,7 +250,7 @@ void ARunPlatform_Beam::MoveToPlayerPlat()
 			}
 
 			if (NextPlatform != nullptr)
-				NextPlatToCur = GetActorLocation() + DeltaPos - NextPlatform->GetActorLocation();    //«Û≥ˆœ¬“ª∏ˆ∆’Õ®∆ΩÃ®µΩ∏√∆ΩÃ®µƒœ‡∂‘Œª÷√
+				NextPlatToCur = GetActorLocation() + DeltaPos - NextPlatform->GetActorLocation();    //Ê±ÇÂá∫‰∏ã‰∏Ä‰∏™ÊôÆÈÄöÂπ≥Âè∞Âà∞ËØ•Âπ≥Âè∞ÁöÑÁõ∏ÂØπ‰ΩçÁΩÆ
 		}
 	}
 }

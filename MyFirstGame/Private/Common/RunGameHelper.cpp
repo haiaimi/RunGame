@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "../../Public/Common/RunGameHelper.h"
 #include "ConstructorHelpers.h"
@@ -13,13 +13,16 @@
 #include "DynamicMeshBuilder.h"
 //#include "Materials/MaterialInterface.h"
 #include "Materials/Material.h"
+#include "Materials/MaterialInstanceConstant.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 class UCurveFloat* RunGameHelper::CoinsArrangement = nullptr;
 class UObjectLibrary* RunGameHelper::Library = nullptr;
-//class FDynamicMeshBuilder* RunGameHelper::DynamicMeshBuilder = nullptr;
-class UMaterial* RunGameHelper::DynamicMeshMaterial = nullptr;
+class UMaterialInstanceDynamic* RunGameHelper::DynamicMeshMaterial = nullptr;
 TArray<FDynamicMeshVertex> RunGameHelper::VertexBuffer = { FDynamicMeshVertex() };
-TArray<int32> RunGameHelper::IndexBuffer = { 0 };
+TArray<uint32> RunGameHelper::IndexBuffer = { 0 };
+bool RunGameHelper::bInitilized = false;
+ERHIFeatureLevel::Type RunGameHelper::InFeatureLevel = ERHIFeatureLevel::Type::SM5;
 
 //RunGameHelper::RunGameHelper()
 //{
@@ -60,15 +63,15 @@ TArray<int32> RunGameHelper::IndexBuffer = { 0 };
 
 void RunGameHelper::Initilize()
 {
-	/*·½·¨Ò»£ºÖ±½Ó¼ÓÔØ*/
+	/*æ–¹æ³•ä¸€ï¼šç›´æŽ¥åŠ è½½*/
 	/*UCurveFloat* Temp = LoadObject<UCurveFloat>(nullptr, TEXT("/Game/Blueprint/CoinsArrange"));
 	if (Temp)
 		CoinsArrangement = Temp;*/
 
-	/*·½·¨¶þ£º¼ÓÔØUObject¿â£¬ÕâÊÇ¼ÓÔØÒ»¸öÎÄ¼þ¼ÐµÄ×ÊÔ´£¬ÔÚ¶à¸ö×ÊÔ´µÄÊ±ºò±È½ÏÊÊÓÃ*/
+	/*æ–¹æ³•äºŒï¼šåŠ è½½UObjectåº“ï¼Œè¿™æ˜¯åŠ è½½ä¸€ä¸ªæ–‡ä»¶å¤¹çš„èµ„æºï¼Œåœ¨å¤šä¸ªèµ„æºçš„æ—¶å€™æ¯”è¾ƒé€‚ç”¨*/
 	Library = UObjectLibrary::CreateLibrary(UCurveFloat::StaticClass(), false, false);
-	int32 AssetNums = Library->LoadAssetDataFromPath(TEXT("/Game/Blueprint/Curves"));   //¼ÓÔØÒ»¸ö×ÊÔ´ÎÄ¼þ¼Ð£¬Ò»¶¨ÒªÊ¹ÓÃ¸Ã¼ÓÔØº¯Êý£¬·ñÔò²»»á¼ÓÔØµ½Êý×éÖÐ
-	Library->LoadAssetsFromAssetData();       //ÔØÈëµ½ÄÚ´æ
+	int32 AssetNums = Library->LoadAssetDataFromPath(TEXT("/Game/Blueprint/Curves"));   //åŠ è½½ä¸€ä¸ªèµ„æºæ–‡ä»¶å¤¹ï¼Œä¸€å®šè¦ä½¿ç”¨è¯¥åŠ è½½å‡½æ•°ï¼Œå¦åˆ™ä¸ä¼šåŠ è½½åˆ°æ•°ç»„ä¸­
+	Library->LoadAssetsFromAssetData();       //è½½å…¥åˆ°å†…å­˜
 	//UE_LOG(LogRunGame, Log, TEXT("%d"), AssetNums)
 		
 	TArray<FAssetData> Assets;
@@ -108,30 +111,52 @@ void RunGameHelper::Initilize()
 		0,1,3,
 		3,1,0
 	};
+
+	bInitilized = true;
 }
 
 void RunGameHelper::LoadAsset(UObject* Outer)
 {
 	if (!ensure(Outer))return;
-	DynamicMeshMaterial = LoadObject<UMaterial>(Outer, TEXT("/Game/StarterContent/Materials/M_AssetPlatform"));
+	UMaterialInterface* Material = LoadObject<UMaterialInterface>(Outer, TEXT("/Game/StarterContent/Materials/M_Brick_Clay_Beveled"));
+
+	//DynamicMeshMaterial = Cast<UMaterialInterface>(StaticLoadObject(UMaterialInterface::StaticClass(), Outer, TEXT("/Game/StarterContent/Materials/M_AssetPlatform")));
+	
+	//UMaterialInstanceDynamic* MaterialInstanceDynamic = NewObject<UMaterialInstanceDynamic>(Outer);
+	if (Material)
+	{
+		DynamicMeshMaterial = UMaterialInstanceDynamic::Create(Material, Outer);
+		/*MaterialInstance->SetParentEditorOnly(Material);
+		MaterialInstance->PostEditChange();*/
+		//DynamicMeshMaterial = MaterialInstance;
+		UE_LOG(LogRunGame, Log, TEXT("æè´¨ï¼š%s"), *DynamicMeshMaterial->GetMaterial()->GetName())
+	}
+
+	UWorld* CurWorld = Outer->GetWorld();     //å½“å‰æ‰€åœ¨ä¸–ç•Œ
+	if (CurWorld)
+	{
+		InFeatureLevel = CurWorld->Scene->GetFeatureLevel();
+
+		UE_LOG(LogRunGame, Log, TEXT("FeatureLevel:%d"), (int32)InFeatureLevel)
+	}
 }
 
 void RunGameHelper::ArrangeCoins(UWorld* ContextWorld, UClass* SpawnClass, ARunPlatform* const AttachedPlatform, TEnumAsByte<EPlatformDirection::Type> PreDir)
 {
-	if (!ensure(CoinsArrangement))return;   //Î´´´½¨×ÊÔ´£¬Ö±½Ó·µ»Ø
+	if (!ensure(CoinsArrangement))return;   //æœªåˆ›å»ºèµ„æºï¼Œç›´æŽ¥è¿”å›ž
 	int32 CurveCoins = FMath::RandRange(0, 99);
 
 	if (AttachedPlatform)
 	{
-		FMatrix Orient = FRotationMatrix(AttachedPlatform->GetActorRotation());    //Æ½Ì¨·½Ïò
+		FMatrix Orient = FRotationMatrix(AttachedPlatform->GetActorRotation());    //å¹³å°æ–¹å‘
 		FVector SpawnDirX = Orient.GetUnitAxis(EAxis::X);
 		FVector SpawnDirY = Orient.GetUnitAxis(EAxis::Y);
 		FVector SpawnDirZ = Orient.GetUnitAxis(EAxis::Z);
 
 		FVector FirstSpawnLoc;
-		int32 ScorePosOnPlat = FMath::Rand() % 3;     //0Îª×ó£¬1ÎªÖÐ£¬2ÎªÓÒ
+		int32 ScorePosOnPlat = FMath::Rand() % 3;     //0ä¸ºå·¦ï¼Œ1ä¸ºä¸­ï¼Œ2ä¸ºå³
 
-		//ÏÂÃæ¾ÍÊÇÉèÖÃÈý¸öÎ»ÖÃµÄScore
+		//ä¸‹é¢å°±æ˜¯è®¾ç½®ä¸‰ä¸ªä½ç½®çš„Score
 		if (ScorePosOnPlat == 0)
 			FirstSpawnLoc = AttachedPlatform->GetActorLocation() + SpawnDirY * (AttachedPlatform->GetPlatformWidth() - 20) + 30 * SpawnDirX + SpawnDirZ * 70;
 		else if (ScorePosOnPlat == 1)
@@ -150,7 +175,7 @@ void RunGameHelper::ArrangeCoins(UWorld* ContextWorld, UClass* SpawnClass, ARunP
 		for (int32 i = 0; i < BonusNum; i++)
 		{
 			float RelativeHeight = 0.f;
-			//»ñÈ¡µ±Ç°Ó²±ÒµÄÏà¶Ô¸ß¶È
+			//èŽ·å–å½“å‰ç¡¬å¸çš„ç›¸å¯¹é«˜åº¦
 			if (CurveCoins < 50)
 			{
 				RelativeHeight = 50.f*CoinsArrangement->GetFloatValue(i*XStride);
@@ -167,8 +192,8 @@ void RunGameHelper::ArrangeCoins(UWorld* ContextWorld, UClass* SpawnClass, ARunP
 				SpawnBonus->RotateStartTime = 0.1f*i;
 				UGameplayStatics::FinishSpawningActor(SpawnBonus, SpawnTrans);
 			}
-
-			//SpawnBonus->SetOwner(ContextWorld->GetFirstPlayerController());    //»áÓÃÓÚ¼ì²â
+		
+			//SpawnBonus->SetOwner(ContextWorld->GetFirstPlayerController());    //ä¼šç”¨äºŽæ£€æµ‹
 			SpawnBonus->AttachToActor(AttachedPlatform, FAttachmentTransformRules::KeepWorldTransform);
 			AttachedPlatform->OnDestory.AddUObject(SpawnBonus, &ABonus::DestroyActor);
 			AttachedPlatform->OnFall.AddUObject(SpawnBonus, &ABonus::StartFall);
@@ -182,14 +207,14 @@ void RunGameHelper::DrawMesh(FPrimitiveDrawInterface* PDIRef)
 {
 	//FDynamicMeshBuilder* MeshBuilder = new FDynamicMeshBuilder();
 
-	//// ¶¥µã»º³å
+	//// é¡¶ç‚¹ç¼“å†²
 	//FDynamicMeshVertexBuffer* VertexBuffer = new FDynamicMeshVertexBuffer;
 	//VertexBuffer->Vertices.SetNum(3);
 	//VertexBuffer->Vertices[0] = FDynamicMeshVertex(FVector(0.f, 0.f, 0.f));
 	//VertexBuffer->Vertices[1] = FDynamicMeshVertex(FVector(20000.f, 0.f, 0.f));
 	//VertexBuffer->Vertices[2] = FDynamicMeshVertex(FVector(20000.f, 0.f, 11000.f));
 
-	//// Ë÷Òý»º³å
+	//// ç´¢å¼•ç¼“å†²
 	//FDynamicMeshIndexBuffer* IndexBuffer = new FDynamicMeshIndexBuffer;
 	//IndexBuffer->Indices.SetNum(3);
 	//IndexBuffer->Indices[0] = 0;
@@ -221,25 +246,24 @@ void RunGameHelper::DrawMesh(FPrimitiveDrawInterface* PDIRef)
 	//	3,1,0
 	//};
 
-	FDynamicMeshBuilder DynamicMeshBuilder;
-
-	DynamicMeshBuilder.AddVertex(FVector(0.f, 0.f, 0.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
-	DynamicMeshBuilder.AddVertex(FVector(2000.f, 0.f, 0.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
-	DynamicMeshBuilder.AddVertex(FVector(2000.f, 0.f, 1100.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
-
-	DynamicMeshBuilder.AddTriangle(0, 1, 2);
-	DynamicMeshBuilder.AddTriangle(2, 1, 0);
-	//ÉèÖÃ¶¥µã»º³å
-	//DynamicMeshBuilder.AddVertices(VertexBuffer);
-	////ÉèÖÃË÷Òý»º³å
-	//DynamicMeshBuilder.AddTriangles(IndexBuffer);
-
-	if (DynamicMeshMaterial != nullptr)
+	if (bInitilized/* && DynamicMeshMaterial != nullptr*/)
 	{
-		UE_LOG(LogRunGame, Log, TEXT("ÕÒµ½²ÄÖÊ×ÊÔ´"))
+		FDynamicMeshBuilder DynamicMeshBuilder(InFeatureLevel);
+
+		/*DynamicMeshBuilder.AddVertex(FVector(0.f, 0.f, 0.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
+		DynamicMeshBuilder.AddVertex(FVector(2000.f, 0.f, 0.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
+		DynamicMeshBuilder.AddVertex(FVector(2000.f, 0.f, 1100.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
+		
+		DynamicMeshBuilder.AddTriangle(0, 1, 2);
+		DynamicMeshBuilder.AddTriangle(2, 1, 0);*/
+		//è®¾ç½®é¡¶ç‚¹ç¼“å†²
+		DynamicMeshBuilder.AddVertices(VertexBuffer);
+		//è®¾ç½®ç´¢å¼•ç¼“å†² 
+		DynamicMeshBuilder.AddTriangles(IndexBuffer);
+		
 		FMatrix TranslationMatrix = FTranslationMatrix(FVector(0.f, 0.f, 1000.f));
-		FMatrix ToLocalMatrix = TranslationMatrix * FScaleMatrix(FVector(1.f, 1.f, 1.f));
-		DynamicMeshBuilder.Draw(PDIRef, ToLocalMatrix, DynamicMeshMaterial->GetRenderProxy(false, false), 0);
+		FMatrix ToLocalMatrix = FScaleMatrix(FVector(1.f, 1.f, 1.f)) * TranslationMatrix;
+		DynamicMeshBuilder.Draw(PDIRef, ToLocalMatrix, UMaterial::GetDefaultMaterial(MD_Surface)->GetRenderProxy(false), 0);
 	}
 }
 

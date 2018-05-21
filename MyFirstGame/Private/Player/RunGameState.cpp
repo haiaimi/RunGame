@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "RunGameState.h"
 #include "TimerManager.h"
@@ -10,7 +10,7 @@
 
 ARunGameState::ARunGameState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	PrimaryActorTick.bCanEverTick = true;    //ÔÊĞíÃ¿Ö¡¸üĞÂ
+	PrimaryActorTick.bCanEverTick = true;    //å…è®¸æ¯å¸§æ›´æ–°
 
 	PlayerDistance = 0.f;
 	PlayerScore = 0.f;
@@ -26,7 +26,7 @@ void ARunGameState::BeginPlay()
 	Super::BeginPlay();
 
 	NotifyIntegerMinutes();
-	HasSurvivedTime = 0.f;    //Ê±¼äÖÃÁã
+	HasSurvivedTime = 0.f;    //æ—¶é—´ç½®é›¶
 
 	CharacterRef = Cast<AMyFirstGameCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
 	if (!MiniMapCapture && CharacterRef)
@@ -51,7 +51,7 @@ void ARunGameState::TickActor(float DeltaTime, enum ELevelTick TickType, FActorT
 
 void ARunGameState::AddPlayerDistance(float AddDistance)
 {
-	PlayerDistance += AddDistance / 100.f;     //µ¥Î»×ª»»³ÉÃ×
+	PlayerDistance += AddDistance / 100.f;     //å•ä½è½¬æ¢æˆç±³
 	UpdatePlayerScore(AddDistance * 10.f / 100.f);     
 }
 

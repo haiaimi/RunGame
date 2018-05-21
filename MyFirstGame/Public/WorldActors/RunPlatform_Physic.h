@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -15,11 +15,11 @@ class MYFIRSTGAME_API ARunPlatform_Physic : public ARunPlatform
 	GENERATED_UCLASS_BODY()
 
 public:
-	/**Æ½Ì¨µÄÒÀ¸½ÎïÌå*/
+	/**å¹³å°çš„ä¾é™„ç‰©ä½“*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Platform", meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* AttachedMesh;
 
-	/**ÎïÀíÔ¼Êø×é¼ş*/
+	/**ç‰©ç†çº¦æŸç»„ä»¶*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Platform")
 	class UPhysicsConstraintComponent* ConstraintComponent;
 
@@ -27,7 +27,7 @@ public:
 	class UParticleSystem* LinkParticle;
 
 	class UParticleSystemComponent* SpawnedParticle;
-	/**Æ½Ì¨ÉÏÓÃÓÚºÍÔ¼ÊøµãÁ¬½ÓµÄ²å²Û*/
+	/**å¹³å°ä¸Šç”¨äºå’Œçº¦æŸç‚¹è¿æ¥çš„æ’æ§½*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Platform")
 	FName LinkSocket;
 

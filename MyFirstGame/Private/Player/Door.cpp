@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Door.h"
 #include "Components/BoxComponent.h"
@@ -30,7 +30,7 @@ ADoor::ADoor()
 		DoorMesh->SetupAttachment(DoorRoot);
 	}
 
-	//ÃÅÄ¬ÈÏÎª¹Ø
+	//é—¨é»˜è®¤ä¸ºå…³
 	IsInOpen = false;
 	bReset = false;
 }
@@ -48,7 +48,7 @@ void ADoor::Tick(float DeltaTime)
 
 	if (CanbOperate)
 	{
-		if (CurChar->OpenTheDoor)   //Èç¹ûÎªtrue¾Í¿ÉÒÔ½øĞĞ¿ªÃÅ
+		if (CurChar->OpenTheDoor)   //å¦‚æœä¸ºtrueå°±å¯ä»¥è¿›è¡Œå¼€é—¨
 		{
 			IsInOpen = true;
 			IsInCloseRotate = false;
@@ -105,7 +105,7 @@ void ADoor::Tick(float DeltaTime)
 		if (FMath::Abs(YawRotation) < 1.f)
 		{
 			DoorRoot->SetRelativeRotation(FRotator(0.0f, 0.f, 0.0f));
-			bReset = false;   //ÃÅÖØÖÃÍê³É
+			bReset = false;   //é—¨é‡ç½®å®Œæˆ
 			IsInCloseRotate = false;
 		}
 	}

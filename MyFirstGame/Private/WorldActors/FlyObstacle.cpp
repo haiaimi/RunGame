@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+Ôªø// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlyObstacle.h"
 #include "Components/StaticMeshComponent.h"
@@ -24,9 +24,9 @@ AFlyObstacle::AFlyObstacle(const FObjectInitializer& ObjectInitializer) :Super(O
 	RootComponent = SceneRoot;
 	FlyObstacleMesh->SetupAttachment(RootComponent);
 	FlyObstacleMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	FlyObstacleMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);         //÷ª∂‘ÕÊº“≤˙…˙≈ˆ◊≤
+	FlyObstacleMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);         //Âè™ÂØπÁé©ÂÆ∂‰∫ßÁîüÁ¢∞Êíû
 
-	//ƒ¨»œ≥ıÀŸ∂»”Îº”ÀŸ∂»
+	//ÈªòËÆ§ÂàùÈÄüÂ∫¶‰∏éÂä†ÈÄüÂ∫¶
 	StartSpeed = CurSpeed = 0.f;
 	AccelerateSpeed = 200.f;
 	IsOver = false;
@@ -41,7 +41,7 @@ void AFlyObstacle::PostInitializeComponents()
 
 	if (AimCharacter != nullptr)
 	{
-		FlyDir = (AimCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal2D();         //…Ë÷√≥ı ºµƒ∑ΩœÚ
+		FlyDir = (AimCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal2D();         //ËÆæÁΩÆÂàùÂßãÁöÑÊñπÂêë
 		FlyDst = AimCharacter->GetActorLocation();
 		QueryIsOverSubAngle();
 	}
@@ -57,7 +57,7 @@ void AFlyObstacle::BeginPlay()
 
 	ShowObstaclePosRelativeToChar();
 	ToStopAccelerate = -AccelerateSpeed * 2;
-//≤‚ ‘Ãıº˛±‡“Î
+//ÊµãËØïÊù°‰ª∂ÁºñËØë
 #ifdef WITH_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("In Editor"));
 
@@ -73,19 +73,19 @@ void AFlyObstacle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 
-	if (FVector::DotProduct(FlyDir, (GetActorLocation() - FlyDst).GetSafeNormal2D()) < 0)        //’‚ «ªπŒ¥≥¨π˝ƒø±Íµ„µƒ«Èøˆ
+	if (FVector::DotProduct(FlyDir, (GetActorLocation() - FlyDst).GetSafeNormal2D()) < 0)        //ËøôÊòØËøòÊú™Ë∂ÖËøáÁõÆÊ†áÁÇπÁöÑÊÉÖÂÜµ
 	{
 		SetActorLocation(GetActorLocation() + FlyDir * CurSpeed * DeltaTime);
 
 		const FRotator ObstacleRotation = GetActorRotation();
-		SetActorRotation(FRotator(ObstacleRotation.Pitch, ObstacleRotation.Yaw + CurSpeed * DeltaTime/2.f , ObstacleRotation.Roll));  //Õ¨ ±∏˙ÀÊ“∆∂ØÀŸ∂»–˝◊™
+		SetActorRotation(FRotator(ObstacleRotation.Pitch, ObstacleRotation.Yaw + CurSpeed * DeltaTime/2.f , ObstacleRotation.Roll));  //ÂêåÊó∂Ë∑üÈöèÁßªÂä®ÈÄüÂ∫¶ÊóãËΩ¨
 		CurSpeed += AccelerateSpeed * DeltaTime;
 		if (CurSpeed >= 2000.f)
 			CurSpeed = 2000.f;
 
 		ToCharMaxSpeed = CurSpeed;
 	}
-	else          //’‚ «≥¨π˝ƒø±Íµ„µƒ«Èøˆ
+	else          //ËøôÊòØË∂ÖËøáÁõÆÊ†áÁÇπÁöÑÊÉÖÂÜµ
 	{
 		if (CurSpeed > 0)
 		{
@@ -93,7 +93,7 @@ void AFlyObstacle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 			{
 				if (ToCharMaxSpeed < 1000.f)
 				{
-					CurSpeed = ToCharMaxSpeed = 1000.f;      // π∆‰◊Ó–°µƒºıÀŸ≥ıÀŸ∂»Œ™500£¨∑¿÷πÕ£‘⁄∆ΩÃ®…œπ˝≥§ ±º‰
+					CurSpeed = ToCharMaxSpeed = 1000.f;      //‰ΩøÂÖ∂ÊúÄÂ∞èÁöÑÂáèÈÄüÂàùÈÄüÂ∫¶‰∏∫500ÔºåÈò≤Ê≠¢ÂÅúÂú®Âπ≥Âè∞‰∏äËøáÈïøÊó∂Èó¥
 				}
 				SelectSuitStopAccelerate(FlyDir, ToCharMaxSpeed, ComputeDistanceToStop(ToCharMaxSpeed, ToStopAccelerate));
 			}
@@ -107,7 +107,7 @@ void AFlyObstacle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTi
 			{
 				CurSpeed = 0.f;
 				IsOver = false;
-				ToStopAccelerate = -AccelerateSpeed * 2;  //ª÷∏¥ƒ¨»œµƒ∑µªÿº”ÀŸ∂»
+				ToStopAccelerate = -AccelerateSpeed * 2;  //ÊÅ¢Â§çÈªòËÆ§ÁöÑËøîÂõûÂä†ÈÄüÂ∫¶
 			}
 		}
 	}
@@ -133,30 +133,30 @@ void AFlyObstacle::Destroyed()
 
 void AFlyObstacle::QueryIsOverSubAngle()
 {
-	if ((AimCharacter != nullptr && !IsOver) || ForceActive)  //÷ª”–‘⁄∑«≥¨π˝ ±≤≈÷¥––œ¬√Êµƒ≤Ÿ◊˜
+	if ((AimCharacter != nullptr && !IsOver) || ForceActive)  //Âè™ÊúâÂú®ÈùûË∂ÖËøáÊó∂ÊâçÊâßË°å‰∏ãÈù¢ÁöÑÊìç‰Ωú
 	{
 		bool IsOnPhysicPlatform = false;
 		if (AimCharacter->Controller)
 		{
 			AMyPlayerController* MPC = Cast<AMyPlayerController>(AimCharacter->Controller);
 			if (MPC->CurPlatform != nullptr)
-				IsOnPhysicPlatform = MPC->CurPlatform->IsA(MPC->SpawnPlatform_Physic);    //ÕÊº“µ±«∞∆ΩÃ® «ŒÔ¿Ì∆ΩÃ®æÕÕ£÷π“∆∂Ø
+				IsOnPhysicPlatform = MPC->CurPlatform->IsA(MPC->SpawnPlatform_Physic);    //Áé©ÂÆ∂ÂΩìÂâçÂπ≥Âè∞ÊòØÁâ©ÁêÜÂπ≥Âè∞Â∞±ÂÅúÊ≠¢ÁßªÂä®
 		}
 
 		if (IsOnPhysicPlatform == false)
 		{
 			FVector CurBestDir = (AimCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal2D();
-			float SubAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CurBestDir, FlyDir)));    //À„≥ˆœ‡≤ÓΩ«∂»
+			float SubAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CurBestDir, FlyDir)));    //ÁÆóÂá∫Áõ∏Â∑ÆËßíÂ∫¶
 																											   //GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::FormatAsNumber(SubAngle));
 
 			if ((SubAngle > 30.f && SubAngle < 150.f) || ForceActive)
 			{
-				FlyDir = CurBestDir;   //∏¸∏ƒ∑…––Ω«∂»
-				FlyDst = AimCharacter->GetActorLocation();    //∏¸∏ƒ∑…––µƒƒø±ÍŒª÷√
+				FlyDir = CurBestDir;   //Êõ¥ÊîπÈ£ûË°åËßíÂ∫¶
+				FlyDst = AimCharacter->GetActorLocation();    //Êõ¥ÊîπÈ£ûË°åÁöÑÁõÆÊ†á‰ΩçÁΩÆ
 			}
 		}
 	}
-	GetWorldTimerManager().SetTimer(QueryAngler, this, &AFlyObstacle::QueryIsOverSubAngle, 0.5f, false);    //√ø0.5√ÎºÏ≤È“ª¥Œ
+	GetWorldTimerManager().SetTimer(QueryAngler, this, &AFlyObstacle::QueryIsOverSubAngle, 0.5f, false);    //ÊØè0.5ÁßíÊ£ÄÊü•‰∏ÄÊ¨°
 }
 
 void AFlyObstacle::StartDestroy()
@@ -167,7 +167,7 @@ void AFlyObstacle::StartDestroy()
 
 	ARunGameState* RGS = Cast<ARunGameState>(GetWorld()->GetGameState());
 	if (RGS)
-		RGS->UpdatePlayerScore(1000.f);     //¥›ªŸ“ª∏ˆ∑…––’œ∞≠æÕº”1000∑÷
+		RGS->UpdatePlayerScore(1000.f);     //ÊëßÊØÅ‰∏Ä‰∏™È£ûË°åÈöúÁ¢çÂ∞±Âä†1000ÂàÜ
 
 	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AFlyObstacle::DestroyActor, 4.f, false);
 }
@@ -183,7 +183,7 @@ void AFlyObstacle::DestroyActor()
 void AFlyObstacle::SelectSuitStopAccelerate(FVector MoveDir, float CurSpeed, float MoveDistance)
 {
 	FHitResult Result;
-	FCollisionObjectQueryParams ObjectQueryParams(ECollisionChannel::ECC_WorldDynamic);       //÷ªºÏ≤‚∆ΩÃ®Õ¯∏Ò,∆ΩÃ®Õ¯∏Ò «WorldStatic
+	FCollisionObjectQueryParams ObjectQueryParams(ECollisionChannel::ECC_WorldDynamic);       //Âè™Ê£ÄÊµãÂπ≥Âè∞ÁΩëÊ†º,Âπ≥Âè∞ÁΩëÊ†ºÊòØWorldStatic
 	FCollisionQueryParams QueryParams(TEXT("ObstacleQuery"));
 	GetWorld()->SweepSingleByObjectType(Result,
 										GetActorLocation() + MoveDir * MoveDistance + FVector(0.f, 0.f, 1.f)*400.f,
@@ -192,12 +192,12 @@ void AFlyObstacle::SelectSuitStopAccelerate(FVector MoveDir, float CurSpeed, flo
 										FCollisionShape::MakeBox(HalfObstacleSize*2.f), 
 										QueryParams);
 
-	if (Cast<ARunPlatform>(Result.GetActor()))      //ºÏ≤‚µΩ∆ΩÃ®
+	if (Cast<ARunPlatform>(Result.GetActor()))      //Ê£ÄÊµãÂà∞Âπ≥Âè∞
 	{
-		//œ»º”“∆∂Øæ‡¿Î200
+		//ÂÖàÂä†ÁßªÂä®Ë∑ùÁ¶ª200
 		MoveDistance += 200.f;
 		SelectSuitStopAccelerate(MoveDir, CurSpeed, MoveDistance);
-		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("µ˜’˚º”ÀŸ∂»"));
+		GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("Ë∞ÉÊï¥Âä†ÈÄüÂ∫¶"));
 	} 
 	else
 	{
@@ -208,12 +208,12 @@ void AFlyObstacle::SelectSuitStopAccelerate(FVector MoveDir, float CurSpeed, flo
 float AFlyObstacle::ComputeDistanceToStop(float CurSpeed, float Accelerate)
 {
 	float MoveTime = FMath::Abs(CurSpeed / Accelerate);
-	return FMath::Abs(Accelerate * MoveTime * MoveTime) / 2;       //∑µªÿ“∆∂Øæ‡¿Î
+	return FMath::Abs(Accelerate * MoveTime * MoveTime) / 2;       //ËøîÂõûÁßªÂä®Ë∑ùÁ¶ª
 }
 
 float AFlyObstacle::ComputeAccelerateToStop(float CurSpeed, float MoveDistance)
 {
-	return -(CurSpeed * CurSpeed) / (MoveDistance * 2);       //«Û≥ˆ∫œ  µƒº”ÀŸ∂»
+	return -(CurSpeed * CurSpeed) / (MoveDistance * 2);       //Ê±ÇÂá∫ÂêàÈÄÇÁöÑÂä†ÈÄüÂ∫¶
 }
 
 void AFlyObstacle::ShowObstaclePosRelativeToChar()
@@ -222,12 +222,12 @@ void AFlyObstacle::ShowObstaclePosRelativeToChar()
 	{
 		const FMatrix CharOrient = FRotationMatrix(AimCharacter->GetActorRotation());
 		
-		const FVector CharFront = CharOrient.GetUnitAxis(EAxis::X);    //ÕÊº“’˝«∞∑ΩœÚ
-		const FVector CharBehind = -CharFront;     //’˝∫Û∑Ω
-		const FVector CharRight = CharOrient.GetUnitAxis(EAxis::Y);    //ÕÊº“’˝”“∑Ω
-		const FVector CharLeft = -CharRight;  //ÕÊº“’˝◊Û±ﬂ
+		const FVector CharFront = CharOrient.GetUnitAxis(EAxis::X);    //Áé©ÂÆ∂Ê≠£ÂâçÊñπÂêë
+		const FVector CharBehind = -CharFront;     //Ê≠£ÂêéÊñπ
+		const FVector CharRight = CharOrient.GetUnitAxis(EAxis::Y);    //Áé©ÂÆ∂Ê≠£Âè≥Êñπ
+		const FVector CharLeft = -CharRight;  //Áé©ÂÆ∂Ê≠£Â∑¶Ëæπ
 
-		const FVector CharToObtsacleDir = (GetActorLocation() - AimCharacter->GetActorLocation()).GetSafeNormal2D();   //’œ∞≠ŒÔœ‡∂‘”⁄ÕÊº“µƒ∑ΩœÚ
+		const FVector CharToObtsacleDir = (GetActorLocation() - AimCharacter->GetActorLocation()).GetSafeNormal2D();   //ÈöúÁ¢çÁâ©Áõ∏ÂØπ‰∫éÁé©ÂÆ∂ÁöÑÊñπÂêë
 
 		float FrontDegrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CharFront, CharToObtsacleDir)));
 		if (FrontDegrees < 45.f)
@@ -248,19 +248,19 @@ void AFlyObstacle::ShowObstaclePosRelativeToChar()
 		switch(CurDirToChar)
 		{
 		case EFlyObstacleToCharDir::FOTCD_Front:
-			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("‘⁄«∞∑Ω! ÀŸ∂»Œ™%4.2f m/s"), CurSpeed / 100.f));
+			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("Âú®ÂâçÊñπ! ÈÄüÂ∫¶‰∏∫%4.2f m/s"), CurSpeed / 100.f));
 			break;
 
 		case EFlyObstacleToCharDir::FOTCD_Right:
-			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("‘⁄”“∑Ω! ÀŸ∂»Œ™%4.2f m/s"), CurSpeed / 100.f));
+			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("Âú®Âè≥Êñπ! ÈÄüÂ∫¶‰∏∫%4.2f m/s"), CurSpeed / 100.f));
 			break;
 
 		case EFlyObstacleToCharDir::FOTCD_Behind:
-			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("‘⁄∫Û∑Ω! ÀŸ∂»Œ™%4.2f m/s"), CurSpeed / 100.f));
+			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("Âú®ÂêéÊñπ! ÈÄüÂ∫¶‰∏∫%4.2f m/s"), CurSpeed / 100.f));
 			break;
 
 		case EFlyObstacleToCharDir::FOTCD_Left:
-			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("‘⁄◊Û∑Ω! ÀŸ∂»Œ™%4.2f m/s"), CurSpeed / 100.f));
+			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("Âú®Â∑¶Êñπ! ÈÄüÂ∫¶‰∏∫%4.2f m/s"), CurSpeed / 100.f));
 			break;
 		}
 

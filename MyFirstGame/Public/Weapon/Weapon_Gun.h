@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -7,26 +7,26 @@
 #include "MyFirstGame.h"
 #include "Weapon_Gun.generated.h"
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FWeaponData
 {
 	GENERATED_USTRUCT_BODY()
 
-	/**ËùÄÜĞ¯´ø×î´ó×Óµ¯ÊıÁ¿*/
+	/**æ‰€èƒ½æºå¸¦æœ€å¤§å­å¼¹æ•°é‡*/
 	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
 	int32 MaxAmmo;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
 	int32 AmmoPerClip;
 
-	/**³õÊ¼Ê±×Óµ¯ÊıÁ¿*/
+	/**åˆå§‹æ—¶å­å¼¹æ•°é‡*/
 	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
 	int32 InitialAmmo;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Gun")
 	int8 ShootSpeed;
 
-	/**´ËÇ¹µÄÀàĞÍ*/
+	/**æ­¤æªçš„ç±»å‹*/
 	UPROPERTY(EditDefaultsOnly, Category = "Gun")
 	TEnumAsByte<EWeaponType::Type> WeaponType;
 
@@ -53,14 +53,14 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "GunData")
 	FWeaponData WeaponData;
 
-	/**·¢Éä×Óµ¯Ëù¶ÔÏàÓ¦µÄµã£¨Ç¹µÄ¹Ç÷ÀÉÏ£©*/
+	/**å‘å°„å­å¼¹æ‰€å¯¹ç›¸åº”çš„ç‚¹ï¼ˆæªçš„éª¨éª¼ä¸Šï¼‰*/
 	UPROPERTY(EditDefaultsOnly, Category = "GunData")
 	FName FirePoint;
 
 	UPROPERTY(EditDefaultsOnly, Category = "GunData")
 	class UParticleSystem* FireEmitter;
 
-	/**ÉÁµçÁ£×Ó*/
+	/**é—ªç”µç²’å­*/
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GunData")
 	class UParticleSystem* BeamEmitter;
 
@@ -80,6 +80,6 @@ public:
 
 	FTransform GetFireTransform();
 
-	/**°Ñ¿ª»ğº¯Êı·ÅÔÚÇ¹ÀàÖĞ*/
+	/**æŠŠå¼€ç«å‡½æ•°æ”¾åœ¨æªç±»ä¸­*/
 	virtual void Fire(FVector FireDir);
 };

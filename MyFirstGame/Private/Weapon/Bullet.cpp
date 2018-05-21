@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Bullet.h"
 #include "Components/StaticMeshComponent.h"
@@ -22,10 +22,10 @@ ABullet::ABullet(const FObjectInitializer& ObjectInitializer) :Super(ObjectIniti
 	BulletMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("BulletMesh"));
 	BulletCollision = ObjectInitializer.CreateDefaultSubobject<USphereComponent>(this, TEXT("BulletCollision"));
 
-	BulletCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);          //Ö»ÊÇÓÃÀ´¼ì²â£¬²»¾ßÓÐÎïÀíÄ£Äâ
-	BulletCollision->SetCollisionObjectType(COLLISION_PROJECTILE);          //ÉèÖÃ¸ÃCollisionµÄ¶ÔÏóÀàÐÍ
+	BulletCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);          //åªæ˜¯ç”¨æ¥æ£€æµ‹ï¼Œä¸å…·æœ‰ç‰©ç†æ¨¡æ‹Ÿ
+	BulletCollision->SetCollisionObjectType(COLLISION_PROJECTILE);          //è®¾ç½®è¯¥Collisionçš„å¯¹è±¡ç±»åž‹
 	BulletCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	BulletCollision->SetCollisionResponseToChannel(COLLISION_BOOMQUERY, ECollisionResponse::ECR_Ignore);  //ºöÂÔ±¬Õ¨¼ì²âÌå
+	BulletCollision->SetCollisionResponseToChannel(COLLISION_BOOMQUERY, ECollisionResponse::ECR_Ignore);  //å¿½ç•¥çˆ†ç‚¸æ£€æµ‹ä½“
 	BulletCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Block);  
 	
 	BulletMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -43,7 +43,7 @@ ABullet::ABullet(const FObjectInitializer& ObjectInitializer) :Super(ObjectIniti
 	ProjectileComponent->ProjectileGravityScale = 0.5f;
 
 	//CurWeaponType = EWeaponType::Weapon_Projectile;
-	PrimaryActorTick.TickGroup = TG_PrePhysics;     //ÔÚÎïÀíÄ£ÄâÖ®Ç°ËùÓÐµÄÈÎÎñÒª±»Ö´ÐÐ
+	PrimaryActorTick.TickGroup = TG_PrePhysics;     //åœ¨ç‰©ç†æ¨¡æ‹Ÿä¹‹å‰æ‰€æœ‰çš„ä»»åŠ¡è¦è¢«æ‰§è¡Œ
 }
 
 // Called when the game starts or when spawned
@@ -55,8 +55,8 @@ void ABullet::PostInitializeComponents()
 	ProjectileComponent->OnProjectileStop.AddDynamic(this, &ABullet::OnImpact);
 	if(Instigator)
 	{
-		BulletCollision->MoveIgnoreActors.Add(Instigator);    //ºöÂÔÍæ¼Ò×ÔÉí
-		BulletCollision->MoveIgnoreActors.Add(GetOwner());   //Í¬Ê±ºöÂÔÇ¹±¾Éí
+		BulletCollision->MoveIgnoreActors.Add(Instigator);    //å¿½ç•¥çŽ©å®¶è‡ªèº«
+		BulletCollision->MoveIgnoreActors.Add(GetOwner());   //åŒæ—¶å¿½ç•¥æžªæœ¬èº«
 	}
 	
 	OwnerController = GetInstigatorController();
@@ -68,7 +68,7 @@ void ABullet::PostInitializeComponents()
 		OwnerWeapon = Temp;
 		if (CurWeaponType == EWeaponType::Weapon_Beam && OwnerWeapon->BeamEmitter != NULL)
 		{
-			SpawnedParticle = UGameplayStatics::SpawnEmitterAttached(OwnerWeapon->BeamEmitter, BulletMesh, TEXT("ParticleSocket"));    //Éú³ÉÉÁµçÁ£×Ó
+			SpawnedParticle = UGameplayStatics::SpawnEmitterAttached(OwnerWeapon->BeamEmitter, BulletMesh, TEXT("ParticleSocket"));    //ç”Ÿæˆé—ªç”µç²’å­
 			SpawnedParticle->SetWorldScale3D(FVector(5.f, 5.f, 5.f));
 			SpawnedParticle->SetRelativeRotation(FRotator(0.f, 0.f, 90.f));
 		}
@@ -80,7 +80,7 @@ void ABullet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (OwnerWeapon &&CurWeaponType == EWeaponType::Type::Weapon_Beam) //Ö»ÓÐÉÁµçÇ¹²Å»á¸üÐÂ
+	if (OwnerWeapon &&CurWeaponType == EWeaponType::Type::Weapon_Beam) //åªæœ‰é—ªç”µæžªæ‰ä¼šæ›´æ–°
 	{
 		SpawnedParticle->SetBeamTargetPoint(0, OwnerWeapon->GetFireLocation(), 0);
 		//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, TEXT("Beam is in Update"));
@@ -99,7 +99,7 @@ void ABullet::OnImpact(const FHitResult& HitResult)
 	if (HitResult.GetComponent()->IsSimulatingPhysics() && HitResult.GetActor() != this)
 	{
 		if (CurWeaponType == EWeaponType::Weapon_Projectile)
-			HitResult.GetComponent()->AddImpulseAtLocation(GetVelocity() * 5, GetActorLocation());  //¸øÇ°·½µÄÎïÌåÊ©¼ÓÒ»¸ö³åÁ¦
+			HitResult.GetComponent()->AddImpulseAtLocation(GetVelocity() * 5, GetActorLocation());  //ç»™å‰æ–¹çš„ç‰©ä½“æ–½åŠ ä¸€ä¸ªå†²åŠ›
 		if (CurWeaponType == EWeaponType::Weapon_Beam)
 			HitResult.GetComponent()->AddImpulseAtLocation(GetVelocity() * 100, GetActorLocation());
 	}

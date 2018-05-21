@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Weapon_Gun.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -59,7 +59,7 @@ void AWeapon_Gun::Fire(FVector ShootDir)
 {
 	FTransform SpawnTrans(FRotator::ZeroRotator, GetFireLocation());
 	
-	//µÚÒ»ÖÖ·½·¨
+	//ç¬¬ä¸€ç§æ–¹æ³•
 	ABullet* SpawnBullet = GetWorld()->SpawnActorDeferred<ABullet>(ProjectileWeapon, SpawnTrans, this, this->Instigator);
 	if (SpawnBullet != nullptr)
 	{
@@ -68,13 +68,13 @@ void AWeapon_Gun::Fire(FVector ShootDir)
 		UGameplayStatics::FinishSpawningActor(SpawnBullet, SpawnTrans);
 	}
 
-	//ÊÍ·Å¿ª»ğÌØĞ§
+	//é‡Šæ”¾å¼€ç«ç‰¹æ•ˆ
 	if (GetFireParticle())
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), GetFireParticle(), GetFireLocation());
 	}
 
-	//µÚ¶şÖÖ·½·¨
+	//ç¬¬äºŒç§æ–¹æ³•
 	/*ABullet* SpawnBullet = Cast<ABullet>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, ProjectileWeapon, SpawnTrans));
 	if (SpawnBullet)
 	{

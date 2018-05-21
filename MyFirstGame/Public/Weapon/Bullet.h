@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -31,7 +31,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bullet")
 	float LiveTime;
 
-	/**·¢Éä¸Ã×Óµ¯µÄÇ¹*/
+	/**å‘å°„è¯¥å­å¼¹çš„æª*/
 	class AWeapon_Gun* OwnerWeapon;
 
 	class UParticleSystemComponent* SpawnedParticle;
@@ -49,7 +49,7 @@ public:
 
 	void InitBulletVelocity(const FVector& ShootDir);
 
-	/**°ÑÁ£×ÓµÄÔ´µãÒÀ¸½µ½Æ½Ì¨ÉÏ*/
+	/**æŠŠç²’å­çš„æºç‚¹ä¾é™„åˆ°å¹³å°ä¸Š*/
 	void ChangeParticleSourceToPlatform(FVector SourcePoint);
 	
 };

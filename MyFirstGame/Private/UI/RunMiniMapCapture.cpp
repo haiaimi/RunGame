@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "RunMiniMapCapture.h"
 #include "Engine/SceneCapture2D.h"
@@ -12,7 +12,7 @@ const FRotator RightDir(-90.f, 90.f, 0.f);
 
 ARunMiniMapCapture::ARunMiniMapCapture(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitializer)
 {
-	GetCaptureComponent2D()->bCaptureEveryFrame = false;       //²»½øÐÐÃ¿Ö¡¸üÐÂ£¬Ö»ÓÐÒÆ¶¯»ò¼ÓÔØµÄÊ±ºò½øÐÐäÖÈ¾
+	GetCaptureComponent2D()->bCaptureEveryFrame = false;       //ä¸è¿›è¡Œæ¯å¸§æ›´æ–°ï¼Œåªæœ‰ç§»åŠ¨æˆ–åŠ è½½çš„æ—¶å€™è¿›è¡Œæ¸²æŸ“
 	GetCaptureComponent2D()->bCaptureOnMovement = true;
 
 	PrimaryActorTick.bCanEverTick = true;
@@ -49,14 +49,14 @@ void ARunMiniMapCapture::Tick(float DeltaTime)
 		//if (FMath::Abs(NextRot.Yaw - DstRotator.Yaw) < 1 && FMath::Abs(NextRot.Roll - DstRotator.Roll) < 1)
 		//{
 		//	RootComponent->SetWorldRotation(NextRot);
-		//	bUpdateRot = false;      //Í£Ö¹¸üÐÂ½Ç¶È
+		//	bUpdateRot = false;      //åœæ­¢æ›´æ–°è§’åº¦
 		//}
 
-		//Ê¹ÓÃÆÕÍ¨Rotator½øÐÐ²îÖµ»á³öÏÖÒì³££¬ËùÒÔÊ¹ÓÃËÄÔªÊý
+		//ä½¿ç”¨æ™®é€šRotatorè¿›è¡Œå·®å€¼ä¼šå‡ºçŽ°å¼‚å¸¸ï¼Œæ‰€ä»¥ä½¿ç”¨å››å…ƒæ•°
 		CurLerpAlpha += DeltaTime * 2.f;
 		FQuat quat(RootComponent->GetComponentRotation());
 		FQuat DstQuat(DstRotator);
-		FRotator newRotator = FQuat::Slerp(quat, DstQuat, CurLerpAlpha).Rotator();     //ÕâÀïÊ¹ÓÃÇòÃæÆ½»¬ÏßÐÔ²åÖµ£¬Ê¹ÓÃFastLerp¹ý¶É»áÊ®·Ö²»×ÔÈ»
+		FRotator newRotator = FQuat::Slerp(quat, DstQuat, CurLerpAlpha).Rotator();     //è¿™é‡Œä½¿ç”¨çƒé¢å¹³æ»‘çº¿æ€§æ’å€¼ï¼Œä½¿ç”¨FastLerpè¿‡æ¸¡ä¼šååˆ†ä¸è‡ªç„¶
 		RootComponent->SetWorldRotation(newRotator);
 		RotatorYaw = CachedRotatorYaw + (DstRotator.Yaw - CachedRotatorYaw) * CurLerpAlpha;
 

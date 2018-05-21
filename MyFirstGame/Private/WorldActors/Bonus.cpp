@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Bonus.h"
 #include "Components/StaticMeshComponent.h"
@@ -23,11 +23,11 @@ ABonus::ABonus(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitial
 	BonusQuery = ObjectInitializer.CreateDefaultSubobject<UBoxComponent>(this, TEXT("BonusQuery"));
 
 	BonusShape->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	BonusShape->SetCollisionEnabled(ECollisionEnabled::QueryOnly);     //²»ÓÃÓÚ¼ì²â
+	BonusShape->SetCollisionEnabled(ECollisionEnabled::QueryOnly);     //ä¸ç”¨äºæ£€æµ‹
 
 	BonusQuery->SetCollisionObjectType(COLLISION_BOOMQUERY);
 	BonusQuery->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	BonusQuery->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);   //Ö»¶ÔÍæ¼Ò¼ì²â
+	BonusQuery->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);   //åªå¯¹ç©å®¶æ£€æµ‹
 
 	RootComponent = BonusShape;
 	BonusQuery->SetupAttachment(BonusShape);
@@ -41,14 +41,14 @@ void ABonus::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	//ÓÃÅö×²Ìå°ó¶¨BonusÍø¸ñ
+	//ç”¨ç¢°æ’ä½“ç»‘å®šBonusç½‘æ ¼
 	FVector ShapeExtent = BonusShape->Bounds.BoxExtent;
 	FVector QueryExtent = BonusQuery->Bounds.BoxExtent;
-	//ÉèÖÃÅö×²Ìå°üÎ§ĞÎ×´
+	//è®¾ç½®ç¢°æ’ä½“åŒ…å›´å½¢çŠ¶
 	BonusQuery->SetRelativeScale3D(FVector(ShapeExtent.X / QueryExtent.X, ShapeExtent.Y / QueryExtent.Y, ShapeExtent.Z / QueryExtent.Z));
-	BonusQuery->OnComponentBeginOverlap.AddDynamic(this, &ABonus::BeginOverlap);    //Ìí¼ÓÅö×²ÏìÓ¦
+	BonusQuery->OnComponentBeginOverlap.AddDynamic(this, &ABonus::BeginOverlap);    //æ·»åŠ ç¢°æ’å“åº”
 
-	BonusShape->SetWorldScale3D(BonusData.ShapeScale);   //ÉèÖÃ½±ÀøÍø¸ñµÄ´óĞ¡
+	BonusShape->SetWorldScale3D(BonusData.ShapeScale);   //è®¾ç½®å¥–åŠ±ç½‘æ ¼çš„å¤§å°
 	SetActorRotation(GetActorRotation() + BonusData.ShapeRotation);
 }
 
@@ -58,7 +58,7 @@ void ABonus::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunc
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 
 	RotateStartTime -= DeltaTime;
-	//Ğı×ª
+	//æ—‹è½¬
 	if (RotateStartTime <= 0)
 		SetActorRotation(GetActorRotation() + FRotator(0.f, DeltaTime * 180.f, 0.f));
 	if (bISMoveToScoreBorder)
@@ -97,10 +97,10 @@ void ABonus::DestroyActor()
 
 void ABonus::StartFall()
 {
-	this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform); //´ÓÒÀÀµActorÍÑÀë
+	this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform); //ä»ä¾èµ–Actorè„±ç¦»
 
 	if (!BonusShape->IsSimulatingPhysics() && !bISMoveToScoreBorder)
-		BonusShape->SetSimulatePhysics(true);     //¿ªÆôÎïÀíÄ£Äâ
+		BonusShape->SetSimulatePhysics(true);     //å¼€å¯ç‰©ç†æ¨¡æ‹Ÿ
 }
 void ABonus::MoveToScoreBorder(float DeltaTime)
 {
@@ -108,7 +108,7 @@ void ABonus::MoveToScoreBorder(float DeltaTime)
 	{
 		FVector WorldPosition, WorldDirection;
 		FViewport* ViewPort = ControllerRef->GetLocalPlayer()->ViewportClient->Viewport;
-		ControllerRef->GetLocalPlayer()->GetProjectionData(ViewPort, eSSP_FULL, ProjectionData);      //»ñÈ¡µ±Ç°µÄÍ¶Ó°Êı¾İ
+		ControllerRef->GetLocalPlayer()->GetProjectionData(ViewPort, eSSP_FULL, ProjectionData);      //è·å–å½“å‰çš„æŠ•å½±æ•°æ®
 
 		FVector2D ScreenPosition;
 		ScreenPosition.X = ViewPort->GetSizeXY().X + ControllerRef->ScoreBorderRelativeToTopLeft.X;

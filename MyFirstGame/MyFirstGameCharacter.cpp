@@ -1,4 +1,4 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+ï»¿// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 #include "MyFirstGameCharacter.h"
 #include "Kismet/HeadMountedDisplayFunctionLibrary.h"
@@ -42,15 +42,15 @@ AMyFirstGameCharacter::AMyFirstGameCharacter(const FObjectInitializer& ObjectIni
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = false;
 
-	//ÊÇ·ñ½øÈë»·¹Ë×´Ì¬
+	//æ˜¯å¦è¿›å…¥ç¯é¡¾çŠ¶æ€
 	IsViewAround = false;
 	OpenTheDoor = false;
 	CloseTheDoor = false;
 
 	CanShoot = true;
-	IsInCrounch = false;    //³õÊ¼×´Ì¬ÊÇÕ¾Á¢×´Ì¬
+	IsInCrounch = false;    //åˆå§‹çŠ¶æ€æ˜¯ç«™ç«‹çŠ¶æ€
 	IsTargeting = false;
-	IsInCrounchToStand = false; //³õÊ¼×´Ì¬²»ÔÚ¶¯×÷ÖĞ
+	IsInCrounchToStand = false; //åˆå§‹çŠ¶æ€ä¸åœ¨åŠ¨ä½œä¸­
 	IsInStandToCrounch = false;
 	IsSmoothController = false;
 
@@ -70,7 +70,7 @@ AMyFirstGameCharacter::AMyFirstGameCharacter(const FObjectInitializer& ObjectIni
 
 	CurrentWeaponType = EWeaponType::Type::Weapon_Instant;
 	ShootInternal = 0.f;
-	RunRate = 1.f; //Ä¬ÈÏ¼ÓËÙ¶¯»­²¥·ÅËÙÂÊ
+	RunRate = 1.f; //é»˜è®¤åŠ é€ŸåŠ¨ç”»æ’­æ”¾é€Ÿç‡
 	AddedSpeed = 0.f;
 
 	// Create a follow camera
@@ -137,7 +137,7 @@ void AMyFirstGameCharacter::PostInitializeComponents()
 	CurMaxAcclerateSpeed = MaxAcclerateSpeed;
 	CurMaxRunSpeed = MaxRunSpeed;
 
-	WeaponNum = Inventory.Num();   //ÎäÆ÷ÊıÁ¿
+	WeaponNum = Inventory.Num();   //æ­¦å™¨æ•°é‡
 	if (WeaponNum > 0)
 	{
 		for (int32 i = 0; i < WeaponNum; i++)
@@ -145,8 +145,8 @@ void AMyFirstGameCharacter::PostInitializeComponents()
 			if (Inventory[i])
 			{
 				FActorSpawnParameters param;
-				param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;     //ºöÂÔÅö×²Ìå
-				param.Instigator = this;     //ÉèÖÃÎïÌåËùÓĞÕß
+				param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;     //å¿½ç•¥ç¢°æ’ä½“
+				param.Instigator = this;     //è®¾ç½®ç‰©ä½“æ‰€æœ‰è€…
 				AWeapon_Gun* weapon = GetWorld()->SpawnActor<AWeapon_Gun>(Inventory[i], param);
 				InterInventory.Add(weapon);
 			}
@@ -159,9 +159,9 @@ void AMyFirstGameCharacter::PostInitializeComponents()
 			PackupWeapon(InterInventory[1]);   
 	}
 
-	if (Test)
+	/*if (Test)
 		Test->CreateSceneProxy();
-	Test->SetVisibility(true);
+	Test->SetVisibility(true);*/
 }
 
 void AMyFirstGameCharacter::OnResetVR()
@@ -242,12 +242,12 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
 
-	if (CanShoot && !GetCharacterMovement()->IsFalling())    //Íæ¼ÒÔÚÌøÔ¾µÄ¹ı³ÌÖĞ²»ÄÜÉä»÷
+	if (CanShoot && !GetCharacterMovement()->IsFalling())    //ç©å®¶åœ¨è·³è·ƒçš„è¿‡ç¨‹ä¸­ä¸èƒ½å°„å‡»
 	{
 		if (IsShooting)
 		{	
 			//if (!IsTargeting)
-				//SetActorRotation(FRotator(0.f, GetControlRotation().Yaw, 0.f));     //ÈËÎïÉä»÷Ê±£¬°ÑÈËÎïÉíÌå¶¨ÏòÉèÖÃÎª¿ØÖÆÆ÷¶¨Ïò£¬¼´×¼ĞÄËùÖ¸·½Ïò
+				//SetActorRotation(FRotator(0.f, GetControlRotation().Yaw, 0.f));     //äººç‰©å°„å‡»æ—¶ï¼ŒæŠŠäººç‰©èº«ä½“å®šå‘è®¾ç½®ä¸ºæ§åˆ¶å™¨å®šå‘ï¼Œå³å‡†å¿ƒæ‰€æŒ‡æ–¹å‘
 
 			float AnimRate = ComputeSuitRate(ShootSpeed);
 
@@ -285,26 +285,26 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 	}
 	//GetCharacterMovement()->Jump
 	if (IsInAccelerate && !IsInCrounch && !IsTargeting)
-		GetCharacterMovement()->MaxWalkSpeed = CurMaxAcclerateSpeed + AddedSpeed;       //°ÑËÙ¶È±äÎªµ±Ç°¼ÓËÙ×´Ì¬ËÙ¶È
+		GetCharacterMovement()->MaxWalkSpeed = CurMaxAcclerateSpeed + AddedSpeed;       //æŠŠé€Ÿåº¦å˜ä¸ºå½“å‰åŠ é€ŸçŠ¶æ€é€Ÿåº¦
 
 	else if (IsInCrounch || IsTargeting)
-		GetCharacterMovement()->MaxWalkSpeed = 250.f;    //ÏÂ¶×ºÍÃé×¼Ê±µÄËÙ¶È
+		GetCharacterMovement()->MaxWalkSpeed = 250.f;    //ä¸‹è¹²å’Œç„å‡†æ—¶çš„é€Ÿåº¦
 
 	else
-		GetCharacterMovement()->MaxWalkSpeed = CurMaxRunSpeed + AddedSpeed;      //ËÙ¶È¸ÄÎªµ±Ç°Õı³£ÅÜ²½ËÙ¶È
+		GetCharacterMovement()->MaxWalkSpeed = CurMaxRunSpeed + AddedSpeed;      //é€Ÿåº¦æ”¹ä¸ºå½“å‰æ­£å¸¸è·‘æ­¥é€Ÿåº¦
 
-	//ÏÂÃæÊÇÅĞ¶ÏÊÇ·ñ¿ÉÒÔ¿ªÇ¹£¨¸ù¾İËÙ¶ÈãĞÖµÅĞ¶Ï£¬´óÓÚ800¾Í»á²¥·Å¼ÓËÙ¶¯»­£¬ÓÉÓÚ×´Ì¬»úµÄÉèÖÃ£¬ºóÆÚ¿ÉÒÔÌí¼ÓÒ»¸ö¼ÓËÙãĞÖµ½Ó¿Ú¸ø×´Ì¬»ú£¬Ò²¾Í²»ÄÜ¿ªÇ¹£©
+	//ä¸‹é¢æ˜¯åˆ¤æ–­æ˜¯å¦å¯ä»¥å¼€æªï¼ˆæ ¹æ®é€Ÿåº¦é˜ˆå€¼åˆ¤æ–­ï¼Œå¤§äº800å°±ä¼šæ’­æ”¾åŠ é€ŸåŠ¨ç”»ï¼Œç”±äºçŠ¶æ€æœºçš„è®¾ç½®ï¼ŒåæœŸå¯ä»¥æ·»åŠ ä¸€ä¸ªåŠ é€Ÿé˜ˆå€¼æ¥å£ç»™çŠ¶æ€æœºï¼Œä¹Ÿå°±ä¸èƒ½å¼€æªï¼‰
 	if (GetCharacterMovement()->MaxWalkSpeed >= 800.f)
 		CanShoot = false;
 	else
 		CanShoot = true;
 
-	//ÔÚ»·¹ËĞı×ªÊÓ½Çºó½«ControllerÆ½»¬¹ı¶Éµ½Íæ¼Ò(Actor)·½Ïò
+	//åœ¨ç¯é¡¾æ—‹è½¬è§†è§’åå°†Controllerå¹³æ»‘è¿‡æ¸¡åˆ°ç©å®¶(Actor)æ–¹å‘
 	if (IsSmoothController && Controller != NULL)
 	{
 		FVector ControllerDir = Controller->GetControlRotation().Vector().GetSafeNormal2D();
 		FVector CharDir = GetActorRotation().Vector().GetSafeNormal2D();
-		float SubDegree = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CharDir, ControllerDir)));      //»ñÈ¡Á½ÕßÏà²îµÄ¶ÈÊı
+		float SubDegree = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CharDir, ControllerDir)));      //è·å–ä¸¤è€…ç›¸å·®çš„åº¦æ•°
 
 		float CharYaw = AdjustDegree(GetActorRotation().Yaw);
 		float ControllerYaw = AdjustDegree(Controller->GetControlRotation().Yaw);
@@ -329,7 +329,7 @@ void AMyFirstGameCharacter::TickActor(float DeltaTime, enum ELevelTick TickType,
 
 void AMyFirstGameCharacter::Destroyed()
 {
-	int32 WeaponNum = InterInventory.Num();      //É¾³ıÉú³ÉµÄÎäÆ÷
+	int32 WeaponNum = InterInventory.Num();      //åˆ é™¤ç”Ÿæˆçš„æ­¦å™¨
 	for (int32 i = 0; i < WeaponNum; i++)
 	{
 		if (InterInventory[i] != nullptr)
@@ -371,7 +371,7 @@ void AMyFirstGameCharacter::AddControllerYawInput(float Val)
 }
 void AMyFirstGameCharacter::ViewAround()
 {
-	CanShoot = false;       //»·¹ËµÄÊ±ºò²»ÄÜÉä»÷
+	CanShoot = false;       //ç¯é¡¾çš„æ—¶å€™ä¸èƒ½å°„å‡»
 	IsViewAround = true;
 }
 
@@ -383,8 +383,8 @@ void AMyFirstGameCharacter::StopViewAround()
 
 void AMyFirstGameCharacter::StartAccelerate()
 {
-	if (!IsInCrounch)       //ÔÚÏÂ¶×µÄÊ±ºò²»ÄÜ¼ÓËÙ
-		IsInAccelerate = true;       //¼ÓËÙÅÜµÄÊ±ºòÒ²²»ÄÜÉä»÷
+	if (!IsInCrounch)       //åœ¨ä¸‹è¹²çš„æ—¶å€™ä¸èƒ½åŠ é€Ÿ
+		IsInAccelerate = true;       //åŠ é€Ÿè·‘çš„æ—¶å€™ä¹Ÿä¸èƒ½å°„å‡»
 }
 
 void AMyFirstGameCharacter::StopAccelerate()
@@ -394,8 +394,8 @@ void AMyFirstGameCharacter::StopAccelerate()
 
 FRotator AMyFirstGameCharacter::ComputeAimOffset()const
 {
-	//µÚÒ»ÖÖ·½·¨
-	if (Controller)                    //×¢ÒâÕâ¾ä±Ø¼Ó£¬·ñÔòÀ¶Í¼±ÀÀ££¬Ò»¶¨ÒªÅĞ¶ÏÖ¸ÕëÊÇ·ñÎª¿Õ GetBaseAimRotation() º¯ÊıÒÑ¾­ÅĞ¶Ï¹ı
+	//ç¬¬ä¸€ç§æ–¹æ³•
+	if (Controller)                    //æ³¨æ„è¿™å¥å¿…åŠ ï¼Œå¦åˆ™è“å›¾å´©æºƒï¼Œä¸€å®šè¦åˆ¤æ–­æŒ‡é’ˆæ˜¯å¦ä¸ºç©º GetBaseAimRotation() å‡½æ•°å·²ç»åˆ¤æ–­è¿‡
 	{
 		const FRotator deltaR = /*GetBaseAimRotation()*/Controller->GetControlRotation() - GetActorRotation();
 		const float YawDelta = AdjustDegree(deltaR.Yaw);
@@ -406,9 +406,9 @@ FRotator AMyFirstGameCharacter::ComputeAimOffset()const
 	}
 	return FRotator::ZeroRotator;
 
-	//µÚ¶şÖÖ·½·¨
+	//ç¬¬äºŒç§æ–¹æ³•
 	//const FVector AimDirWS = GetBaseAimRotation().Vector();
-	//const FVector AimDirLS = ActorToWorld().InverseTransformVectorNoScale(AimDirWS);    //»ñÈ¡Á½¸öĞı×ªVectorµÄ²î£¬¾ÍÊÇoffset
+	//const FVector AimDirLS = ActorToWorld().InverseTransformVectorNoScale(AimDirWS);    //è·å–ä¸¤ä¸ªæ—‹è½¬Vectorçš„å·®ï¼Œå°±æ˜¯offset
 	//const FRotator AimRotLS = AimDirLS.Rotation();
 
 	//return AimRotLS;
@@ -440,7 +440,7 @@ void AMyFirstGameCharacter::AvoidOpenDoor()
 
 void AMyFirstGameCharacter::UpdateStandCharacter()
 {
-	float sub = 0.f;					 //ControllerºÍCharacter  µÄYawÖáÖ®¼äµÄ²î
+	float sub = 0.f;					 //Controllerå’ŒCharacter  çš„Yawè½´ä¹‹é—´çš„å·®
 	if (Controller)
 	{
 		float ControllerCurYaw = Controller->GetControlRotation().Yaw;
@@ -483,7 +483,7 @@ float AMyFirstGameCharacter::AdjustDegree(const float in)const
 
 void AMyFirstGameCharacter::Shoot(float AimRate)
 {
-	//ÏÈ²¥·ÅÉä»÷¶¯»­
+	//å…ˆæ’­æ”¾å°„å‡»åŠ¨ç”»
 	if (IsTargeting && ShootAim_Ironsight)
 		PlayAnim(AimRate, ShootAim_Ironsight);
 	if (!IsTargeting && ShootAim)
@@ -504,8 +504,8 @@ FHitResult AMyFirstGameCharacter::QueryCrossHair(float Distance)
 		MPC = Cast<AMyPlayerController>(Controller);
 		ViewLocation = MPC->PlayerCameraManager->ViewTarget.POV.Location;
 		ViewRotation = MPC->GetControlRotation();
-		//FVector ForwardVec = ViewRotation.Vector();                    //Ò²Ê¹ÓÃ¸Ã·½·¨
-		FVector ForwardVec = FRotationMatrix(ViewRotation).GetUnitAxis(EAxis::X);         //»ñÈ¡Ä³¸öÖáµÄ·½ÏòÒ²¿ÉÒÔÊ¹ÓÃ¾ØÕó
+		//FVector ForwardVec = ViewRotation.Vector();                    //ä¹Ÿä½¿ç”¨è¯¥æ–¹æ³•
+		FVector ForwardVec = FRotationMatrix(ViewRotation).GetUnitAxis(EAxis::X);         //è·å–æŸä¸ªè½´çš„æ–¹å‘ä¹Ÿå¯ä»¥ä½¿ç”¨çŸ©é˜µ
 
 		FCollisionQueryParams TraceParam(TEXT("QueryInstant"), false, this);
 		FCollisionResponseParams ResponseParam(ECollisionResponse::ECR_Block);
@@ -527,8 +527,8 @@ FVector AMyFirstGameCharacter::ComputeShootDir(float AdjustDistance)
 		ViewLocation = MPC->PlayerCameraManager->ViewTarget.POV.Location;
 		ViewRotation = MPC->GetControlRotation();
 		
-		FVector ForwardVec = FRotationMatrix(ViewRotation).GetUnitAxis(EAxis::X);         //»ñÈ¡Ä³¸öÖáµÄ·½ÏòÒ²¿ÉÒÔÊ¹ÓÃ¾ØÕó
-		FVector ShootVec = ForwardVec * AdjustDistance + ViewLocation - CurWeapon->GetFireLocation();    //Ç¹¿ÚÎ»ÖÃµ½¾İÍæ¼ÒÊÓÏßÖĞĞÄÒ»¶¨¾àÀëÎ»ÖÃµÄ·½Ïò
+		FVector ForwardVec = FRotationMatrix(ViewRotation).GetUnitAxis(EAxis::X);         //è·å–æŸä¸ªè½´çš„æ–¹å‘ä¹Ÿå¯ä»¥ä½¿ç”¨çŸ©é˜µ
+		FVector ShootVec = ForwardVec * AdjustDistance + ViewLocation - CurWeapon->GetFireLocation();    //æªå£ä½ç½®åˆ°æ®ç©å®¶è§†çº¿ä¸­å¿ƒä¸€å®šè·ç¦»ä½ç½®çš„æ–¹å‘
 
 		return ShootVec;
 	}
@@ -556,8 +556,8 @@ void AMyFirstGameCharacter::Fire()
 	}
 	else
 	{
-		//ShootDir = (Controller->GetControlRotation() + FRotator(2.f, 0.f, 0.f)).Vector();      //PitchĞı×ªÖáÌá¸ß2¶È£¬ÒÔÊÊÅä×¼ĞÄÎ»ÖÃ£¬Õâ¸ö·½·¨Êµ²â²»Ôõ²»ĞĞ£¬Æ«ÒÆ²»ºÃ¿ØÖÆ
-		ShootDir = ComputeShootDir(50000.f);     //¼ÆËãºÏÊÊµÄÉä»÷½Ç¶È£¬ÕâÀïÉèÖÃÎ»500Ã×µ÷Õû¾àÀë
+		//ShootDir = (Controller->GetControlRotation() + FRotator(2.f, 0.f, 0.f)).Vector();      //Pitchæ—‹è½¬è½´æé«˜2åº¦ï¼Œä»¥é€‚é…å‡†å¿ƒä½ç½®ï¼Œè¿™ä¸ªæ–¹æ³•å®æµ‹ä¸æ€ä¸è¡Œï¼Œåç§»ä¸å¥½æ§åˆ¶
+		ShootDir = ComputeShootDir(50000.f);     //è®¡ç®—åˆé€‚çš„å°„å‡»è§’åº¦ï¼Œè¿™é‡Œè®¾ç½®ä½500ç±³è°ƒæ•´è·ç¦»
 	}
 	CurWeapon->Fire(ShootDir);
 }
@@ -566,14 +566,14 @@ void AMyFirstGameCharacter::NextWeapon()
 {
 	int32 NextWeaponIndex = (InterInventory.Find(CurWeapon) + 1) % InterInventory.Num();
 	AWeapon_Gun* const pNextWeapon = InterInventory[NextWeaponIndex];
-	EquipWeapon(pNextWeapon); //×°±¸ÏÂÒ»¸öÎäÆ÷
+	EquipWeapon(pNextWeapon); //è£…å¤‡ä¸‹ä¸€ä¸ªæ­¦å™¨
 }
 
 void AMyFirstGameCharacter::PreWeapon()
 {
 	int32 PreWeaponIndex = InterInventory.Find(CurWeapon) == 0 ? (InterInventory.Num() - 1) : (InterInventory.Find(CurWeapon) - 1) % InterInventory.Num();
 	AWeapon_Gun* const pPreWeapon = InterInventory[PreWeaponIndex];
-	EquipWeapon(pPreWeapon); //×°±¸Ç°Ò»¸öÎäÆ÷
+	EquipWeapon(pPreWeapon); //è£…å¤‡å‰ä¸€ä¸ªæ­¦å™¨
 }
 
 float AMyFirstGameCharacter::PlayAnim(float rate, UAnimMontage* Anim)
@@ -589,13 +589,13 @@ float AMyFirstGameCharacter::PlayAnim(float rate, UAnimMontage* Anim)
 float AMyFirstGameCharacter::ComputeSuitRate(int8 CurShootSpeed)
 {
 	
-	if (CurrentWeaponType == EWeaponType::Weapon_Beam)   //Èç¹ûÊÇÉÁµçÇ¹¾Í°´Õı³£¶¯»­ÆµÂÊ
+	if (CurrentWeaponType == EWeaponType::Weapon_Beam)   //å¦‚æœæ˜¯é—ªç”µæªå°±æŒ‰æ­£å¸¸åŠ¨ç”»é¢‘ç‡
 		return 1.f;
 
 	else if (CurrentWeaponType == EWeaponType::Weapon_Projectile)
 	{
-		float PerShootAnimTime = 0.233f;    //Ã¿·¢¶¯»­µÄÊ±¼ä
-		float CurPerShootTime = 1.f / CurShootSpeed;          //µ±Ç°ÉäËÙÇé¿öÏÂ£¬·¢Éä×Óµ¯¼ä¸ôÊ±¼ä
+		float PerShootAnimTime = 0.233f;    //æ¯å‘åŠ¨ç”»çš„æ—¶é—´
+		float CurPerShootTime = 1.f / CurShootSpeed;          //å½“å‰å°„é€Ÿæƒ…å†µä¸‹ï¼Œå‘å°„å­å¼¹é—´éš”æ—¶é—´
 		return PerShootAnimTime / CurPerShootTime;
 	}
 	return 1.f;
@@ -613,14 +613,14 @@ void AMyFirstGameCharacter::ToggleCrounchStat()
 			if (IsTargeting && StandToCrounchAim_Ironsight)
 				ActionAnimTime = PlayAnim(1.f, StandToCrounchAim_Ironsight);
 			if (!IsTargeting && StandToCrounchAim)
-				ActionAnimTime = PlayAnim(1.f, StandToCrounchAim); //¶¯»­²¥·ÅµÄÊ±¼ä
+				ActionAnimTime = PlayAnim(1.f, StandToCrounchAim); //åŠ¨ç”»æ’­æ”¾çš„æ—¶é—´
 
-			CurActionTime = GetWorld()->GetTimeSeconds();          //»ñÈ¡¶¯»­¿ªÊ¼Ê±¼ä
+			CurActionTime = GetWorld()->GetTimeSeconds();          //è·å–åŠ¨ç”»å¼€å§‹æ—¶é—´
 			IsInStandToCrounch = true;
 			GetCharacterMovement()->MaxWalkSpeed = 250.f;
 
 			FVector CapLocation = GetCapsuleComponent()->GetComponentLocation();
-			GetCapsuleComponent()->SetCapsuleHalfHeight(48.f);     //ÈËÎï¶×ÏÂ£¬Åö×²ÌåÒ²ÒªËæ×Å±äĞ¡£¬ÕâÀïËõĞ¡ÎªÔ­À´µÄÒ»°ë
+			GetCapsuleComponent()->SetCapsuleHalfHeight(48.f);     //äººç‰©è¹²ä¸‹ï¼Œç¢°æ’ä½“ä¹Ÿè¦éšç€å˜å°ï¼Œè¿™é‡Œç¼©å°ä¸ºåŸæ¥çš„ä¸€åŠ
 			GetCapsuleComponent()->SetWorldLocation(CapLocation - FVector(0.f, 0.f, 48.f));
 			GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -48));
 		}
@@ -645,27 +645,27 @@ void AMyFirstGameCharacter::ToggleCrounchStat()
 
 void AMyFirstGameCharacter::EquipWeapon(AWeapon_Gun* const curWeapon)
 {
-	//ÉèÖÃµ±Ç°ÎäÆ÷ÀàĞÍ£¬¼°ÉäËÙ
+	//è®¾ç½®å½“å‰æ­¦å™¨ç±»å‹ï¼ŒåŠå°„é€Ÿ
 	if (curWeapon)
 	{
 		CurrentWeaponType = curWeapon->WeaponData.WeaponType;
 		AMyPlayerController* MPC = Cast<AMyPlayerController>(Controller);
 		if (MPC != nullptr)
-			MPC->ChangeWeaponType(CurrentWeaponType);     //°ÑÎäÆ÷ÀàĞÍ²ÎÊı´«µ½Controller
+			MPC->ChangeWeaponType(CurrentWeaponType);     //æŠŠæ­¦å™¨ç±»å‹å‚æ•°ä¼ åˆ°Controller
 
 		ShootSpeed = curWeapon->WeaponData.ShootSpeed;
 
 		CurWeapon->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
 		PackupWeapon(CurWeapon);
 		CurWeapon = curWeapon;
-		CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponSocket);       //°ÑWeapon¸½×Åµ½Íæ¼ÒÉíÉÏ,¼Ç×¡ÊÇ¸½×ÅÔÚÍø¸ñÉÏ£¬¶ø²»ÊÇÕû¸öActor
+		CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, WeaponSocket);       //æŠŠWeaponé™„ç€åˆ°ç©å®¶èº«ä¸Š,è®°ä½æ˜¯é™„ç€åœ¨ç½‘æ ¼ä¸Šï¼Œè€Œä¸æ˜¯æ•´ä¸ªActor
 		CurWeapon->SetActorRelativeRotation(FRotator(0.f, 90.f, 0.f));
 	}
 }
 
 void AMyFirstGameCharacter::PackupWeapon(AWeapon_Gun* PackupWeapon)
 {
-	/*Ä¬ÈÏÊı×éÖĞµÚÒ»¸öÎªÒ»ºÅÎäÆ÷£¬µÚ¶ş¸öÎª¶şºÅÎäÆ÷*/
+	/*é»˜è®¤æ•°ç»„ä¸­ç¬¬ä¸€ä¸ªä¸ºä¸€å·æ­¦å™¨ï¼Œç¬¬äºŒä¸ªä¸ºäºŒå·æ­¦å™¨*/
 	int32 AttackIndex = InterInventory.Find(PackupWeapon);
 	if (AttackIndex == 0)
 	{
@@ -681,7 +681,7 @@ void AMyFirstGameCharacter::PackupWeapon(AWeapon_Gun* PackupWeapon)
 
 void AMyFirstGameCharacter::ApplyBonus(class ABonus* BonusActor)
 {
-	EBonusType::Type BonusType = BonusActor->BonusData.BonusType;    //»ñÈ¡¸Ã½±Àø×´Ì¬
+	EBonusType::Type BonusType = BonusActor->BonusData.BonusType;    //è·å–è¯¥å¥–åŠ±çŠ¶æ€
 	if (BonusType != EBonusType::Bonus_None)
 	{
 		if (BonusType == EBonusType::Bonus_Score)

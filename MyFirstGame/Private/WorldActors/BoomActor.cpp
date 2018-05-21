@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BoomActor.h"
 #include "PhysicsEngine/RadialForceComponent.h"
@@ -21,24 +21,24 @@ ABoomActor::ABoomActor()
 	BoomEmitter = CreateDefaultSubobject<UParticleSystem>("BoomEmitter");
 	QueryChar = CreateDefaultSubobject<USphereComponent>("QueryCharacter");
 	QueryChar->SetSphereRadius(250.f);
-	QueryChar->SetCollisionObjectType(COLLISION_BOOMQUERY);    //ÉèÖÃ¼ì²âÌåµÄÅö×²ÀàĞÍ
+	QueryChar->SetCollisionObjectType(COLLISION_BOOMQUERY);    //è®¾ç½®æ£€æµ‹ä½“çš„ç¢°æ’ç±»å‹
 	QueryChar->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	QueryChar->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-	QueryChar->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECollisionResponse::ECR_Ignore);    //ºöÂÔ×Óµ¯Åö×²¼ì²â
-	QueryChar->SetCollisionEnabled(ECollisionEnabled::QueryOnly);      //Ö»ÓÃÓÚ¼ì²â
+	QueryChar->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECollisionResponse::ECR_Ignore);    //å¿½ç•¥å­å¼¹ç¢°æ’æ£€æµ‹
+	QueryChar->SetCollisionEnabled(ECollisionEnabled::QueryOnly);      //åªç”¨äºæ£€æµ‹
 
 	WhatToBoom->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
-	WhatToBoom->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECollisionResponse::ECR_Block);   //»ØÓ¦×Óµ¯Åö×²¼ì²â
+	WhatToBoom->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECollisionResponse::ECR_Block);   //å›åº”å­å¼¹ç¢°æ’æ£€æµ‹
 	RootComponent = WhatToBoom;
 
 	QueryChar->SetupAttachment(WhatToBoom);
 	WhatToBoom->SetRelativeLocation(FVector(0.f, 0.f, 0.f));  
 	RadialForce->SetupAttachment(RootComponent);
 	RadialForce->SetRelativeLocation(FVector::ZeroVector);
-	RadialForce->SetActive(false);                   //Ä¬ÈÏÉèÖÃ±¬Õ¨×é¼ş´¦ÓÚ·Ç¼¤»î×´Ì¬
-	RadialForce->bAutoActivate = false;         //½ûÖ¹×Ô¶¯¼¤»î
-	RadialForce->ForceStrength = 3000000.f;  //ÉèÖÃ±¬Õ¨µÄÁ¦Á¿
-	RadialForce->Radius = 500.f;                      //ÉèÖÃ±¬Õ¨°ë¾¶
+	RadialForce->SetActive(false);                   //é»˜è®¤è®¾ç½®çˆ†ç‚¸ç»„ä»¶å¤„äºéæ¿€æ´»çŠ¶æ€
+	RadialForce->bAutoActivate = false;         //ç¦æ­¢è‡ªåŠ¨æ¿€æ´»
+	RadialForce->ForceStrength = 3000000.f;  //è®¾ç½®çˆ†ç‚¸çš„åŠ›é‡
+	RadialForce->Radius = 500.f;                      //è®¾ç½®çˆ†ç‚¸åŠå¾„
 
 	IsBoom = false;
 	CanBoom = true;
@@ -60,7 +60,7 @@ void ABoomActor::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTick
 void ABoomActor::Boom()
 {
 	RadialForce->SetActive(true);
-	QueryChar->SetCollisionEnabled(ECollisionEnabled::NoCollision);  //Í£Ö¹¼ì²â£¬ÒÑ¾­±¬Õ¨¹ı
+	QueryChar->SetCollisionEnabled(ECollisionEnabled::NoCollision);  //åœæ­¢æ£€æµ‹ï¼Œå·²ç»çˆ†ç‚¸è¿‡
 	if (BoomEmitter)
 	{
 		//UGameplayStatics::SpawnEmitterAttached(BoomEmitter, WhatToBoom, NAME_None, WhatToBoom->GetComponentLocation());
@@ -72,7 +72,7 @@ void ABoomActor::Boom()
 	if (GetWorld())
 	{
 		GetWorldTimerManager().SetTimer(SpawnParticle, this, &ABoomActor::DestroyActor, 2.f, false);
-		GetWorldTimerManager().SetTimer(ForceTime, this, &ABoomActor::StopForce, 0.5f, false);    //±¬Õ¨Ğ§¹ûÖ»³ÖĞø0.5Ãë
+		GetWorldTimerManager().SetTimer(ForceTime, this, &ABoomActor::StopForce, 0.5f, false);    //çˆ†ç‚¸æ•ˆæœåªæŒç»­0.5ç§’
 	}
 
 	IsBoom = true;
@@ -99,11 +99,11 @@ void ABoomActor::StartSimulatePhysic()
 
 void ABoomActor::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	if (InitiativeToBoom)     //Èç¹ûÊÇÖ÷¶¯±¬Õ¨£¨¼ì²âµ½ÈË¾Í±¬Õ¨£©
+	if (InitiativeToBoom)     //å¦‚æœæ˜¯ä¸»åŠ¨çˆ†ç‚¸ï¼ˆæ£€æµ‹åˆ°äººå°±çˆ†ç‚¸ï¼‰
 	{
 		if (Cast<AMyFirstGameCharacter>(OtherActor))
 		{
-			Boom(); //Èç¹û¼ì²âµ½Íæ¼Ò¾Í±¬Õ¨
+			Boom(); //å¦‚æœæ£€æµ‹åˆ°ç©å®¶å°±çˆ†ç‚¸
 		}
 	}
 }

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -9,7 +9,7 @@ class ARunPlatform;
 class FPrimitiveDrawInterface;
 
 /**
- * ¸ÃÀàÓÃÓÚ×ÊÔ´¼ÓÔØ£¬µÈÒ»Ğ©ÆäËû×÷ÓÃ
+ * è¯¥ç±»ç”¨äºèµ„æºåŠ è½½ï¼Œç­‰ä¸€äº›å…¶ä»–ä½œç”¨
  */
 class MYFIRSTGAME_API RunGameHelper
 {
@@ -20,7 +20,7 @@ public:
 
 	static void Initilize();
 
-	/**¼ÓÔØÒ»Ğ©×ÊÔ´£¬ÒÀÀµÍâ²¿Àà£¬ÒÔÃâ±»Çå³ı*/
+	/**åŠ è½½ä¸€äº›èµ„æºï¼Œä¾èµ–å¤–éƒ¨ç±»ï¼Œä»¥å…è¢«æ¸…é™¤*/
 	static void LoadAsset(UObject* Outer);
 
 	static void ArrangeCoins(UWorld* ContextWorld, UClass* SpawnClass, ARunPlatform* const AttachedPlatform, TEnumAsByte<EPlatformDirection::Type> PreDir);
@@ -32,15 +32,19 @@ public:
 	static void DrawMesh(FPrimitiveDrawInterface* PDIRef);
 
 private:
+	static bool bInitilized;
+
 	static class UCurveFloat* CoinsArrangement;
 
 	static class UObjectLibrary* Library;
 
 	//static class FDynamicMeshBuilder* DynamicMeshBuilder;
 
-	static class UMaterial* DynamicMeshMaterial;
+	static class UMaterialInstanceDynamic* DynamicMeshMaterial;
 
 	static TArray<FDynamicMeshVertex> VertexBuffer;
 
-	static TArray<int32> IndexBuffer;
+	static TArray<uint32> IndexBuffer;
+
+	static ERHIFeatureLevel::Type InFeatureLevel;
 };

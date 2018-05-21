@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -9,10 +9,10 @@
 
 struct FSceneViewProjectionData;
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FBonusData
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly, Category = "Score")
 	int32 BonusScore;
@@ -25,11 +25,11 @@ struct FBonusData
 
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	TEnumAsByte<EBonusType::Type> BonusType;
-	/**µ÷ÕûĞÎ×´µÄ´óĞ¡*/
+	/**è°ƒæ•´å½¢çŠ¶çš„å¤§å°*/
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	FVector ShapeScale;
 
-	/**µ÷ÕûÍø¸ñµÄ¶¨Ïò*/
+	/**è°ƒæ•´ç½‘æ ¼çš„å®šå‘*/
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	FRotator ShapeRotation;
 
@@ -89,6 +89,6 @@ public:
 
 	void StartFall();
 
-	/**½ğ±ÒÒÆÏòUIµÄÌØĞ§*/
+	/**é‡‘å¸ç§»å‘UIçš„ç‰¹æ•ˆ*/
 	void MoveToScoreBorder(float DeltaTime);
 };

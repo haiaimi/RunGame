@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Weapon_Gun_Beam.h"
 #include "Particles/ParticleSystem.h"
@@ -30,7 +30,7 @@ void AWeapon_Gun_Beam::Fire(FVector ShootDir)
 		UGameplayStatics::FinishSpawningActor(SpawnBullet, SpawnTrans);
 	}
 
-	//ÊÍ·Å¿ª»ğÌØĞ§
+	//é‡Šæ”¾å¼€ç«ç‰¹æ•ˆ
 	if (GetFireParticle())
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), GetFireParticle(), GetFireLocation());

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -22,7 +22,7 @@ public:
 	virtual void PostInitializeComponents()override;
 
 public:
-	//ÏÂÃæµÄº¯Êı²»ĞèÒªµ÷ÓÃ¸¸Àà
+	//ä¸‹é¢çš„å‡½æ•°ä¸éœ€è¦è°ƒç”¨çˆ¶ç±»
 	UFUNCTION()
 	virtual void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)override;
 
@@ -32,26 +32,26 @@ public:
 	virtual void StartDestroy()override;
 	
 public:
-	/**ÓÃÓÚ¸ÃÆ½Ì¨ÏÂ×¹Ïú»Ù*/
+	/**ç”¨äºè¯¥å¹³å°ä¸‹å é”€æ¯*/
 	FTimerHandle ToFall;
 
-	/**¸ÃÆ½Ì¨Éú³ÉÊ±µÄ¶¨Ïò*/
+	/**è¯¥å¹³å°ç”Ÿæˆæ—¶çš„å®šå‘*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Platform")
 	FRotator SpawnRotation;
 
 	class UCurveFloat* MoveCurve;
 
-	/**¸ÃÆ½Ì¨ÊÇ·ñÒÆ¶¯*/
+	/**è¯¥å¹³å°æ˜¯å¦ç§»åŠ¨*/
 	uint32 bCanMove : 1;
 
 	float MoveCurveTime;
 
-	/**ÓÃÓÚÆ½Ì¨ÒÆ¶¯²îÒì»¯*/
+	/**ç”¨äºå¹³å°ç§»åŠ¨å·®å¼‚åŒ–*/
 	float MoveStartTime;
 
 	class AJumpPlatform* PrePlatform = nullptr;
 
 private:
-	/**´İ»ÙÁÙ½üµÄÆ½Ì¨*/
+	/**æ‘§æ¯ä¸´è¿‘çš„å¹³å°*/
 	//FTimerHandle AdjacentFall;
 };
