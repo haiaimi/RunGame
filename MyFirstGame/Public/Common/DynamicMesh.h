@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -8,8 +8,9 @@
 
 class FPrimitiveSceneProxy;
 class FPrimitiveDrawInterface;
+class UMaterialInstanceConstant;
 /**
- * ¸ÃÀàÓÃÓÚ»ñÈ¡ PDI½Ó¿Ú½øĞĞ¶¯Ì¬»æÍ¼
+ * è¯¥ç±»ç”¨äºè·å– PDIæ¥å£è¿›è¡ŒåŠ¨æ€ç»˜å›¾
  */
 UCLASS()
 class MYFIRSTGAME_API UDynamicMesh : public UPrimitiveComponent
@@ -22,7 +23,10 @@ public:
 	virtual FBoxSphereBounds CalcBounds(const FTransform& LocalToWorld) const override;
 
 public:
-	/**»æÍ¼½Ó¿Ú*/
+	/**ç»˜å›¾æ¥å£*/
 	class FPrimitiveDrawInterface* PDI;
+
+	class UMaterialInstanceConstant* ConstantMaterial;
 	
 };
+
