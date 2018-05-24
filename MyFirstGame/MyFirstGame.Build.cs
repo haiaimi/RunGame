@@ -19,8 +19,7 @@ public class MyFirstGame : ModuleRules
                                                             "RenderCore",
                                                             "Renderer",
                                                             "RHI",
-                                                            "Slate",
-                                                            "SlateCore",
+                                                            "ShaderCore",
                                                             "CustomMeshComponent"
 
         });
