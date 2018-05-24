@@ -12,12 +12,19 @@ public class MyFirstGame : ModuleRules
                                                             "CoreUObject",
                                                             "Engine",
                                                             "InputCore",
-                                                            "HeadMountedDisplay" ,
+                                                           // "HeadMountedDisplay" ,
                                                             "UnrealEd",
                                                             "ImageWrapper",
                                                             "UMG",
                                                             "RenderCore",
-                                                            "Renderer"
+                                                            "Renderer",
+                                                            "RHI",
+                                                            "Slate",
+                                                            "SlateCore",
+                                                            "CustomMeshComponent"
+
         });
+
+      //  PrivateIncludePathModuleNames.AddRange(new string[] { "CustomMeshComponent" });
 	}
 }
