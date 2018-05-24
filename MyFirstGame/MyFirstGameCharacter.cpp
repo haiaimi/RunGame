@@ -1,7 +1,6 @@
 ﻿// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 #include "MyFirstGameCharacter.h"
-#include "Kismet/HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -24,6 +23,7 @@
 #include "RunGameState.h"
 #include "DynamicMesh.h"
 #include "RunGameHelper.h"
+#include "ProcedureMesh.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AMyFirstGameCharacter
@@ -80,10 +80,6 @@ AMyFirstGameCharacter::AMyFirstGameCharacter(const FObjectInitializer& ObjectIni
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
-
-	Test = ObjectInitializer.CreateDefaultSubobject<UDynamicMesh>(this, TEXT("PDITest"));
-	//Test->SetupAttachment(RootComponent);
-	Test->SetVisibility(true);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -125,9 +121,6 @@ void AMyFirstGameCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	// handle touch devices
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AMyFirstGameCharacter::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &AMyFirstGameCharacter::TouchStopped);
-
-	// VR headset functionality
-	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AMyFirstGameCharacter::OnResetVR);
 }
 
 void AMyFirstGameCharacter::PostInitializeComponents()
@@ -162,11 +155,6 @@ void AMyFirstGameCharacter::PostInitializeComponents()
 	/*if (Test)
 		Test->CreateSceneProxy();
 	Test->SetVisibility(true);*/
-}
-
-void AMyFirstGameCharacter::OnResetVR()
-{
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
 void AMyFirstGameCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
