@@ -13,6 +13,7 @@
 #include "Materials/MaterialInstanceConstant.h"
 
 
+
 UDynamicMesh::UDynamicMesh(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitializer)
 {
 	PDI = nullptr;
@@ -145,7 +146,7 @@ FPrimitiveSceneProxy* UDynamicMesh::CreateSceneProxy()
 			Result.bRenderInMainPass = ShouldRenderInMainPass();
 			Result.bUsesLightingChannels = GetLightingChannelMask() != GetDefaultLightingChannelMask();
 			Result.bOpaqueRelevance = true;
-			
+	
 			//Result.bEditorPrimitiveRelevance = true;
 		
 			return Result;
