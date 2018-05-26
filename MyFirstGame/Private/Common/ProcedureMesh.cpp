@@ -15,6 +15,26 @@
 #include "PhysicsEngine/BodySetup.h"
 #include "VertexFactory.h"
 #include "RenderResource.h"
+#include "RenderingThread.h"
+
+
+struct FProcedureMeshVertex
+{
+	FProcedureMeshVertex() {}    //默认构造函数
+	FProcedureMeshVertex(const FVector& InPosition):
+		Position(InPosition),
+		TextureCoordinate(FVector2D(0.f,0.f)),
+		TangentX(FVector(1.f,0.f,0.f)),
+		TangentZ(FVector(0.f,0.f,1.f)),
+		Color(FColor::Black)
+	{}
+
+	FVector Position;
+	FVector2D TextureCoordinate;
+	FPackedNormal TangentX;
+	FPackedNormal TangentZ;
+	FColor Color;
+};
 
 /**顶点缓冲类*/
 class FProcedureVertexBuffer :public FVertexBuffer
@@ -23,11 +43,11 @@ public:
 	virtual void InitRHI()override
 	{
 		FRHIResourceCreateInfo CreateInfo;
-		VertexBufferRHI = RHICreateVertexBuffer(Vertices.Num() * sizeof(FDynamicMeshVertex), EBufferUsageFlags::BUF_Static, CreateInfo);    //创建顶点缓冲，并返回RHI接口
+		VertexBufferRHI = RHICreateVertexBuffer(Vertices.Num() * sizeof(FProcedureMeshVertex), EBufferUsageFlags::BUF_Static, CreateInfo);    //创建顶点缓冲，并返回VertexBufferRHI，其实就是指向缓冲所在内存的指针
 
 		//映射缓冲区的内存，并向其填充数据
-		void* VertexBufferData = RHILockVertexBuffer(VertexBufferRHI, 0, Vertices.Num() * sizeof(FDynamicMeshVertex), RLM_WriteOnly);   
-		FMemory::Memcpy(VertexBufferData, Vertices.GetData(), Vertices.Num() * sizeof(FDynamicMeshVertex));     //向缓冲区传入数据
+		void* VertexBufferData = RHILockVertexBuffer(VertexBufferRHI, 0, Vertices.Num() * sizeof(FProcedureMeshVertex), RLM_WriteOnly);
+		FMemory::Memcpy(VertexBufferData, Vertices.GetData(), Vertices.Num() * sizeof(FProcedureMeshVertex));     //向缓冲区传入数据
 		RHIUnlockVertexBuffer(VertexBufferRHI);    //关闭映射
 	}
 
@@ -38,7 +58,7 @@ public:
 
 public:
 	/**顶点数组*/
-	TArray<FDynamicMeshVertex> Vertices;
+	TArray<FProcedureMeshVertex> Vertices;
 
 };
 
@@ -51,10 +71,10 @@ public:
 	{
 		// 操作同上，创建索引缓并填充数据
 		FRHIResourceCreateInfo CreateInfo;
-		IndexBufferRHI = RHICreateIndexBuffer(sizeof(int32), Indices.Num() * sizeof(int32), BUF_Static, CreateInfo);
+		IndexBufferRHI = RHICreateIndexBuffer(sizeof(uint32), Indices.Num() * sizeof(uint32), BUF_Static, CreateInfo);      //创建索引缓冲
 
-		void* Buffer = RHILockIndexBuffer(IndexBufferRHI, 0, Indices.Num() * sizeof(int32), RLM_WriteOnly);
-		FMemory::Memcpy(Buffer, Indices.GetData(), Indices.Num() * sizeof(int32));
+		void* Buffer = RHILockIndexBuffer(IndexBufferRHI, 0, Indices.Num() * sizeof(uint32), RLM_WriteOnly); 
+		FMemory::Memcpy(Buffer, Indices.GetData(), Indices.Num() * sizeof(uint32));
 		RHIUnlockIndexBuffer(IndexBufferRHI);
 	}
 
@@ -66,25 +86,25 @@ public:
 
 public:
 	/**顶点索引数组*/
-	TArray<int32> Indices;
+	TArray<uint32> Indices;
 };
 
-/**输入布局，就是D3D中的InputLayout，其输入布局对应于FDynamicVertex中的内容*/
+/**输入布局，就是D3D中的InputLayout，其输入布局对应于FProcedureMeshVertex中的内容*/
 class FProcedureVertexFactory :public FLocalVertexFactory
 {
 public:
 	FProcedureVertexFactory() :FLocalVertexFactory(ERHIFeatureLevel::SM5, "ProcedureVertexFactory") {}
 
+	FProcedureVertexFactory(ERHIFeatureLevel::Type InFeatureLevel) :FLocalVertexFactory(InFeatureLevel, "ProcedureVertexFactory") {}
+
 public:
 	// 输入布局初始化
 	void Init(const FProcedureVertexBuffer* InVertexBuffer)
 	{
-		VertexBuffer = InVertexBuffer;
-
-		FLocalVertexFactory* VertexFactory = this;
-		const FProcedureVertexBuffer* ProcedureVertexBuffer = VertexBuffer;
-		ENQUEUE_RENDER_COMMAND(InitProcedureVertexFactory)(
-			[VertexFactory, ProcedureVertexBuffer](FRHICommandListImmediate& RHICmdList)
+		ENQUEUE_UNIQUE_RENDER_COMMAND_TWOPARAMETER(
+			InitProcedureVertexFactory, 
+			FProcedureVertexFactory*, VertexFactory, this, 
+			const FProcedureVertexBuffer*, ProcedureVertexBuffer, InVertexBuffer,
 		{
 			/**
 			  先了解一下EVertexStreamUsage的作用，定义如下：
@@ -102,52 +122,52 @@ public:
 			//Position的输入
 			NewData.PositionComponent = FVertexStreamComponent(
 				ProcedureVertexBuffer,
-				0,
-				sizeof(FVector),
+				STRUCT_OFFSET(FProcedureMeshVertex, Position),
+				sizeof(FProcedureMeshVertex),
 				VET_Float3,
 				EVertexStreamUsage::Default
 			);
-
+			
 			NewData.NumTexCoords = 1;       //默认只存在一个纹理坐标
 
 			//TexCoord 纹理坐标输入
 			NewData.TextureCoordinates.Add(FVertexStreamComponent(
 				ProcedureVertexBuffer,
-				0,
-				sizeof(FVector2D),            //注意该Stride参数不是指单个元素的步程，而是指该组所有元素的步程，所以Stride = 输入类型的元素数目 * 该类型的宽度
-				EVertexElementType::VET_Float2,
-				EVertexStreamUsage::ManualFetch
+				STRUCT_OFFSET(FProcedureMeshVertex, TextureCoordinate),            
+				sizeof(FProcedureMeshVertex),                                //注意该Stride参数不是指单个元素的步程，而是指整个结构的宽度
+				EVertexElementType::VET_Float2
+				//EVertexStreamUsage::ManualFetch
 			));
 
 			// 两个Tangent输入分别为X，Y方向
 			NewData.TangentBasisComponents[0] = FVertexStreamComponent(
 				ProcedureVertexBuffer,
-				0,
-				2 * sizeof(FPackedNormal),
-				EVertexElementType::VET_PackedNormal,
-				EVertexStreamUsage::ManualFetch
+				STRUCT_OFFSET(FProcedureMeshVertex, TangentX),
+				sizeof(FProcedureMeshVertex),
+				EVertexElementType::VET_PackedNormal
+				//EVertexStreamUsage::ManualFetch
 			);
 
 			NewData.TangentBasisComponents[1] = FVertexStreamComponent(
 				ProcedureVertexBuffer,
-				sizeof(FPackedNormal),
-				2 * sizeof(FPackedNormal),        //由于这里连续存了两个Tangent元素，所以Stride为2倍FPackedNormal
-				EVertexElementType::VET_PackedNormal,
-				EVertexStreamUsage::ManualFetch
+				STRUCT_OFFSET(FProcedureMeshVertex, TangentZ),        //由于这里连续存了两个Tangent元素，所以Stride为2倍FPackedNormal
+				sizeof(FProcedureMeshVertex),
+				EVertexElementType::VET_PackedNormal
+				//EVertexStreamUsage::ManualFetch
 			);
 
 			// Color颜色输入布局
 			NewData.ColorComponent = FVertexStreamComponent(
 				ProcedureVertexBuffer,
-				0,
-				sizeof(FColor),
-				EVertexElementType::VET_Color,
-				EVertexStreamUsage::ManualFetch
+				STRUCT_OFFSET(FProcedureMeshVertex, Color),     //该宏用于计算结构体内的成员偏移量（字节为单位）
+				sizeof(FProcedureMeshVertex),
+				EVertexElementType::VET_Color
+				//EVertexStreamUsage::ManualFetch
 			);
 
 			VertexFactory->SetData(NewData);
-		}
-		);
+		};
+		)
 	}
 
 private:
@@ -157,18 +177,10 @@ private:
 UProcedureMesh::UProcedureMesh(const FObjectInitializer& ObjectInitializer) :Super(ObjectInitializer)
 {
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface>  MaterialFinder(TEXT("/Game/StarterContent/Materials/M_AssetPlatform"));
-	ConstantMaterial = ObjectInitializer.CreateDefaultSubobject<UMaterialInstanceConstant>(this, TEXT("ConstantMaterial"));
-
-	if (MaterialFinder.Succeeded())
-	{
-		ConstantMaterial->SetParentEditorOnly(MaterialFinder.Object);
-		ConstantMaterial->PostEditChange();
-	}
 
 	ModelSetup = nullptr;
 	bHasCustomNavigableGeometry = EHasCustomNavigableGeometry::Yes;
 	CastShadow = true;
-	bUseAsOccluder = true;
 	bHiddenInGame = false;
 }
 
@@ -179,14 +191,51 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 	{
 	public:
 		FProceduralSceneProxy(const UProcedureMesh* InComponent)
-		:FPrimitiveSceneProxy(InComponent)
+		:FPrimitiveSceneProxy(InComponent),
+		 MaterialRelevance(InComponent->GetMaterialRelevance(GetScene().GetFeatureLevel())),
+		 VertexFactory(InComponent->GetWorld()->Scene->GetFeatureLevel())
 		{
+			VertexBuffer.Vertices.SetNum(4);
+
+			VertexBuffer.Vertices =
+			{
+				FProcedureMeshVertex(FVector(0.f, 0.f, 0.f)),
+				FProcedureMeshVertex(FVector(20000.f, 0.f, 0.f)),
+				FProcedureMeshVertex(FVector(20000.f, 0.f, 11000.f)),
+				FProcedureMeshVertex(FVector(20000.f, 20000.f, 0.f))
+			};
+
+			//TArray<int32> IndexBuffer;
+			IndexBuffer.Indices.SetNum(24);
+
+			IndexBuffer.Indices =
+			{
+				0,2,1,
+				1,2,0,
+				1,2,3,
+				3,2,1,
+				3,2,0,
+				0,2,3,
+				0,1,3,
+				3,1,0
+			};
+
+			// 下面是初始化资源，有顶点/索引缓冲/输入布局
 			VertexFactory.Init(&VertexBuffer);
 
 			BeginInitResource(&VertexBuffer);
 			BeginInitResource(&IndexBuffer);
 			BeginInitResource(&VertexFactory);
 		}
+
+		/**清空资源*/
+		virtual ~FProceduralSceneProxy()
+		{
+			VertexBuffer.ReleaseResource();
+			IndexBuffer.ReleaseResource();
+			VertexFactory.ReleaseResource();
+		}
+
 
 		SIZE_T GetTypeHash() const override
 		{
@@ -199,6 +248,9 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 			QUICK_SCOPE_CYCLE_COUNTER(STAT_ProceduralSceneProxy_GetDynamicMeshElements);
 			const FMatrix& LocalToWorld = GetLocalToWorld();
 
+			auto WireFrameMaterialInstance = new FColoredMaterialRenderProxy(GEngine->WireframeMaterial->GetRenderProxy(IsSelected()), FLinearColor::Black);
+			Collector.RegisterOneFrameMaterialProxy(WireFrameMaterialInstance);
+
 			for (int32 ViewIndex = 0; ViewIndex < Views.Num(); ViewIndex++)
 			{
 				if (VisibilityMap & (1 << ViewIndex))
@@ -210,70 +262,92 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 					//获取PDI
 					FPrimitiveDrawInterface* pdi = Collector.GetPDI(ViewIndex);
 
-					if (pdi != nullptr)
-					{
-						//RunGameHelper::DrawMesh(pdi);
-						/*FDynamicMeshBuilder DynamicMeshBuilder(ViewFamily.GetFeatureLevel());
+					FMeshBatch& Mesh = Collector.AllocateMesh();
+					//FMeshBatch Mesh;
+					FMeshBatchElement& BatchElement = Mesh.Elements[0];
+					BatchElement.IndexBuffer = &IndexBuffer;
+					Mesh.bWireframe = true;   //不是网格型
+					Mesh.VertexFactory = &VertexFactory;      //输入布局
+					Mesh.MaterialRenderProxy = WireFrameMaterialInstance;/*UMaterial::GetDefaultMaterial(MD_Surface)->GetRenderProxy(IsSelected());*/
+					BatchElement.PrimitiveUniformBuffer = CreatePrimitiveUniformBufferImmediate(GetLocalToWorld(), GetBounds(), GetLocalBounds(), true, UseEditorDepthTest());    //设置全局缓冲区参数
+					BatchElement.FirstIndex = 0;       //
+					BatchElement.NumPrimitives = IndexBuffer.Indices.Num() / 3;    //绘制的图元数目
+					BatchElement.MinVertexIndex = 0;
+					BatchElement.MaxVertexIndex = VertexBuffer.Vertices.Num() - 1;
+					Mesh.ReverseCulling = IsLocalToWorldDeterminantNegative();
+					Mesh.Type = EPrimitiveType::PT_TriangleList;     //基本图元为三角形
+					Mesh.DepthPriorityGroup = SDPG_World;      //深度检测优先顺序
+					Mesh.bCanApplyViewModeOverrides = true;
+					Collector.AddMesh(ViewIndex, Mesh);
+					//pdi->DrawMesh(Mesh);
+					GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, FString::Printf(TEXT("Vertex Num: %d, Index Num: %d"), VertexBuffer.Vertices.Num(), IndexBuffer.Indices.Num()));
 
-						DynamicMeshBuilder.AddVertex(FVector(0.f, 0.f, 0.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
-						DynamicMeshBuilder.AddVertex(FVector(2000.f, 0.f, 0.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
-						DynamicMeshBuilder.AddVertex(FVector(2000.f, 0.f, 1100.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
+					if (VertexBuffer.VertexBufferRHI.IsValid() && IndexBuffer.IndexBufferRHI.IsValid())
+						GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("缓冲区有效"));
+						
+					
+					//RunGameHelper::DrawMesh(pdi);
+					/*FDynamicMeshBuilder DynamicMeshBuilder(ViewFamily.GetFeatureLevel());
 
-						DynamicMeshBuilder.AddTriangle(0, 1, 2);
-						DynamicMeshBuilder.AddTriangle(2, 1, 0);*/
-						////设置顶点缓冲
-						////DynamicMeshBuilder.AddVertices(VertexBuffer);
-						//////设置索引缓冲
-						////DynamicMeshBuilder.AddTriangles(IndexBuffer);
-						//TArray<FDynamicMeshVertex> VertexBuffer;
+					DynamicMeshBuilder.AddVertex(FVector(0.f, 0.f, 0.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
+					DynamicMeshBuilder.AddVertex(FVector(2000.f, 0.f, 0.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
+					DynamicMeshBuilder.AddVertex(FVector(2000.f, 0.f, 1100.f), FVector2D(0.f, 0.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, 0.f), FVector(0.f, 0.f, 1.f), FColor::Black);
 
-						//TArray<uint32> IndexBuffer;
+					DynamicMeshBuilder.AddTriangle(0, 1, 2);
+					DynamicMeshBuilder.AddTriangle(2, 1, 0);*/
+					////设置顶点缓冲
+					////DynamicMeshBuilder.AddVertices(VertexBuffer);
+					//////设置索引缓冲
+					////DynamicMeshBuilder.AddTriangles(IndexBuffer);
+					//TArray<FDynamicMeshVertex> VertexBuffer;
 
-						//VertexBuffer.SetNum(4);
+					//TArray<uint32> IndexBuffer;
 
-						//VertexBuffer =
-						//{
-						//	FDynamicMeshVertex(FVector(0.f, 0.f, 0.f)),
-						//	FDynamicMeshVertex(FVector(20000.f, 0.f, 0.f)),
-						//	FDynamicMeshVertex(FVector(20000.f, 0.f, 11000.f)),
-						//	FDynamicMeshVertex(FVector(20000.f, 20000.f, 0.f))
-						//};
+					//VertexBuffer.SetNum(4);
 
-						////TArray<int32> IndexBuffer;
-						//IndexBuffer.SetNum(24);
+					//VertexBuffer =
+					//{
+					//	FDynamicMeshVertex(FVector(0.f, 0.f, 0.f)),
+					//	FDynamicMeshVertex(FVector(20000.f, 0.f, 0.f)),
+					//	FDynamicMeshVertex(FVector(20000.f, 0.f, 11000.f)),
+					//	FDynamicMeshVertex(FVector(20000.f, 20000.f, 0.f))
+					//};
 
-						//IndexBuffer =
-						//{
-						//	0,2,1,
-						//	1,2,0,
-						//	1,2,3,
-						//	3,2,1,
-						//	3,2,0,
-						//	0,2,3,
-						//	0,1,3,
-						//	3,1,0
-						//};
+					////TArray<int32> IndexBuffer;
+					//IndexBuffer.SetNum(24);
 
-						////设置顶点缓冲
-						//DynamicMeshBuilder.AddVertices(VertexBuffer);
-						////设置索引缓冲 
-						//DynamicMeshBuilder.AddTriangles(IndexBuffer);
-						////UE_LOG(LogRunGame, Log, TEXT("找到材质资源"))
-						FMatrix TranslationMatrix = FTranslationMatrix(FVector(0.f, 0.f, 1000.f));
-						FMatrix ToLocalMatrix = FScaleMatrix(FVector(1.f, 1.f, 1.f)) * TranslationMatrix;
+					//IndexBuffer =
+					//{
+					//	0,2,1,
+					//	1,2,0,
+					//	1,2,3,
+					//	3,2,1,
+					//	3,2,0,
+					//	0,2,3,
+					//	0,1,3,
+					//	3,1,0
+					//};
 
-						DrawWireBox(pdi, FBox(FVector(0.f, 0.f, 0.f), FVector(100.f, 100.f, 100.f)), FColor::Black, 5, 0);
-						//GEngine->
-						//DynamicMeshBuilder->Draw(pdi, ToLocalMatrix, UMaterial::GetDefaultMaterial(EMaterialDomain::MD_Surface)->GetRenderProxy(IsSelected()), SDPG_World);
-						//pdi->View->Ele
-						//DrawCylinder(pdi, FVector(0.f, 0.f, 0.f), FVector(0.f, 0.f, 1000.f), 500.f, 100, UMaterial::GetDefaultMaterial(MD_Surface)->GetRenderProxy(false), SDPG_Foreground);
-						//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::Printf(TEXT("获取到PDI,VewsNum:%d"), Views.Num()));
+					////设置顶点缓冲
+					//DynamicMeshBuilder.AddVertices(VertexBuffer);
+					////设置索引缓冲 
+					//DynamicMeshBuilder.AddTriangles(IndexBuffer);
+					////UE_LOG(LogRunGame, Log, TEXT("找到材质资源"))
+					FMatrix TranslationMatrix = FTranslationMatrix(FVector(0.f, 0.f, 1000.f));
+					FMatrix ToLocalMatrix = FScaleMatrix(FVector(1.f, 1.f, 1.f)) * TranslationMatrix;
 
-						//pdi->DrawLine(FVector(0.f, 0.f, 0.f), FVector(100000.f, 10000.f, 10000.f), FLinearColor::Green, SDPG_World, 5.f);
+					DrawWireBox(pdi, FBox(FVector(0.f, 0.f, 0.f), FVector(100.f, 100.f, 100.f)), FColor::Black, 5, 0);
+					//GEngine->
+					//DynamicMeshBuilder->Draw(pdi, ToLocalMatrix, UMaterial::GetDefaultMaterial(EMaterialDomain::MD_Surface)->GetRenderProxy(IsSelected()), SDPG_World);
+					//pdi->View->Ele
+					//DrawCylinder(pdi, FVector(0.f, 0.f, 0.f), FVector(0.f, 0.f, 1000.f), 500.f, 100, UMaterial::GetDefaultMaterial(MD_Surface)->GetRenderProxy(false), SDPG_Foreground);
+					//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::Printf(TEXT("获取到PDI,VewsNum:%d"), Views.Num()));
 
-						//if (View->bIsViewInfo)    //判断是否为ViewInfo类型
-						//	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::Printf(TEXT("MeshElement的数目:%d,"), static_cast<const FViewInfo*>(View)->ViewMeshElements.Num()));
-					}
+					//pdi->DrawLine(FVector(0.f, 0.f, 0.f), FVector(100000.f, 10000.f, 10000.f), FLinearColor::Green, SDPG_World, 5.f);
+
+					//if (View->bIsViewInfo)    //判断是否为ViewInfo类型
+					//	GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, FString::Printf(TEXT("MeshElement的数目:%d,"), static_cast<const FViewInfo*>(View)->ViewMeshElements.Num()));
+
 				}
 			}
 		}
@@ -284,24 +358,18 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 			Result.bDrawRelevance = IsShown(View);
 			Result.bDynamicRelevance = true;
 			Result.bShadowRelevance = true;
-			Result.bRenderCustomDepth = ShouldRenderCustomDepth();
-			Result.bRenderInMainPass = ShouldRenderInMainPass();
-			Result.bUsesLightingChannels = GetLightingChannelMask() != GetDefaultLightingChannelMask();
 			Result.bOpaqueRelevance = true;
+			MaterialRelevance.SetPrimitiveViewRelevance(Result);
 
 			//Result.bEditorPrimitiveRelevance = true;
 
 			return Result;
 		}
 
-		/**清空资源*/
-		~FProceduralSceneProxy()
+		virtual bool CanBeOccluded() const override
 		{
-			VertexBuffer.ReleaseResource();
-			IndexBuffer.ReleaseResource();
-			VertexFactory.ReleaseResource();
+			return !MaterialRelevance.bDisableDepthTest;
 		}
-
 
 		virtual uint32 GetMemoryFootprint(void) const override { return(sizeof(*this) + GetAllocatedSize()); }
 		uint32 GetAllocatedSize(void) const { return(FPrimitiveSceneProxy::GetAllocatedSize()); }
@@ -312,6 +380,8 @@ private:
 		class FProcedureVertexBuffer VertexBuffer;
 		class FProcedureIndexBuffer IndexBuffer;
 		class FProcedureVertexFactory VertexFactory;
+
+		FMaterialRelevance MaterialRelevance;
 	};
 
 	return new FProceduralSceneProxy(this);
