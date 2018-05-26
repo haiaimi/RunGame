@@ -25,6 +25,9 @@ public:
 
 	
 public:
+	UPROPERTY(VisibleAnywhere)
 	class UProcedureMesh* DynamicMesh;
+
+	class UProceduralMeshComponent* ProcedureMesh;
 	
 };
