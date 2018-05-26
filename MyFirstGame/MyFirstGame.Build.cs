@@ -16,14 +16,17 @@ public class MyFirstGame : ModuleRules
                                                             "UnrealEd",
                                                             "ImageWrapper",
                                                             "UMG",
-                                                            "RenderCore",
                                                             "Renderer",
-                                                            "RHI",
-                                                            "ShaderCore",
-                                                            "CustomMeshComponent"
-
+                                                            "Slate",
+                                                            "SlateCore",
+                                                            "ProceduralMeshComponent"
         });
 
-      //  PrivateIncludePathModuleNames.AddRange(new string[] { "CustomMeshComponent" });
+        PrivateDependencyModuleNames.AddRange(new string[] {  "RenderCore",
+                                                              "RHI",
+                                                              "ShaderCore"
+        });
+
+        PrivateIncludePathModuleNames.AddRange(new string[] { "ProceduralMeshComponent" });
 	}
 }
