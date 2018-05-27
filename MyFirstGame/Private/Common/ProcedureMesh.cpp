@@ -15,7 +15,6 @@
 #include "PhysicsEngine/BodySetup.h"
 #include "VertexFactory.h"
 #include "RenderResource.h"
-#include "RenderingThread.h"
 
 
 struct FProcedureMeshVertex
@@ -37,29 +36,85 @@ struct FProcedureMeshVertex
 };
 
 /**顶点缓冲类*/
-class FProcedureVertexBuffer :public FVertexBuffer
+class FProcedureVertexBuffer :public FRenderResource
 {
 public:
 	virtual void InitRHI()override
 	{
-		FRHIResourceCreateInfo CreateInfo;
-		VertexBufferRHI = RHICreateVertexBuffer(Vertices.Num() * sizeof(FProcedureMeshVertex), EBufferUsageFlags::BUF_Static, CreateInfo);    //创建顶点缓冲，并返回VertexBufferRHI，其实就是指向缓冲所在内存的指针
+		FRHIResourceCreateInfo CreateInfo_1, CreateInfo_2, CreateInfo_3, CreateInfo_4;
+		PositionBuffer.VertexBufferRHI = RHICreateVertexBuffer(Vertices.Num() * sizeof(FVector), EBufferUsageFlags::BUF_Static | EBufferUsageFlags::BUF_ShaderResource, CreateInfo_1);    //创建顶点缓冲，并返回VertexBufferRHI，其实就是指向缓冲所在内存的指针
+		TangentBuffer.VertexBufferRHI = RHICreateVertexBuffer(2 * Vertices.Num() * sizeof(FPackedNormal), EBufferUsageFlags::BUF_Static | EBufferUsageFlags::BUF_ShaderResource, CreateInfo_2);   //由于要创建SRV所以要指定缓冲区类型
+		TexCoordBuffer.VertexBufferRHI = RHICreateVertexBuffer(Vertices.Num() * sizeof(FVector2D), EBufferUsageFlags::BUF_Static | EBufferUsageFlags::BUF_ShaderResource, CreateInfo_3);
+		ColorBuffer.VertexBufferRHI = RHICreateVertexBuffer(Vertices.Num() * sizeof(FColor), EBufferUsageFlags::BUF_Static | EBufferUsageFlags::BUF_ShaderResource, CreateInfo_4);
 
-		//映射缓冲区的内存，并向其填充数据
-		void* VertexBufferData = RHILockVertexBuffer(VertexBufferRHI, 0, Vertices.Num() * sizeof(FProcedureMeshVertex), RLM_WriteOnly);
-		FMemory::Memcpy(VertexBufferData, Vertices.GetData(), Vertices.Num() * sizeof(FProcedureMeshVertex));     //向缓冲区传入数据
-		RHIUnlockVertexBuffer(VertexBufferRHI);    //关闭映射
+		//创建ShaderResourceView，着色器资源
+		TangentBufferSRV = RHICreateShaderResourceView(TangentBuffer.VertexBufferRHI, 4, PF_R8G8B8A8);
+		TexCoordBufferSRV = RHICreateShaderResourceView(TexCoordBuffer.VertexBufferRHI, 8, PF_G32R32F);
+		ColorBufferSRV = RHICreateShaderResourceView(ColorBuffer.VertexBufferRHI, 4, PF_R8G8B8A8);
+
+		PositionBufferSRV = RHICreateShaderResourceView(PositionBuffer.VertexBufferRHI, sizeof(float), PF_R32_FLOAT);    //用于深度检测
+
+		//映射缓冲区的内存，4个缓冲区
+		FVector* PositionBufferData = static_cast<FVector*>(RHILockVertexBuffer(PositionBuffer.VertexBufferRHI, 0, Vertices.Num() * sizeof(FVector), RLM_WriteOnly));
+		FPackedNormal* TangentBufferData = static_cast<FPackedNormal*>(RHILockVertexBuffer(TangentBuffer.VertexBufferRHI, 0, 2 * Vertices.Num() * sizeof(FPackedNormal), RLM_WriteOnly));
+		FVector2D* TexCoordBufferData = static_cast<FVector2D*>(RHILockVertexBuffer(TexCoordBuffer.VertexBufferRHI, 0, Vertices.Num() * sizeof(FVector2D), RLM_WriteOnly));
+		FColor* ColorBufferData = static_cast<FColor*>(RHILockVertexBuffer(ColorBuffer.VertexBufferRHI, 0, Vertices.Num() * sizeof(FColor), RLM_WriteOnly));
+
+		//填充数据
+		for (int i = 0; i < Vertices.Num(); i++)
+		{
+			PositionBufferData[i] = Vertices[i].Position;      //顶点数据
+			TangentBufferData[2 * i] = Vertices[i].TangentX;    //切线数据
+			TangentBufferData[2 * i + 1] = Vertices[i].TangentZ;
+			TexCoordBufferData[i] = Vertices[i].TextureCoordinate;   //UV数据
+			ColorBufferData[i] = Vertices[i].Color;          //颜色数据
+		}
+		
+		//关闭映射
+		RHIUnlockVertexBuffer(PositionBuffer.VertexBufferRHI);  
+		RHIUnlockVertexBuffer(TangentBuffer.VertexBufferRHI);
+		RHIUnlockVertexBuffer(TexCoordBuffer.VertexBufferRHI);
+		RHIUnlockVertexBuffer(ColorBuffer.VertexBufferRHI);
+	}
+
+	void InitResource() override
+	{
+		// 初始化数据
+		FRenderResource::InitResource();
+		PositionBuffer.InitResource();
+		TangentBuffer.InitResource();
+		TexCoordBuffer.InitResource();
+		ColorBuffer.InitResource();
+	}
+
+	void ReleaseResource() override
+	{
+		//释放资源
+		FRenderResource::ReleaseResource();
+		PositionBuffer.ReleaseResource();
+		TangentBuffer.ReleaseResource();
+		TexCoordBuffer.ReleaseResource();
+		ColorBuffer.ReleaseResource();
 	}
 
 	virtual void ReleaseRHI()override
 	{
-		FVertexBuffer::ReleaseRHI();
+		FRenderResource::ReleaseRHI();
 	}
 
 public:
 	/**顶点数组*/
 	TArray<FProcedureMeshVertex> Vertices;
 
+	FVertexBuffer PositionBuffer;
+	FVertexBuffer TangentBuffer;
+	FVertexBuffer TexCoordBuffer;
+	FVertexBuffer ColorBuffer;
+
+	FShaderResourceViewRHIRef TangentBufferSRV;
+	FShaderResourceViewRHIRef TexCoordBufferSRV;
+	FShaderResourceViewRHIRef ColorBufferSRV;
+	FShaderResourceViewRHIRef PositionBufferSRV;
 };
 
 
@@ -101,73 +156,96 @@ public:
 	// 输入布局初始化
 	void Init(const FProcedureVertexBuffer* InVertexBuffer)
 	{
-		ENQUEUE_UNIQUE_RENDER_COMMAND_TWOPARAMETER(
-			InitProcedureVertexFactory, 
-			FProcedureVertexFactory*, VertexFactory, this, 
-			const FProcedureVertexBuffer*, ProcedureVertexBuffer, InVertexBuffer,
+		/*if (IsInRenderingThread())
 		{
-			/**
-			  先了解一下EVertexStreamUsage的作用，定义如下：
-
-			  enum class EVertexStreamUsage : uint8
-			  {
-			  Default			= 0 << 0,        // 默认形式，如顶点
-			  Instancing		= 1 << 0,        // 就如D3D中的硬件 Instance ，用于灵活变换DrawCall
-			  Overridden		= 1 << 1,        // 覆盖
-			  ManualFetch		= 1 << 2         // 手动获取，如取法线，纹理坐标，都需要在Shader中人工程序获取，但是如顶点就是直接通过顶点着色器，不是经过Shader人工程序获取
-			  };
-
-			*/
-			FDataType NewData;
-			//Position的输入
-			NewData.PositionComponent = FVertexStreamComponent(
-				ProcedureVertexBuffer,
-				STRUCT_OFFSET(FProcedureMeshVertex, Position),
-				sizeof(FProcedureMeshVertex),
-				VET_Float3,
-				EVertexStreamUsage::Default
+			FDataType TheData;
+			TheData.PositionComponent = STRUCTMEMBER_VERTEXSTREAMCOMPONENT(VertexBuffer, FProcedureMeshVertex, Position, VET_Float3);
+			TheData.TextureCoordinates.Add(
+				FVertexStreamComponent(VertexBuffer, STRUCT_OFFSET(FProcedureMeshVertex, TextureCoordinate), sizeof(FProcedureMeshVertex), VET_Float2)
 			);
-			
-			NewData.NumTexCoords = 1;       //默认只存在一个纹理坐标
+			TheData.TangentBasisComponents[0] = STRUCTMEMBER_VERTEXSTREAMCOMPONENT(VertexBuffer, FProcedureMeshVertex, TangentX, VET_PackedNormal);
+			TheData.TangentBasisComponents[1] = STRUCTMEMBER_VERTEXSTREAMCOMPONENT(VertexBuffer, FProcedureMeshVertex, TangentZ, VET_PackedNormal);
+			TheData.ColorComponent = STRUCTMEMBER_VERTEXSTREAMCOMPONENT(VertexBuffer, FProcedureMeshVertex, Color, VET_Color);
+			SetData(TheData);
+		}
+		else
+		{
+			E
+		}*/
 
-			//TexCoord 纹理坐标输入
-			NewData.TextureCoordinates.Add(FVertexStreamComponent(
-				ProcedureVertexBuffer,
-				STRUCT_OFFSET(FProcedureMeshVertex, TextureCoordinate),            
-				sizeof(FProcedureMeshVertex),                                //注意该Stride参数不是指单个元素的步程，而是指整个结构的宽度
-				EVertexElementType::VET_Float2
-				//EVertexStreamUsage::ManualFetch
-			));
+		FProcedureVertexFactory* VertexFactory = this;
+		const FProcedureVertexBuffer* ProcedureVertexBuffer = InVertexBuffer;
+		ENQUEUE_RENDER_COMMAND(InitProcedureVertexFactory)(
+			[VertexFactory,ProcedureVertexBuffer](FRHICommandList& RHICmdList)
+			{
+				/**
+				先了解一下EVertexStreamUsage的作用，定义如下：
 
-			// 两个Tangent输入分别为X，Y方向
-			NewData.TangentBasisComponents[0] = FVertexStreamComponent(
-				ProcedureVertexBuffer,
-				STRUCT_OFFSET(FProcedureMeshVertex, TangentX),
-				sizeof(FProcedureMeshVertex),
-				EVertexElementType::VET_PackedNormal
-				//EVertexStreamUsage::ManualFetch
-			);
+				enum class EVertexStreamUsage : uint8
+				{
+				Default			= 0 << 0,        // 默认形式，如顶点
+				Instancing		= 1 << 0,        // 就如D3D中的硬件 Instance ，用于灵活变换DrawCall
+				Overridden		= 1 << 1,        // 覆盖
+				ManualFetch		= 1 << 2         // 手动获取，如取法线，纹理坐标，都需要在Shader中人工程序获取，但是如顶点就是直接通过顶点着色器，不是经过Shader人工程序获取
+				};
 
-			NewData.TangentBasisComponents[1] = FVertexStreamComponent(
-				ProcedureVertexBuffer,
-				STRUCT_OFFSET(FProcedureMeshVertex, TangentZ),        //由于这里连续存了两个Tangent元素，所以Stride为2倍FPackedNormal
-				sizeof(FProcedureMeshVertex),
-				EVertexElementType::VET_PackedNormal
-				//EVertexStreamUsage::ManualFetch
-			);
+				*/
+				FDataType NewData;
+				//Position的输入
+				NewData.PositionComponent = FVertexStreamComponent(
+					&ProcedureVertexBuffer->PositionBuffer,
+					0,
+					sizeof(FVector),
+					VET_Float3,
+					EVertexStreamUsage::Default
+				);
 
-			// Color颜色输入布局
-			NewData.ColorComponent = FVertexStreamComponent(
-				ProcedureVertexBuffer,
-				STRUCT_OFFSET(FProcedureMeshVertex, Color),     //该宏用于计算结构体内的成员偏移量（字节为单位）
-				sizeof(FProcedureMeshVertex),
-				EVertexElementType::VET_Color
-				//EVertexStreamUsage::ManualFetch
-			);
+				NewData.NumTexCoords = 1;       //默认只存在一个纹理坐标
+				NewData.LightMapCoordinateIndex = 0;
+				NewData.TangentsSRV = ProcedureVertexBuffer->TangentBufferSRV;
+				NewData.TextureCoordinatesSRV = ProcedureVertexBuffer->TexCoordBufferSRV;
+				NewData.ColorComponentsSRV = ProcedureVertexBuffer->ColorBufferSRV;
+				NewData.PositionComponentSRV = ProcedureVertexBuffer->PositionBufferSRV;
 
-			VertexFactory->SetData(NewData);
-		};
-		)
+												//TexCoord 纹理坐标输入
+				NewData.TextureCoordinates.Add(FVertexStreamComponent(
+					&ProcedureVertexBuffer->TexCoordBuffer,
+					0,
+					sizeof(FVector2D),                                //注意该Stride参数不是指单个元素的步程，而是指整个结构的宽度
+					EVertexElementType::VET_Float2,
+					EVertexStreamUsage::ManualFetch
+				));
+
+				// 两个Tangent输入分别为X，Y方向
+				NewData.TangentBasisComponents[0] = FVertexStreamComponent(
+					&ProcedureVertexBuffer->TangentBuffer,
+					0,
+					2 * sizeof(FPackedNormal),
+					EVertexElementType::VET_PackedNormal,
+					EVertexStreamUsage::ManualFetch
+				);
+
+				NewData.TangentBasisComponents[1] = FVertexStreamComponent(
+					&ProcedureVertexBuffer->TangentBuffer,
+					sizeof(FPackedNormal),              //由于这里连续存了两个Tangent元素，所以Stride为2倍FPackedNormal
+					2 * sizeof(FPackedNormal),
+					EVertexElementType::VET_PackedNormal,
+					EVertexStreamUsage::ManualFetch
+				);
+
+				// Color颜色输入布局
+				NewData.ColorComponent = FVertexStreamComponent(
+					&ProcedureVertexBuffer->ColorBuffer,
+					0,                                //该宏用于计算结构体内的成员偏移量（字节为单位）
+					sizeof(FColor),
+					EVertexElementType::VET_Color,
+					EVertexStreamUsage::ManualFetch
+				);
+
+				VertexFactory->SetData(NewData);
+			}
+		);
+		
 	}
 
 private:
@@ -179,7 +257,6 @@ UProcedureMesh::UProcedureMesh(const FObjectInitializer& ObjectInitializer) :Sup
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface>  MaterialFinder(TEXT("/Game/StarterContent/Materials/M_AssetPlatform"));
 
 	ModelSetup = nullptr;
-	bHasCustomNavigableGeometry = EHasCustomNavigableGeometry::Yes;
 	CastShadow = true;
 	bHiddenInGame = false;
 }
@@ -221,10 +298,11 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 			};
 
 			// 下面是初始化资源，有顶点/索引缓冲/输入布局
-			VertexFactory.Init(&VertexBuffer);
 
 			BeginInitResource(&VertexBuffer);
 			BeginInitResource(&IndexBuffer);
+
+			VertexFactory.Init(&VertexBuffer);
 			BeginInitResource(&VertexFactory);
 		}
 
@@ -249,7 +327,7 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 			const FMatrix& LocalToWorld = GetLocalToWorld();
 
 			auto WireFrameMaterialInstance = new FColoredMaterialRenderProxy(GEngine->WireframeMaterial->GetRenderProxy(IsSelected()), FLinearColor::Black);
-			Collector.RegisterOneFrameMaterialProxy(WireFrameMaterialInstance);
+			Collector.RegisterOneFrameMaterialProxy(WireFrameMaterialInstance);       //创建网格材质，需要的时候使用
 
 			for (int32 ViewIndex = 0; ViewIndex < Views.Num(); ViewIndex++)
 			{
@@ -257,18 +335,13 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 				{
 					const FSceneView* View = Views[ViewIndex];
 
-					//const FLinearColor DrawColor = GetViewSelectionColor(BoxColor, *View, IsSelected(), IsHovered(), false, IsIndividuallySelected());
-
-					//获取PDI
-					FPrimitiveDrawInterface* pdi = Collector.GetPDI(ViewIndex);
-
 					FMeshBatch& Mesh = Collector.AllocateMesh();
 					//FMeshBatch Mesh;
 					FMeshBatchElement& BatchElement = Mesh.Elements[0];
 					BatchElement.IndexBuffer = &IndexBuffer;
-					Mesh.bWireframe = true;   //不是网格型
+					Mesh.bWireframe = false;   //不是网格型
 					Mesh.VertexFactory = &VertexFactory;      //输入布局
-					Mesh.MaterialRenderProxy = WireFrameMaterialInstance;/*UMaterial::GetDefaultMaterial(MD_Surface)->GetRenderProxy(IsSelected());*/
+					Mesh.MaterialRenderProxy = UMaterial::GetDefaultMaterial(MD_Surface)->GetRenderProxy(IsSelected());
 					BatchElement.PrimitiveUniformBuffer = CreatePrimitiveUniformBufferImmediate(GetLocalToWorld(), GetBounds(), GetLocalBounds(), true, UseEditorDepthTest());    //设置全局缓冲区参数
 					BatchElement.FirstIndex = 0;       //
 					BatchElement.NumPrimitives = IndexBuffer.Indices.Num() / 3;    //绘制的图元数目
@@ -277,12 +350,12 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 					Mesh.ReverseCulling = IsLocalToWorldDeterminantNegative();
 					Mesh.Type = EPrimitiveType::PT_TriangleList;     //基本图元为三角形
 					Mesh.DepthPriorityGroup = SDPG_World;      //深度检测优先顺序
-					Mesh.bCanApplyViewModeOverrides = true;
+					Mesh.bCanApplyViewModeOverrides = false;
 					Collector.AddMesh(ViewIndex, Mesh);
 					//pdi->DrawMesh(Mesh);
 					GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, FString::Printf(TEXT("Vertex Num: %d, Index Num: %d"), VertexBuffer.Vertices.Num(), IndexBuffer.Indices.Num()));
 
-					if (VertexBuffer.VertexBufferRHI.IsValid() && IndexBuffer.IndexBufferRHI.IsValid())
+					if (VertexBuffer.PositionBuffer.VertexBufferRHI.IsValid() && IndexBuffer.IndexBufferRHI.IsValid())
 						GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("缓冲区有效"));
 						
 					
@@ -333,10 +406,10 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 					////设置索引缓冲 
 					//DynamicMeshBuilder.AddTriangles(IndexBuffer);
 					////UE_LOG(LogRunGame, Log, TEXT("找到材质资源"))
-					FMatrix TranslationMatrix = FTranslationMatrix(FVector(0.f, 0.f, 1000.f));
-					FMatrix ToLocalMatrix = FScaleMatrix(FVector(1.f, 1.f, 1.f)) * TranslationMatrix;
+					/*FMatrix TranslationMatrix = FTranslationMatrix(FVector(0.f, 0.f, 1000.f));
+					FMatrix ToLocalMatrix = FScaleMatrix(FVector(1.f, 1.f, 1.f)) * TranslationMatrix;*/
 
-					DrawWireBox(pdi, FBox(FVector(0.f, 0.f, 0.f), FVector(100.f, 100.f, 100.f)), FColor::Black, 5, 0);
+					//DrawWireBox(pdi, FBox(FVector(0.f, 0.f, 0.f), FVector(100.f, 100.f, 100.f)), FColor::Black, 5, 0);
 					//GEngine->
 					//DynamicMeshBuilder->Draw(pdi, ToLocalMatrix, UMaterial::GetDefaultMaterial(EMaterialDomain::MD_Surface)->GetRenderProxy(IsSelected()), SDPG_World);
 					//pdi->View->Ele
@@ -359,9 +432,8 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 			Result.bDynamicRelevance = true;
 			Result.bShadowRelevance = true;
 			Result.bOpaqueRelevance = true;
+			Result.bRenderInMainPass = ShouldRenderInMainPass();
 			MaterialRelevance.SetPrimitiveViewRelevance(Result);
-
-			//Result.bEditorPrimitiveRelevance = true;
 
 			return Result;
 		}
@@ -394,17 +466,27 @@ FBoxSphereBounds UProcedureMesh::CalcBounds(const FTransform& LocalToWorld) cons
 
 UBodySetup* UProcedureMesh::GetBodySetup()
 {
-	if (ModelSetup == nullptr)
-	{
-		// 不存在则创建一个BodySetup
-		UBodySetup* NewBodySetup = NewObject<UBodySetup>(this, NAME_None, (IsTemplate() ? RF_Public : RF_NoFlags));
-		NewBodySetup->BodySetupGuid = FGuid::NewGuid();
+	//if (ModelSetup == nullptr)
+	//{
+	//	// 不存在则创建一个BodySetup
+	//	UBodySetup* NewBodySetup = NewObject<UBodySetup>(this, NAME_None, (IsTemplate() ? RF_Public : RF_NoFlags));
+	//	NewBodySetup->BodySetupGuid = FGuid::NewGuid();
 
-		NewBodySetup->bGenerateMirroredCollision = false;
-		NewBodySetup->bDoubleSidedGeometry = true;
-		NewBodySetup->CollisionTraceFlag =  CTF_UseComplexAsSimple ;
-		ModelSetup = NewBodySetup;
-	}
+	//	NewBodySetup->bGenerateMirroredCollision = false;
+	//	NewBodySetup->bDoubleSidedGeometry = true;
+	//	NewBodySetup->CollisionTraceFlag =  CTF_UseComplexAsSimple ;
+	//	ModelSetup = NewBodySetup;
+	//}
 
 	return ModelSetup;
+}
+
+UMaterialInterface* UProcedureMesh::GetMaterialFromCollisionFaceIndex(int32 FaceIndex, int32& SectionIndex) const
+{
+	return UMaterial::GetDefaultMaterial(MD_Surface);
+}
+
+int32 UProcedureMesh::GetNumMaterials()const
+{
+	return 1;
 }
