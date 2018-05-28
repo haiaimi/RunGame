@@ -14,8 +14,8 @@ AProcedureMeshActor::AProcedureMeshActor()
 
 	DynamicMesh = CreateDefaultSubobject<UProcedureMesh>(TEXT("DynamicMesh"));
 
-	if (DynamicMesh)
-		RootComponent = DynamicMesh;
+	/*if (DynamicMesh)
+		RootComponent = DynamicMesh;*/
 
 	/*ProcedureMesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProcedureMesh"));
 
