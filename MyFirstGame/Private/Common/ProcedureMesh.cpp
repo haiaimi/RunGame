@@ -15,25 +15,13 @@
 #include "PhysicsEngine/BodySetup.h"
 #include "VertexFactory.h"
 #include "RenderResource.h"
+#include "Stats.h"
 
+DECLARE_STATS_GROUP(TEXT("MyProceduralMesh"), STATGROUP_MProceduralMesh, STATCAT_Advanced);
 
-struct FProcedureMeshVertex
-{
-	FProcedureMeshVertex() {}    //默认构造函数
-	FProcedureMeshVertex(const FVector& InPosition):
-		Position(InPosition),
-		TextureCoordinate(FVector2D(0.f,0.f)),
-		TangentX(FVector(1.f,0.f,0.f)),
-		TangentZ(FVector(0.f,0.f,1.f)),
-		Color(FColor::Black)
-	{}
+DECLARE_CYCLE_STAT(TEXT("Create ProcMesh Proxy"), STAT_ProceduralMesh_CreateSceneProxy, STATGROUP_MProceduralMesh);
+DECLARE_CYCLE_STAT(TEXT("Get DynamicProcMesh Elements"), STAT_ProceduralMesh_GetDynamicMeshElements, STATGROUP_MProceduralMesh);
 
-	FVector Position;
-	FVector2D TextureCoordinate;
-	FPackedNormal TangentX;
-	FPackedNormal TangentZ;
-	FColor Color;
-};
 
 /**顶点缓冲类*/
 class FProcedureVertexBuffer :public FRenderResource
@@ -52,7 +40,7 @@ public:
 		TexCoordBufferSRV = RHICreateShaderResourceView(TexCoordBuffer.VertexBufferRHI, 8, PF_G32R32F);
 		ColorBufferSRV = RHICreateShaderResourceView(ColorBuffer.VertexBufferRHI, 4, PF_R8G8B8A8);
 
-		PositionBufferSRV = RHICreateShaderResourceView(PositionBuffer.VertexBufferRHI, sizeof(float), PF_R32_FLOAT);    //用于深度检测
+		PositionBufferSRV = RHICreateShaderResourceView(PositionBuffer.VertexBufferRHI, 4, PF_R32_FLOAT);    //用于深度检测
 
 		//映射缓冲区的内存，4个缓冲区
 		FVector* PositionBufferData = static_cast<FVector*>(RHILockVertexBuffer(PositionBuffer.VertexBufferRHI, 0, Vertices.Num() * sizeof(FVector), RLM_WriteOnly));
@@ -85,16 +73,25 @@ public:
 		TangentBuffer.InitResource();
 		TexCoordBuffer.InitResource();
 		ColorBuffer.InitResource();
+
+		UE_LOG(LogRunGame, Log, TEXT("Vertex Init"))
 	}
 
 	void ReleaseResource() override
 	{
 		//释放资源
 		FRenderResource::ReleaseResource();
+		TangentBufferSRV.SafeRelease();
+		TexCoordBufferSRV.SafeRelease();
+		ColorBufferSRV.SafeRelease();
+		PositionBufferSRV.SafeRelease();
+
 		PositionBuffer.ReleaseResource();
 		TangentBuffer.ReleaseResource();
 		TexCoordBuffer.ReleaseResource();
 		ColorBuffer.ReleaseResource();
+
+		UE_LOG(LogRunGame, Log, TEXT("Vertex Release"))
 	}
 
 	virtual void ReleaseRHI()override
@@ -131,12 +128,15 @@ public:
 		void* Buffer = RHILockIndexBuffer(IndexBufferRHI, 0, Indices.Num() * sizeof(uint32), RLM_WriteOnly); 
 		FMemory::Memcpy(Buffer, Indices.GetData(), Indices.Num() * sizeof(uint32));
 		RHIUnlockIndexBuffer(IndexBufferRHI);
+
+		UE_LOG(LogRunGame, Log, TEXT("Index Init"))
 	}
 
 
 	virtual void ReleaseRHI()override
 	{
 		FIndexBuffer::ReleaseRHI();
+		UE_LOG(LogRunGame, Log, TEXT("Factory Release"))
 	}
 
 public:
@@ -148,13 +148,13 @@ public:
 class FProcedureVertexFactory :public FLocalVertexFactory
 {
 public:
-	FProcedureVertexFactory() :FLocalVertexFactory(ERHIFeatureLevel::SM5, "ProcedureVertexFactory") {}
+	FProcedureVertexFactory() :FLocalVertexFactory(ERHIFeatureLevel::SM5, "FProcedureVertexFactory") {}
 
-	FProcedureVertexFactory(ERHIFeatureLevel::Type InFeatureLevel) :FLocalVertexFactory(InFeatureLevel, "ProcedureVertexFactory") {}
+	FProcedureVertexFactory(ERHIFeatureLevel::Type InFeatureLevel, const FProcedureVertexBuffer* InVertexBuffer) :FLocalVertexFactory(InFeatureLevel, "FProcedureVertexFactory"),VertexBuffer(InVertexBuffer) {}
 
 public:
 	// 输入布局初始化
-	void Init(const FProcedureVertexBuffer* InVertexBuffer)
+	void InitResource()override
 	{
 		/*if (IsInRenderingThread())
 		{
@@ -167,14 +167,10 @@ public:
 			TheData.TangentBasisComponents[1] = STRUCTMEMBER_VERTEXSTREAMCOMPONENT(VertexBuffer, FProcedureMeshVertex, TangentZ, VET_PackedNormal);
 			TheData.ColorComponent = STRUCTMEMBER_VERTEXSTREAMCOMPONENT(VertexBuffer, FProcedureMeshVertex, Color, VET_Color);
 			SetData(TheData);
-		}
-		else
-		{
-			E
 		}*/
 
 		FProcedureVertexFactory* VertexFactory = this;
-		const FProcedureVertexBuffer* ProcedureVertexBuffer = InVertexBuffer;
+		const FProcedureVertexBuffer* ProcedureVertexBuffer = VertexBuffer;
 		ENQUEUE_RENDER_COMMAND(InitProcedureVertexFactory)(
 			[VertexFactory,ProcedureVertexBuffer](FRHICommandList& RHICmdList)
 			{
@@ -245,7 +241,9 @@ public:
 				VertexFactory->SetData(NewData);
 			}
 		);
-		
+
+		FLocalVertexFactory::InitResource(); //该函数只在渲染线程中执行
+		UE_LOG(LogRunGame, Log, TEXT("Factory Init"))
 	}
 
 private:
@@ -261,20 +259,30 @@ UProcedureMesh::UProcedureMesh(const FObjectInitializer& ObjectInitializer) :Sup
 	bHiddenInGame = false;
 }
 
+void UProcedureMesh::InitMesh(const TArray<FProcedureMeshVertex>& InVertices, const TArray<uint32>& InIndices)
+{
+	Vertices = Vertices;
+	Indices = InIndices;
+}
+
 FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 {
+	SCOPE_CYCLE_COUNTER(STAT_ProceduralMesh_CreateSceneProxy);
 	//可见UBoxComponent里的内容
-	class FProceduralSceneProxy : public FPrimitiveSceneProxy
+	class FProceduralSceneProxy final : public FPrimitiveSceneProxy
 	{
 	public:
 		FProceduralSceneProxy(const UProcedureMesh* InComponent)
 		:FPrimitiveSceneProxy(InComponent),
-		 MaterialRelevance(InComponent->GetMaterialRelevance(GetScene().GetFeatureLevel())),
-		 VertexFactory(InComponent->GetWorld()->Scene->GetFeatureLevel())
+		 MaterialRelevance(InComponent->GetMaterialRelevance(GetScene().GetFeatureLevel()))
 		{
-			VertexBuffer.Vertices.SetNum(4);
+			VertexBuffer = nullptr;
+			IndexBuffer = nullptr;
+			VertexFactory = nullptr;
+			VertexBuffer = new FProcedureVertexBuffer;
+			VertexBuffer->Vertices.SetNum(4);      //此步多余，会引起崩溃
 
-			VertexBuffer.Vertices =
+			VertexBuffer->Vertices =
 			{
 				FProcedureMeshVertex(FVector(0.f, 0.f, 0.f)),
 				FProcedureMeshVertex(FVector(20000.f, 0.f, 0.f)),
@@ -283,9 +291,10 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 			};
 
 			//TArray<int32> IndexBuffer;
-			IndexBuffer.Indices.SetNum(24);
+			IndexBuffer = new FProcedureIndexBuffer;
+			//IndexBuffer->Indices.SetNum(24);
 
-			IndexBuffer.Indices =
+			IndexBuffer->Indices =
 			{
 				0,2,1,
 				1,2,0,
@@ -298,22 +307,37 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 			};
 
 			// 下面是初始化资源，有顶点/索引缓冲/输入布局
+			BeginInitResource(VertexBuffer);
+			BeginInitResource(IndexBuffer);
 
-			BeginInitResource(&VertexBuffer);
-			BeginInitResource(&IndexBuffer);
+			VertexFactory = new FProcedureVertexFactory(InComponent->GetWorld()->Scene->GetFeatureLevel(), VertexBuffer);
+			BeginInitResource(VertexFactory);
+			MaterialProxy = UMaterial::GetDefaultMaterial(EMaterialDomain::MD_Surface)->GetRenderProxy(IsSelected());
 
-			VertexFactory.Init(&VertexBuffer);
-			BeginInitResource(&VertexFactory);
+			UE_LOG(LogRunGame, Log, TEXT("Proxy Construction"))
 		}
 
 		/**清空资源*/
 		virtual ~FProceduralSceneProxy()
 		{
-			VertexBuffer.ReleaseResource();
-			IndexBuffer.ReleaseResource();
-			VertexFactory.ReleaseResource();
-		}
+			if (VertexBuffer)
+			{
+				VertexBuffer->ReleaseResource();
+				delete VertexBuffer;
+			}
+			if (IndexBuffer)
+			{
+				IndexBuffer->ReleaseResource();
+				delete IndexBuffer;
+			}
+			if (VertexFactory)
+			{
+				VertexFactory->ReleaseResource();
+				delete VertexFactory;
+			}
 
+			UE_LOG(LogRunGame, Log, TEXT("Proxy Destruction"))
+		}
 
 		SIZE_T GetTypeHash() const override
 		{
@@ -323,11 +347,11 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 
 		virtual void GetDynamicMeshElements(const TArray<const FSceneView*>& Views, const FSceneViewFamily& ViewFamily, uint32 VisibilityMap, FMeshElementCollector& Collector) const override
 		{
-			QUICK_SCOPE_CYCLE_COUNTER(STAT_ProceduralSceneProxy_GetDynamicMeshElements);
+			SCOPE_CYCLE_COUNTER(STAT_ProceduralMesh_GetDynamicMeshElements);
 			const FMatrix& LocalToWorld = GetLocalToWorld();
 
-			auto WireFrameMaterialInstance = new FColoredMaterialRenderProxy(GEngine->WireframeMaterial->GetRenderProxy(IsSelected()), FLinearColor::Black);
-			Collector.RegisterOneFrameMaterialProxy(WireFrameMaterialInstance);       //创建网格材质，需要的时候使用
+			//auto WireFrameMaterialInstance = new FColoredMaterialRenderProxy(GEngine->WireframeMaterial->GetRenderProxy(IsSelected()), FLinearColor::Black);
+			//Collector.RegisterOneFrameMaterialProxy(WireFrameMaterialInstance);       //创建网格材质，需要的时候使用
 
 			for (int32 ViewIndex = 0; ViewIndex < Views.Num(); ViewIndex++)
 			{
@@ -338,25 +362,25 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 					FMeshBatch& Mesh = Collector.AllocateMesh();
 					//FMeshBatch Mesh;
 					FMeshBatchElement& BatchElement = Mesh.Elements[0];
-					BatchElement.IndexBuffer = &IndexBuffer;
+					BatchElement.IndexBuffer = IndexBuffer;
 					Mesh.bWireframe = false;   //不是网格型
-					Mesh.VertexFactory = &VertexFactory;      //输入布局
-					Mesh.MaterialRenderProxy = UMaterial::GetDefaultMaterial(MD_Surface)->GetRenderProxy(IsSelected());
+					Mesh.VertexFactory = VertexFactory;      //输入布局
+					Mesh.MaterialRenderProxy = MaterialProxy;
 					BatchElement.PrimitiveUniformBuffer = CreatePrimitiveUniformBufferImmediate(GetLocalToWorld(), GetBounds(), GetLocalBounds(), true, UseEditorDepthTest());    //设置全局缓冲区参数
 					BatchElement.FirstIndex = 0;       //
-					BatchElement.NumPrimitives = IndexBuffer.Indices.Num() / 3;    //绘制的图元数目
+					BatchElement.NumPrimitives = IndexBuffer->Indices.Num() / 3;    //绘制的图元数目
 					BatchElement.MinVertexIndex = 0;
-					BatchElement.MaxVertexIndex = VertexBuffer.Vertices.Num() - 1;
+					BatchElement.MaxVertexIndex = VertexBuffer->Vertices.Num() - 1;
 					Mesh.ReverseCulling = IsLocalToWorldDeterminantNegative();
 					Mesh.Type = EPrimitiveType::PT_TriangleList;     //基本图元为三角形
 					Mesh.DepthPriorityGroup = SDPG_World;      //深度检测优先顺序
 					Mesh.bCanApplyViewModeOverrides = false;
 					Collector.AddMesh(ViewIndex, Mesh);
-					//pdi->DrawMesh(Mesh);
-					GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, FString::Printf(TEXT("Vertex Num: %d, Index Num: %d"), VertexBuffer.Vertices.Num(), IndexBuffer.Indices.Num()));
 
-					if (VertexBuffer.PositionBuffer.VertexBufferRHI.IsValid() && IndexBuffer.IndexBufferRHI.IsValid())
-						GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("缓冲区有效"));
+					/*GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, FString::Printf(TEXT("Vertex Num: %d, Index Num: %d"), VertexBuffer->Vertices.Num(), IndexBuffer->Indices.Num()));
+
+					if (VertexBuffer->PositionBuffer.VertexBufferRHI.IsValid() && IndexBuffer->IndexBufferRHI.IsValid())
+						GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Black, TEXT("缓冲区有效"));*/
 						
 					
 					//RunGameHelper::DrawMesh(pdi);
@@ -449,10 +473,11 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 		//const FMaterialRenderProxy* RenderProxy;
 
 private:
-		class FProcedureVertexBuffer VertexBuffer;
-		class FProcedureIndexBuffer IndexBuffer;
-		class FProcedureVertexFactory VertexFactory;
+		FProcedureVertexBuffer* VertexBuffer;
+		FProcedureIndexBuffer* IndexBuffer;
+		FProcedureVertexFactory* VertexFactory;
 
+		FMaterialRenderProxy* MaterialProxy;
 		FMaterialRelevance MaterialRelevance;
 	};
 
@@ -461,22 +486,31 @@ private:
 
 FBoxSphereBounds UProcedureMesh::CalcBounds(const FTransform& LocalToWorld) const
 {
-	return FBoxSphereBounds(FVector::ZeroVector, FVector(2000.f, 2000.f, 2000.f), 3000.f).TransformBy(LocalToWorld);
+	FBox Bound(ForceInit);
+
+	int32 VertexNum = Vertices.Num();
+	if (Vertices.Num() > 0)
+	{
+		for (int32 i = 0; i < VertexNum; i++)
+			Bound += Vertices[i].Position;
+	}
+
+	return FBoxSphereBounds(Bound).TransformBy(LocalToWorld);
 }
 
 UBodySetup* UProcedureMesh::GetBodySetup()
 {
-	//if (ModelSetup == nullptr)
-	//{
-	//	// 不存在则创建一个BodySetup
-	//	UBodySetup* NewBodySetup = NewObject<UBodySetup>(this, NAME_None, (IsTemplate() ? RF_Public : RF_NoFlags));
-	//	NewBodySetup->BodySetupGuid = FGuid::NewGuid();
+	if (ModelSetup == nullptr)
+	{
+		// 不存在则创建一个BodySetup
+		UBodySetup* NewBodySetup = NewObject<UBodySetup>(this, NAME_None, (IsTemplate() ? RF_Public : RF_NoFlags));
+		NewBodySetup->BodySetupGuid = FGuid::NewGuid();
 
-	//	NewBodySetup->bGenerateMirroredCollision = false;
-	//	NewBodySetup->bDoubleSidedGeometry = true;
-	//	NewBodySetup->CollisionTraceFlag =  CTF_UseComplexAsSimple ;
-	//	ModelSetup = NewBodySetup;
-	//}
+		NewBodySetup->bGenerateMirroredCollision = false;
+		NewBodySetup->bDoubleSidedGeometry = true;
+		NewBodySetup->CollisionTraceFlag =  CTF_UseComplexAsSimple ;
+		ModelSetup = NewBodySetup;
+	}
 
 	return ModelSetup;
 }

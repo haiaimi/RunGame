@@ -6,14 +6,38 @@
 #include "Components/MeshComponent.h"
 #include "ProcedureMesh.generated.h"
 
+
+struct FProcedureMeshVertex
+{
+	FProcedureMeshVertex() {}    //默认构造函数
+
+	FProcedureMeshVertex(const FVector& InPosition) :
+		Position(InPosition),
+		TextureCoordinate(FVector2D(0.f, 0.f)),
+		TangentX(FVector(1.f, 0.f, 0.f)),
+		TangentZ(FVector(0.f, 0.f, 1.f)),
+		Color(FColor::Black)
+	{}
+
+	FVector Position;
+	FVector2D TextureCoordinate;
+	FPackedNormal TangentX;
+	FPackedNormal TangentZ;
+	FColor Color;
+};
+
 /**
  * 
  */
-UCLASS()
+UCLASS(hideCategories = (Object, LOD), meta = (BlueprintSpawnableComponent), ClassGroup = Rendering)
 class MYFIRSTGAME_API UProcedureMesh : public UMeshComponent
 {
 	GENERATED_UCLASS_BODY()
 	
+public:
+	/**初始化网格信息*/
+	void InitMesh(const TArray<FProcedureMeshVertex>& InVertices, const TArray<uint32>& InIndices);
+
 public:
 	virtual FPrimitiveSceneProxy* CreateSceneProxy() override;
 
@@ -33,5 +57,8 @@ public:
 	/**模型碰撞体相关*/
 	UPROPERTY(Instanced)
 	class UBodySetup* ModelSetup;
-	
+
+	TArray<FProcedureMeshVertex> Vertices;
+
+	TArray<uint32> Indices;
 };
