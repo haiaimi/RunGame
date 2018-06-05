@@ -3,6 +3,8 @@
 #include "ProcedureMeshActor.h"
 #include "ProcedureMesh.h"
 #include "../Plugins/Runtime/ProceduralMeshComponent/Source/ProceduralMeshComponent/Public/ProceduralMeshComponent.h"
+#include "PhysicsEngine/BodySetup.h"
+#include "RunGameHelper.h"
 
 
 // Sets default values
@@ -11,8 +13,23 @@ AProcedureMeshActor::AProcedureMeshActor()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	DynamicMesh = nullptr;
+	ProcedureMesh = nullptr;
 
 	DynamicMesh = CreateDefaultSubobject<UProcedureMesh>(TEXT("DynamicMesh"));
+
+	TArray<FVector> Vertices =
+	{
+		FVector(0.f, 0.f, 0.f),
+		FVector(200.f, 0.f, 0.f),
+		FVector(200.f, 0.f, 110.f),
+		FVector(200.f, 200.f, 0.f)
+	};
+
+	DynamicMesh->GetBodySetup()->UpdateTriMeshVertices(Vertices);
+	DynamicMesh->GetBodySetup()->bHasCookedCollisionData = true;
+	DynamicMesh->GetBodySetup()->InvalidatePhysicsData();
+	DynamicMesh->GetBodySetup()->CreatePhysicsMeshes();
+	DynamicMesh->RecreatePhysicsState();
 
 	/*if (DynamicMesh)
 		RootComponent = DynamicMesh;*/
@@ -22,9 +39,9 @@ AProcedureMeshActor::AProcedureMeshActor()
 	TArray<FVector> Vertices =
 	{
 		FVector(0.f, 0.f, 0.f),
-		FVector(20000.f, 0.f, 0.f),
-		FVector(20000.f, 0.f, 11000.f),
-		FVector(20000.f, 20000.f, 0.f)
+		FVector(200.f, 0.f, 0.f),
+		FVector(200.f, 0.f, 110.f),
+		FVector(200.f, 200.f, 0.f)
 	};
 
 	TArray<int32> Indices=
@@ -71,13 +88,23 @@ AProcedureMeshActor::AProcedureMeshActor()
 		FProcMeshTangent(1.f,1.f,1.f)
 	};
 
-	ProcedureMesh->CreateMeshSection(0, Vertices, Indices, Normals, UV, Colors, TangentX, false);*/
+	ProcedureMesh->CreateMeshSection(0, Vertices, Indices, Normals, UV, Colors, TangentX, true);
+	ProcedureMesh->bUseAsyncCooking = false;
+	ProcedureMesh->bUseComplexAsSimpleCollision = false;
+	ProcedureMesh->GetBodySetup()->UpdateTriMeshVertices(Vertices);
+	ProcedureMesh->AddCollisionConvexMesh(Vertices);
+	ProcedureMesh->SetCollisionResponseToAllChannels(ECR_Block);*/
 }
 // Called when the game starts or when spawned
 void AProcedureMeshActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (DynamicMesh)
+		DynamicMesh->SetSimulatePhysics(true);
+
+	if (ProcedureMesh)
+		ProcedureMesh->SetSimulatePhysics(true);
 }
 
 // Called every frame
@@ -85,5 +112,8 @@ void AProcedureMeshActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (ProcedureMesh)
+	{
+		RunGameHelper::ScreenMessageDebug(FString::Printf(TEXT("Collision Vertex Data: %d"), ProcedureMesh->GetBodySetup()->AggGeom.BoxElems.Num()), FColor::Black);
+	}
 }
-

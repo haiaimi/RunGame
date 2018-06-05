@@ -257,6 +257,8 @@ UProcedureMesh::UProcedureMesh(const FObjectInitializer& ObjectInitializer) :Sup
 	ModelSetup = nullptr;
 	CastShadow = true;
 	bHiddenInGame = false;
+	SetCollisionResponseToAllChannels(ECR_Block);   //测试碰撞，阻挡一切物体
+	//SetCollisionProfileName(TEXT("BlockAll"));
 }
 
 void UProcedureMesh::InitMesh(const TArray<FProcedureMeshVertex>& InVertices, const TArray<uint32>& InIndices)
@@ -281,13 +283,14 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 			VertexFactory = nullptr;
 			VertexBuffer = new FProcedureVertexBuffer;
 			VertexBuffer->Vertices.SetNum(4);      //此步多余，会引起崩溃
+			MeshBody = InComponent->ModelSetup;
 
 			VertexBuffer->Vertices =
 			{
 				FProcedureMeshVertex(FVector(0.f, 0.f, 0.f)),
-				FProcedureMeshVertex(FVector(20000.f, 0.f, 0.f)),
-				FProcedureMeshVertex(FVector(20000.f, 0.f, 11000.f)),
-				FProcedureMeshVertex(FVector(20000.f, 20000.f, 0.f))
+				FProcedureMeshVertex(FVector(200.f, 0.f, 0.f)),
+				FProcedureMeshVertex(FVector(200.f, 0.f, 100.f)),
+				FProcedureMeshVertex(FVector(200.f, 200.f, 0.f))
 			};
 
 			//TArray<int32> IndexBuffer;
@@ -305,6 +308,14 @@ FPrimitiveSceneProxy* UProcedureMesh::CreateSceneProxy()
 				0,1,3,
 				3,1,0
 			};
+
+			TArray<FVector> CollisionVertex;
+			for (int32 i = 0; i < VertexBuffer->Vertices.Num(); ++i)
+			{
+				CollisionVertex.Add(VertexBuffer->Vertices[i].Position);
+			}
+			if (MeshBody)
+				MeshBody->UpdateTriMeshVertices(CollisionVertex);
 
 			// 下面是初始化资源，有顶点/索引缓冲/输入布局
 			BeginInitResource(VertexBuffer);
@@ -479,6 +490,8 @@ private:
 
 		FMaterialRenderProxy* MaterialProxy;
 		FMaterialRelevance MaterialRelevance;
+
+		UBodySetup* MeshBody;
 	};
 
 	return new FProceduralSceneProxy(this);
@@ -488,11 +501,19 @@ FBoxSphereBounds UProcedureMesh::CalcBounds(const FTransform& LocalToWorld) cons
 {
 	FBox Bound(ForceInit);
 
-	int32 VertexNum = Vertices.Num();
-	if (Vertices.Num() > 0)
+	TArray<FVector> TVertices =
+	{
+		FVector(0.f, 0.f, 0.f),
+		FVector(200.f, 0.f, 0.f),
+		FVector(200.f, 0.f, 110.f),
+		FVector(200.f, 200.f, 0.f)
+	};
+
+	int32 VertexNum = TVertices.Num();
+	if (TVertices.Num() > 0)
 	{
 		for (int32 i = 0; i < VertexNum; i++)
-			Bound += Vertices[i].Position;
+			Bound += TVertices[i];
 	}
 
 	return FBoxSphereBounds(Bound).TransformBy(LocalToWorld);
@@ -508,7 +529,7 @@ UBodySetup* UProcedureMesh::GetBodySetup()
 
 		NewBodySetup->bGenerateMirroredCollision = false;
 		NewBodySetup->bDoubleSidedGeometry = true;
-		NewBodySetup->CollisionTraceFlag =  CTF_UseComplexAsSimple ;
+		NewBodySetup->CollisionTraceFlag = ECollisionTraceFlag::CTF_UseSimpleAndComplex;    //使用简单碰撞，可用于物理模拟
 		ModelSetup = NewBodySetup;
 	}
 
@@ -518,6 +539,49 @@ UBodySetup* UProcedureMesh::GetBodySetup()
 UMaterialInterface* UProcedureMesh::GetMaterialFromCollisionFaceIndex(int32 FaceIndex, int32& SectionIndex) const
 {
 	return UMaterial::GetDefaultMaterial(MD_Surface);
+}
+
+bool UProcedureMesh::GetPhysicsTriMeshData(FTriMeshCollisionData * CollisionData, bool InUseAllTriData)
+{
+	TArray<FVector> Vertices =
+	{
+		FVector(0.f, 0.f, 0.f),
+		FVector(200.f, 0.f, 0.f),
+		FVector(200.f, 0.f, 110.f),
+		FVector(200.f, 200.f, 0.f)
+	};
+
+	TArray<int32> Indices =
+	{
+		0,2,1,
+		1,2,0,
+		1,2,3,
+		3,2,1,
+		3,2,0,
+		0,2,3,
+		0,1,3,
+		3,1,0
+	};
+
+	CollisionData->Vertices = Vertices;
+	for (int32 i = 0; i < Indices.Num(); i+=3)
+	{
+		FTriIndices Tri;
+		Tri.v0 = Indices[i];
+		Tri.v1 = Indices[i + 1];
+		Tri.v2 = Indices[i + 2];
+		CollisionData->Indices.Add(Tri);
+	}
+
+	CollisionData->bFlipNormals = true;
+	CollisionData->bDeformableMesh = true;
+	CollisionData->bFastCook = true;
+	return true;
+}
+
+bool UProcedureMesh::ContainsPhysicsTriMeshData(bool InUseAllTriData) const
+{
+	return true;
 }
 
 int32 UProcedureMesh::GetNumMaterials()const

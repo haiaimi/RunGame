@@ -30,7 +30,7 @@ struct FProcedureMeshVertex
  * 
  */
 UCLASS(hideCategories = (Object, LOD), meta = (BlueprintSpawnableComponent), ClassGroup = Rendering)
-class MYFIRSTGAME_API UProcedureMesh : public UMeshComponent
+class MYFIRSTGAME_API UProcedureMesh : public UMeshComponent, public IInterface_CollisionDataProvider
 {
 	GENERATED_UCLASS_BODY()
 	
@@ -38,12 +38,20 @@ public:
 	/**初始化网格信息*/
 	void InitMesh(const TArray<FProcedureMeshVertex>& InVertices, const TArray<uint32>& InIndices);
 
+	/**更新碰撞体的构成信息*/
+	void UpdateCollision();
+
 public:
 	virtual FPrimitiveSceneProxy* CreateSceneProxy() override;
 
 	virtual UBodySetup* GetBodySetup()override;
 
 	virtual UMaterialInterface* GetMaterialFromCollisionFaceIndex(int32 FaceIndex, int32& SectionIndex) const override;
+
+	// IInterface_CollisionDataProvider 接口内容
+	virtual bool GetPhysicsTriMeshData(struct FTriMeshCollisionData* CollisionData, bool InUseAllTriData)override;
+	virtual bool ContainsPhysicsTriMeshData(bool InUseAllTriData) const override;
+	virtual bool WantsNegXTriMesh()override { return false; };
 
 private:
 	virtual FBoxSphereBounds CalcBounds(const FTransform& LocalToWorld) const override;
