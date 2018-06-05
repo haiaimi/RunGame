@@ -15,6 +15,7 @@
 #include "Materials/Material.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Engine/Engine.h"
 
 class UCurveFloat* RunGameHelper::CoinsArrangement = nullptr;
 class UObjectLibrary* RunGameHelper::Library = nullptr;
@@ -265,6 +266,19 @@ void RunGameHelper::DrawMesh(FPrimitiveDrawInterface* PDIRef)
 		FMatrix ToLocalMatrix = FScaleMatrix(FVector(1.f, 1.f, 1.f)) * TranslationMatrix;
 		DynamicMeshBuilder.Draw(PDIRef, ToLocalMatrix, UMaterial::GetDefaultMaterial(MD_Surface)->GetRenderProxy(false), 0);
 	}
+}
+
+void RunGameHelper::ScreenMessageDebug(FString&& InString,FColor FontColor)
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FontColor, InString);
+	}
+}
+
+void RunGameHelper::LogDebug(FString InString)
+{
+	UE_LOG(LogRunGame, Log, TEXT("%s"), *InString)
 }
 
 void RunGameHelper::SetPDI(FPrimitiveDrawInterface* PDIRef)

@@ -31,6 +31,10 @@ public:
 
 	static void DrawMesh(FPrimitiveDrawInterface* PDIRef);
 
+	static void ScreenMessageDebug(FString&& InString, FColor FontColor);
+
+	static void LogDebug(FString InString);
+
 private:
 	static bool bInitilized;
 
