@@ -10,3 +10,7 @@ UE4 Game
 
 ### 3、排行榜
 ![image](https://github.com/haiaimi/PictureRepository/blob/master/PictureRepository/%E6%8E%92%E8%A1%8C%E6%A6%9C.gif)
+
+### 状态机
+状态机比较简单，就是人物的基本动作，跳跃，下蹲，加速（射击动画是播放蒙太奇）
+![image](https://github.com/haiaimi/PictureRepository/blob/master/PictureRepository/%E7%8A%B6%E6%80%81%E6%9C%BA.png)
