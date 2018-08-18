@@ -5,6 +5,7 @@
 #include "Particles/ParticleSystem.h"
 #include "Bullet.h"
 #include "Kismet/GameplayStatics.h"
+#include "Gameplay/FireCameraShake.h"
 
 
 // Sets default values
@@ -71,7 +72,12 @@ void AWeapon_Gun::Fire(FVector ShootDir)
 	//释放开火特效
 	if (GetFireParticle())
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), GetFireParticle(), GetFireLocation());
+		UGameplayStatics::SpawnEmitterAttached(GetFireParticle(), GunMesh, FirePoint);
+	}
+
+	if (APlayerController* PC = Cast<APlayerController>(this->Instigator->Controller))
+	{
+		PC->ClientPlayCameraShake(UFireCameraShake::StaticClass());
 	}
 
 	//第二种方法

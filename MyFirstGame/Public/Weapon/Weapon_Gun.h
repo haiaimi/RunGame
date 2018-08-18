@@ -60,6 +60,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "GunData")
 	class UParticleSystem* FireEmitter;
 
+	/**子弹轨迹粒子效果*/
+	UPROPERTY(EditDefaultsOnly, Category = "GunData")
+	class UParticleSystem*	TraceEmitter;
+
 	/**闪电粒子*/
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GunData")
 	class UParticleSystem* BeamEmitter;

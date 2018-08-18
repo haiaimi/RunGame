@@ -75,12 +75,23 @@ void ABullet::PostInitializeComponents()
 	}
 }
 
+void ABullet::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (CurWeaponType == EWeaponType::Weapon_Projectile && OwnerWeapon->TraceEmitter != NULL)
+	{
+		SpawnedParticle = UGameplayStatics::SpawnEmitterAtLocation(this, OwnerWeapon->TraceEmitter, OwnerWeapon->GetFireLocation());
+		SpawnedParticle->SetVectorParameter(TEXT("Target"), ProjectileComponent->Velocity + OwnerWeapon->GetFireLocation());
+	}
+}
+
 // Called every frame
 void ABullet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (OwnerWeapon &&CurWeaponType == EWeaponType::Type::Weapon_Beam) //只有闪电枪才会更新
+	if (OwnerWeapon && CurWeaponType == EWeaponType::Type::Weapon_Beam) //只有闪电枪才会更新
 	{
 		SpawnedParticle->SetBeamTargetPoint(0, OwnerWeapon->GetFireLocation(), 0);
 		//GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Blue, TEXT("Beam is in Update"));
