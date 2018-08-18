@@ -207,7 +207,7 @@ public:
 				NewData.TextureCoordinates.Add(FVertexStreamComponent(
 					&ProcedureVertexBuffer->TexCoordBuffer,
 					0,
-					sizeof(FVector2D),                                //注意该Stride参数不是指单个元素的步程，而是指整个结构的宽度
+					sizeof(FVector2D),                                
 					EVertexElementType::VET_Float2,
 					EVertexStreamUsage::ManualFetch
 				));
@@ -529,7 +529,7 @@ UBodySetup* UProcedureMesh::GetBodySetup()
 
 		NewBodySetup->bGenerateMirroredCollision = false;
 		NewBodySetup->bDoubleSidedGeometry = true;
-		NewBodySetup->CollisionTraceFlag = ECollisionTraceFlag::CTF_UseSimpleAndComplex;    //使用简单碰撞，可用于物理模拟
+		NewBodySetup->CollisionTraceFlag = ECollisionTraceFlag::CTF_UseSimpleAsComplex;    //使用简单碰撞，可用于物理模拟
 		ModelSetup = NewBodySetup;
 	}
 

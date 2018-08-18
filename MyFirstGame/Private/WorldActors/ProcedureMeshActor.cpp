@@ -15,7 +15,7 @@ AProcedureMeshActor::AProcedureMeshActor()
 	DynamicMesh = nullptr;
 	ProcedureMesh = nullptr;
 
-	DynamicMesh = CreateDefaultSubobject<UProcedureMesh>(TEXT("DynamicMesh"));
+	/*DynamicMesh = CreateDefaultSubobject<UProcedureMesh>(TEXT("DynamicMesh"));
 
 	TArray<FVector> Vertices =
 	{
@@ -29,12 +29,12 @@ AProcedureMeshActor::AProcedureMeshActor()
 	DynamicMesh->GetBodySetup()->bHasCookedCollisionData = true;
 	DynamicMesh->GetBodySetup()->InvalidatePhysicsData();
 	DynamicMesh->GetBodySetup()->CreatePhysicsMeshes();
-	DynamicMesh->RecreatePhysicsState();
+	DynamicMesh->RecreatePhysicsState();*/
 
 	/*if (DynamicMesh)
 		RootComponent = DynamicMesh;*/
 
-	/*ProcedureMesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProcedureMesh"));
+	ProcedureMesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProcedureMesh"));
 
 	TArray<FVector> Vertices =
 	{
@@ -93,7 +93,7 @@ AProcedureMeshActor::AProcedureMeshActor()
 	ProcedureMesh->bUseComplexAsSimpleCollision = false;
 	ProcedureMesh->GetBodySetup()->UpdateTriMeshVertices(Vertices);
 	ProcedureMesh->AddCollisionConvexMesh(Vertices);
-	ProcedureMesh->SetCollisionResponseToAllChannels(ECR_Block);*/
+	ProcedureMesh->SetCollisionResponseToAllChannels(ECR_Block);
 }
 // Called when the game starts or when spawned
 void AProcedureMeshActor::BeginPlay()

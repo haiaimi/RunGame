@@ -23,8 +23,8 @@ UDynamicMesh::UDynamicMesh(const FObjectInitializer& ObjectInitializer) :Super(O
 
 	if (MaterialFinder.Succeeded())
 	{
-		ConstantMaterial->SetParentEditorOnly(MaterialFinder.Object);
-		ConstantMaterial->PostEditChange();
+		//ConstantMaterial->SetParentEditorOnly(MaterialFinder.Object);
+		//ConstantMaterial->PostEditChange();
 	}
 
 	bHasCustomNavigableGeometry = EHasCustomNavigableGeometry::Yes;
